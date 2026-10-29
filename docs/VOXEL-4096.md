@@ -1,89 +1,89 @@
-# Exakt 4096 × 4096 × 4096 Voxel
+# Exactly 4096 × 4096 × 4096 voxels
 
-[**Neue Animation ansehen**](drill-4096.mp4) · [Vorschaubild](drill-4096.png)
+[**Watch the new animation**](drill-4096.mp4) · [Preview image](drill-4096.png)
 
-Die hochauflösende Variante ist implementiert und tatsächlich ausgeführt. **Alle drei Rasterdimensionen betragen 4096**, nicht nur die Bohrerlänge. Das sind 68.719.476.736 adressierbare Rasterzellen in einem 60 × 60 × 60 mm großen Simulationsraum, mit **14,6484375 µm würfelförmiger Voxelgröße**. Der bisherige Zylinder Ø 12 × 60 mm steht bei XY = (30,30); der große Bereich um ihn herum ist leer. Anfangs sind **2.159.116.288 Voxel belegt**, nach den Schnitten **1.333.399.870**. Die Anzahl adressierbarer Zellen wird nicht als Anzahl belegter oder einzeln bearbeiteter Voxel ausgegeben.
+The high-resolution version is implemented and has actually been run. **All three grid dimensions are 4096**, not just the drill length. This provides 68,719,476,736 addressable cells in a 60 × 60 × 60 mm simulation volume, with **14.6484375 µm cubic voxels**. The Ø 12 × 60 mm cylinder is centered at XY = (30,30), leaving the surrounding region empty. Initially, **2,159,116,288 voxels are occupied**; after cutting, **1,333,399,870** remain. Addressable cells are not reported as occupied or individually processed voxels.
 
-## Starten und bedienen
+## Launch and controls
 
 ```sh
 ./scripts/drill-4096.sh
 ```
 
-Oder bereits vorhandene Daten direkt öffnen:
+Or open existing data directly:
 
 ```sh
 zig-out/bin/menkh-viewer out/drill-4096/voxel-animation.json --smooth-lighting
 ```
 
-- Ziehen: Kamera drehen; Scrollen: zoomen.
-- **Doppelklick auf eine Oberfläche**: tatsächliches getroffenes Voxel als Kamerafokus setzen. Danach lässt sich bis auf einzelne Voxel hineinzoomen.
-- Shift + Ziehen: Fokus verschieben.
-- Zeitschieber: vorwärts und rückwärts durch die echte Schnitthistorie gehen.
-- Pause/Abspielen, Neustart und Kamera zurücksetzen.
-- „Normalen mitteln“: nur Beleuchtung umschalten. Konturen, Treffpunkte, Voxelbelegung und Volumen bleiben unverändert. Das Startskript aktiviert diese Darstellung; die Mittelung ist im Viewer ausdrücklich gekennzeichnet und abschaltbar.
-- Optional dunkler Hintergrund.
+- Drag to orbit; scroll to zoom.
+- **Double-click a surface** to focus the camera on the actual hit voxel. You can then zoom down to individual voxels.
+- Shift + drag to pan the focus point.
+- Scrub the timeline forward and backward through the actual cutting history.
+- Pause/play, restart, and reset the camera.
+- Toggle normal averaging to change lighting only. Contours, hit positions, occupancy, and volume remain unchanged. The launch script enables this option; the viewer explicitly labels it and allows it to be disabled.
+- Optional dark background.
 
-Die Animation bleibt eine vorberechnete geometrische Demo. Die Wiedergabezeit ist keine Maschinen-Vorschubzeit. Kugelkopf, Helix-Polygonzüge und vereinfachte Spitzen-Facettierung entsprechen der [vorherigen Demo](DRILL-DEMO.md); die deutlich feinere Voxelauflösung macht daraus keine freigegebene Produktionsgeometrie.
+The animation remains a precomputed geometric demo. Playback duration does not represent machine feed time. The spherical cutter, helical polylines, and simplified tip faceting follow the [previous demo](DRILL-DEMO.md); finer voxel spacing does not make the geometry production-approved.
 
-## Bezug zu den gewünschten Videos
+## Relationship to the requested videos
 
-Als Darstellungsreferenz wurden **nur die drei neuesten Videos** auf [jstimpfles Profil](https://handmade.network/m/jstimpfle) herangezogen, jeweils anhand mehrerer Zeitpunkte:
+**Only the three newest videos** on [jstimpfle's profile](https://handmade.network/m/jstimpfle) were used as visual references, each inspected at multiple timestamps:
 
-1. [9. Oktober: Schnitthistorie](https://assets.media.handmade.network/52b4a944-b54a-484b-af96-2bfb08483204/JCut_Recording_2026-10-09_120752.mp4)
-2. [9. Oktober: Detailstufen und Nahansicht](https://assets.media.handmade.network/c57e31b2-ac6d-4c26-aec7-73e409c82000/JCut_Recording_2026-10-09_114621.mp4)
-3. [11. September: Oberfläche und Zoom](https://assets.media.handmade.network/cc886f5f-d0f6-4ca2-a1d1-c4b31757c928/Screen_Recording_2026-09-11_191224.mp4)
+1. [October 9: cutting history](https://assets.media.handmade.network/52b4a944-b54a-484b-af96-2bfb08483204/JCut_Recording_2026-10-09_120752.mp4)
+2. [October 9: detail levels and close-up](https://assets.media.handmade.network/c57e31b2-ac6d-4c26-aec7-73e409c82000/JCut_Recording_2026-10-09_114621.mp4)
+3. [September 11: surface and zoom](https://assets.media.handmade.network/cc886f5f-d0f6-4ca2-a1d1-c4b31757c928/Screen_Recording_2026-09-11_191224.mp4)
 
-Übernommen wurden die visuelle Richtung (blaues Material auf orangefarbenem Hintergrund), Nahinspektion durch Drehen/Zoom und das Durchfahren des Schnittverlaufs. Die Geometrie und Implementierung stammen aus diesem Projekt. Es wird weder eine exakte Nachbildung noch die Übernahme der dort genannten Leistungswerte behauptet.
+The visual direction—blue material against an orange background—along with close inspection through orbit and zoom and navigation through cutting history, informed this viewer. Geometry and implementation belong to this project. This is neither an exact reproduction nor a claim to match the performance reported in those videos.
 
-## Umsetzung
+## Implementation
 
-**Materialabtrag: Zig, CPU, ein Worker.** Das dichte Array kompakter 8³-Blockdeskriptoren bleibt erhalten, ebenso der zusammenhängende Bitfeldpool. Kein Octree, kein GPU-Abtrag. Die konstante-Z-Schaftfräser-API bleibt unverändert.
+**Material removal: Zig, CPU, one worker.** The dense array of compact 8³ block descriptors and contiguous bitfield pool remain in use. There is no octree or GPU cutting. The constant-Z end-mill API is unchanged.
 
-`src/fine.zig` ergänzt eine auf die Bohrerdemo zugeschnittene Blockklassifikation:
+`src/fine.zig` adds block classification tailored to the drill demo:
 
-- Zylinderinitialisierung beschränkt sich auf die möglichen Materialblöcke im Würfel; außen bleiben die Deskriptoren leer.
-- Ein-/Ausschlussprüfungen für den Zylinder verwenden minimale/maximale radiale Distanzen der Mittelpunktbox.
-- Für die 3D-Kapsel beweisen alle acht Eckmittelpunkte mit Sicherheitsabstand vollständigen Einschluss; eine um den Blockradius vergrößerte Kapsel erlaubt konservativen Ausschluss.
-- Für Spitzenebenen werden die extremalen Skalarprodukte des Blocks benutzt.
-- Nur bei partieller Überdeckung werden die einzelnen belegten Voxelmittelpunkte ausgewertet. Alle geometrischen CPU-Prädikate benutzen `f64`.
-- Pool- und Änderungsbufferkapazitäten werden vor dem schreibenden Durchlauf vorbereitet. Es gibt keine Allokationen in der inneren Voxelschleife.
+- Cylinder initialization visits only blocks that can contain material; surrounding descriptors remain empty.
+- Cylinder inclusion and exclusion tests use minimum and maximum radial distances of the voxel-center box.
+- For 3D capsules, all eight corner centers with safety clearance prove complete containment; a capsule expanded by the block radius provides conservative exclusion.
+- Tip planes use the block's extreme dot products.
+- Individual occupied voxel centers are evaluated only for partial overlap. All CPU geometry predicates use `f64`.
+- Pool and change-buffer capacities are prepared before the write pass. The inner voxel loop performs no allocations.
 
-**Darstellung: direkter Metal-Voxelrenderer** in `viewer/VoxelView.swift` und `viewer/Voxel.metal`. Er liest Blockdeskriptoren und Bitfelder. Strahlen überspringen leere Blöcke und gehen in gemischten Blöcken durch die Voxel. Es wird kein riesiges Mesh erzeugt und kein gröberes Ersatzgitter angezeigt. Vier Strahlen pro Ausgabepixel dienen der Kantenglättung. Optional wird ausschließlich die Beleuchtungsnormale aus einer 5³-Voxelumgebung gemittelt; die Oberflächenposition wird weiterhin durch den ersten belegten Voxel bestimmt. Shader- und Kamerarechnung verwenden `f32`, die Simulation `f64`. Das ist keine zertifizierte geometrische Fehlergrenze.
+**Rendering: direct Metal voxel rendering** in `viewer/VoxelView.swift` and `viewer/Voxel.metal`. The renderer reads block descriptors and bitfields. Rays skip empty blocks and traverse individual voxels inside mixed blocks. It generates no huge mesh and displays no coarser substitute grid. Four rays per output pixel provide antialiasing. Optional lighting normals are averaged over a 5³ voxel neighborhood; surface positions still come from the first occupied voxel hit. Shader and camera calculations use `f32`, while simulation uses `f64`. This does not establish a certified geometric error bound.
 
-Der neue Renderer ist von SceneKit unabhängig und benutzt die vorhandenen macOS-Systemframeworks Metal/MetalKit. Der bisherige OBJ-/MQ-Viewer bleibt für die älteren Demos verfügbar. Keine globalen Abhängigkeiten wurden installiert. GPU-Daten werden während eines laufenden GPU-Zugriffs nicht geändert: CPU-Updates warten auf den vorherigen Command Buffer.
+The new renderer is independent of SceneKit and uses the existing macOS Metal/MetalKit frameworks. The original OBJ/MQ viewer remains available for older demos. No global dependencies were installed. CPU updates wait for the preceding GPU command buffer, preventing changes to data while the GPU is reading them.
 
-**Historie statt vollständiger Oberflächenkopien:** `initial.blocks` enthält das reale vollständige Deskriptorarray; `initial.pool` die anfänglichen Bitfelder. Jede `.delta`-Datei enthält pro geändertem Block seine ID, alten/neuen Deskriptor und nötigenfalls alte/neue 64-Byte-Bitfelder. Dadurch ist der Verlauf direkt umkehrbar. `voxel-animation.json` enthält Maße, belegte Voxel, Schritte, Dateigrößen, Speicher- und Zeitmessungen. Die spezifischen Zustandsdateien sind wiederladbar; es gibt weiterhin kein allgemeines CAD-/G-Code-Importformat.
+**History instead of complete surface copies:** `initial.blocks` stores the actual complete descriptor array; `initial.pool` stores the initial bitfields. Each `.delta` file stores each changed block's ID, previous and next descriptors, and, when needed, previous and next 64-byte bitfields. This makes the history directly reversible. `voxel-animation.json` records dimensions, occupied voxels, steps, file sizes, memory usage, and timings. These specific state files can be reloaded; there is still no general CAD or G-code import format.
 
-## Tatsächlich gemessene Werte
+## Measured results
 
-M5 Max, 128 GB RAM, macOS 27.0.1; Zig 0.15.2, ReleaseFast, nativer CPU-Target, **ein Worker**. Ein vollständiger Warm-up, danach drei Wiederholungen in frischen CLI-Prozessen mit jeweils gleichem Initialbestand. Die Dateien wurden warm ins macOS-Dateisystem geschrieben, ohne `fsync`. Keine CPU-Affinität oder thermische Isolation. Die Summen der Phasenmediane müssen nicht dem Median der Gesamtlaufzeit entsprechen.
+M5 Max, 128 GB RAM, macOS 27.0.1; Zig 0.15.2, ReleaseFast, native CPU target, **one worker**. One complete warm-up followed by three repetitions in fresh CLI processes, each starting with identical stock. Files were written through the warm macOS filesystem without `fsync`. There was no CPU affinity or thermal isolation. The sum of phase medians need not equal the median total runtime.
 
-| Phase | Median | Min–Max |
+| Phase | Median | Min–max |
 |---|---:|---:|
-| Zylindrischen Bestand aufbauen | 180,05 ms | 176,04–182,32 ms |
-| Initiale Bestandsstatistik | 86,71 ms | 73,76–90,13 ms |
-| Anfangsbestand exportieren | 80,49 ms | 70,59–80,95 ms |
-| Alle 224 Schnittoperationen, einschließlich Vorbereitung | 2.705,94 ms | 2.677,67–2.942,38 ms |
-| Alle Änderungsdateien exportieren | 49,84 ms | 48,78–51,65 ms |
-| Gesamte Generierung einschließlich Abschlussprüfung | **3,160 s** | **3,155–3,405 s** |
+| Initialize cylindrical stock | 180.05 ms | 176.04–182.32 ms |
+| Initial occupancy statistics | 86.71 ms | 73.76–90.13 ms |
+| Export initial state | 80.49 ms | 70.59–80.95 ms |
+| All 224 cutting operations, including preparation | 2,705.94 ms | 2,677.67–2,942.38 ms |
+| Export all change files | 49.84 ms | 48.78–51.65 ms |
+| Complete generation including final validation | **3.160 s** | **3.155–3.405 s** |
 
-Gemessene maximale RSS der drei CLI-Prozesse: **647.512.064–647.528.448 Byte**. Tatsächliche Blockdeskriptor-Allokation: **536.870.912 Byte (512 MiB)**. Bitfeldpool-Kapazität am Ende: **51.714.560 Byte**. Die gespeicherten Änderungen aller Schritte benötigen zusammen **126.358.276 Byte**. Eine theoretische voll materialisierte 4096³-Bitmap wurde nicht angelegt; diese Zahlen sind keine Schätzung ihres Speicherbedarfs.
+Measured peak RSS across the three CLI processes: **647,512,064–647,528,448 bytes**. Actual block-descriptor allocation: **536,870,912 bytes (512 MiB)**. Final bitfield-pool capacity: **51,714,560 bytes**. Stored changes across all steps total **126,358,276 bytes**. A fully materialized 4096³ bitmap was not allocated; these figures are not estimates of its memory requirements.
 
-Statische Metal-Nah-/Gesamtansicht bei **1280 × 900 Ausgabepixeln**, finalem 4096³-Bestand, vier Samples pro Pixel und gemittelten Beleuchtungsnormalen: nach drei Warm-ups zehn Messungen, GPU-Command-Dauer **1,872 ms Median**, **1,719–1,960 ms**. Das ist eine reine GPU-Zeit der statischen Ausgangskamera, **keine zugesagte interaktive FPS-Zahl**. Delta-Upload, CPU-Steuerung, Videoencoding und Display-VSync sind darin nicht enthalten; starkes Zoomen und volle Bildabdeckung können den Aufwand verändern.
+A static Metal view at **1280 × 900 output pixels**, using the final 4096³ state, four samples per pixel, and averaged lighting normals, was measured ten times after three warm-ups: GPU command duration was **1.872 ms median**, **1.719–1.960 ms** min–max. This is GPU time for the static initial camera, **not a guaranteed interactive frame rate**. Delta upload, CPU control, video encoding, and display VSync are excluded. Strong zoom and full image coverage can change the workload.
 
-Rohdaten: [CPU-Zusammenfassung](../benchmarks/4096/summary.json), [vollständige Simulation](../benchmarks/4096/simulation.json), [GPU-Messung](../benchmarks/4096/render.json), [Replay-Prüfung](../benchmarks/4096/replay.json), sowie die drei einzelnen Läufe im selben Ordner.
+Raw data: [CPU summary](../benchmarks/4096/summary.json), [complete simulation](../benchmarks/4096/simulation.json), [GPU measurement](../benchmarks/4096/render.json), [replay validation](../benchmarks/4096/replay.json), and the three individual runs in the same directory.
 
-## Validierung
+## Validation
 
-- **17/17 Testgruppen** in Debug und ReleaseFast erfolgreich.
-- Neue Blockklassifikation gegen vollständige Mittelpunkt-Oracles geprüft; vorhandene Tests der ursprünglichen Schnitte bleiben erfolgreich.
-- Neue Allokationsfehlerprüfungen bestätigen unveränderte Belegung bei Reservierungsfehlern.
-- Kleine Testgitter: Vorwärts-/Rückwärts-/Vorwärtsänderungen ergeben dieselben Blockbits.
-- **Am echten 4096³-Datensatz**: vorwärts bis zum Ende, zurück zum Anfang, erneut zum Ende. Anfangsdeskriptoren und sämtliche ursprünglichen Poolbits sind nach Rücklauf bytegenau identisch; beide Endläufe liefern 1.333.399.870 belegte Voxel.
-- MP4 tatsächlich gerendert, vollständig mit dem bereits vorhandenen FFmpeg decodiert und ein Nahbild aus dem fertigen Video visuell geprüft.
+- **17/17 test groups** passed in Debug and ReleaseFast.
+- New block classification was checked against exhaustive voxel-center oracles; existing tests for the original cuts continue to pass.
+- New allocation-failure tests confirm unchanged occupancy when reservation fails.
+- Small test grids produce identical block bits after forward/backward/forward replay.
+- **On the actual 4096³ dataset:** replay to the end, back to the beginning, and to the end again. Initial descriptors and all original pool bits are byte-for-byte identical after rewinding; both final passes yield 1,333,399,870 occupied voxels.
+- The MP4 was actually rendered and fully decoded with the existing FFmpeg installation; a close-up frame from the finished video was visually inspected.
 
-## Reproduktion
+## Reproduction
 
 ```sh
 ./zig build drill -Doptimize=ReleaseFast -- --grid 4096 --out out/drill-4096
@@ -97,8 +97,8 @@ zig-out/bin/menkh-viewer out/drill-4096/voxel-animation.json --smooth-lighting
 zig-out/bin/menkh-viewer out/drill-4096/voxel-animation.json --verify-history out/drill-4096/replay.json
 zig-out/bin/menkh-viewer out/drill-4096/voxel-animation.json --frame 224 --smooth-lighting --render-bench out/drill-4096/render.json
 zig-out/bin/menkh-viewer out/drill-4096/voxel-animation.json --frame 224 --smooth-lighting --snapshot out/drill-4096/preview.png
-# Videoziel muss noch nicht existieren:
+# The video destination must not already exist:
 zig-out/bin/menkh-viewer out/drill-4096/voxel-animation.json --smooth-lighting --movie out/drill-4096/new-video.mp4
 ```
 
-`--grid` und `--voxel` sind gegenseitig ausgeschlossen. Das Gittermaß muss ein Vielfaches von acht zwischen 32 und 4096 sein; niedrigere Werte sind nur explizite Testoptionen. Der gezeigte Lauf verwendet tatsächlich 4096 auf jeder Achse. Der neue Videoexport hat **1280 × 900 Bildpixel**, 12 fps und 25,75 s Dauer: Bildauflösung und räumliche Gitterauflösung sind verschiedene Größen.
+`--grid` and `--voxel` are mutually exclusive. Grid size must be a multiple of eight between 32 and 4096; lower values are explicit test options. The demonstrated run uses 4096 on every axis. The new video export contains **1280 × 900 image pixels**, runs at 12 fps, and lasts 25.75 s: image resolution and spatial grid resolution are separate quantities.

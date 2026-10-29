@@ -1,70 +1,70 @@
-# Gemessene Benchmarks
+# Measured benchmarks
 
-Messung am 29./30. Oktober 2026 auf **MacBook Pro Mac17,6, Apple M5 Max, 18 CPU-Kerne (6 Super + 12 Performance), 128 GB RAM, macOS 27.0.1**. Native aarch64-macos-Binärdatei, Zig **0.15.2**, **ReleaseFast**, **ein Worker**. `-mcpu=native` wird von dieser Zig-Version auf dieser Hardware als `apple_m1` mit nativen Featureflags aufgelöst. Das ist die Compiler-Erkennung, keine Behauptung über die tatsächlich verbaute CPU. SDK für Zig: vorhandenes macOS 15.4; Swift-Viewer mit Apple Swift 6.3.2.
+Measured on October 29–30, 2026, on a **MacBook Pro Mac17,6, Apple M5 Max, 18 CPU cores (6 Super + 12 Performance), 128 GB RAM, macOS 27.0.1**. Native aarch64-macos binary, Zig **0.15.2**, **ReleaseFast**, **one worker**. On this hardware, this Zig version resolves `-mcpu=native` to `apple_m1` with native feature flags. This describes compiler detection, not the physical CPU model. Zig uses the existing macOS 15.4 SDK; the viewer uses Apple Swift 6.3.2.
 
-Alle Zahlen stammen aus tatsächlich ausgeführten Läufen. Rohdaten: [`../benchmarks/`](../benchmarks/), Hardware-/Buildangaben in [`environment.json`](../benchmarks/environment.json). Die Tabelle enthält die letzte vollständige Messserie des finalen Kernstands; vorläufige Zahlen aus der Entwicklungsphase können davon abweichen.
+All figures come from completed runs. Raw data are in [`../benchmarks/`](../benchmarks/), with hardware and build details in [`environment.json`](../benchmarks/environment.json). The tables contain the final complete measurement series for the original core implementation; preliminary development measurements may differ.
 
-## Messverfahren
+## Method
 
-Festes Rohteil 40 × 30 × 10 mm; Fräserradius 3 mm, Schneidenlänge 10 mm, Strecke (10,15,6) → (30,15,6). Jede Wiederholung initialisiert einen neuen, identischen Rohteilbestand. Zuerst erfolgt ein zusätzlicher ungemessener **voxelgenauer Vergleich aller Blockbits** zwischen Referenz und Optimierung. Danach je Implementierung ein vollständiger Warm-up und sieben gemessene Wiederholungen. Referenz zuerst, Optimierung danach; identische Szenarien, Speicherstruktur, Poolvorbereitung, Oberfläche und Export. Keine Thread-Affinität, keine isolierte Maschine, keine garantierte Temperatur-/Taktkonstanz.
+Fixed stock: 40 × 30 × 10 mm; cutter radius: 3 mm; cutting length: 10 mm; segment: (10,15,6) → (30,15,6). Every repetition initializes fresh, identical stock. An additional untimed **voxel-exact comparison of all block bits** between reference and optimized implementations runs first. Each implementation then receives one complete warm-up and seven measured repetitions. The reference runs first, followed by the optimized version, with identical scenarios, storage, pool preparation, surface generation, and export. No thread affinity, isolated machine, or constant temperature and clock rate is guaranteed.
 
-Monotone Nanosekunden-Zeitnahme mit `std.time.Timer`; die Phasen sind getrennt. Der Schnitt enthält auch Poolvorbereitung und Reservierung. Statistik, Oberflächenerzeugung und PPM/OBJ-Export liegen außerhalb der Schnittzeit. Export enthält PPM-Erzeugung und Textserialisierung sowie Dateischreiben, aber **kein fsync**; gemessen wird der warme macOS-Dateisystempfad, nicht die dauerhafte SSD-Persistierung. JSON-Serialisierung, analytische Validierung und Ressourcenabfrage liegen außerhalb dieser Phasentimer. Der Benchmark validiert den entfernten Voxelbestand jeder Wiederholung zusätzlich gegen eine vollständige XY-Spaltenzählung des Beispiels und vergleicht alle Wiederholungen mit dem Warm-up. Rückgabewerte werden geprüft und ausgegeben, nicht wegoptimiert.
+Timing uses the monotonic nanosecond `std.time.Timer`, with separate phases. Cutting includes pool preparation and reservation. Statistics, surface generation, and PPM/OBJ export are outside cutting time. Export includes PPM generation, text serialization, and file writes, but **no fsync**; this measures the warm macOS filesystem path, not durable SSD persistence. JSON serialization, analytical validation, and resource queries are outside these phase timers. The benchmark additionally validates each repetition's removed voxel count against a complete XY-column count for the example and compares every repetition with the warm-up. Results are checked and reported, preventing them from being optimized away.
 
-## Materialabtrag
+## Material removal
 
-Alle Zeiten in ms; Streuung als Min–Max. Beide Implementierungen laufen skalar in einem Worker, ohne explizites `@Vector`. Die Referenz ist bereits auf Kandidatenblöcke begrenzt; dies ist kein Vergleich mit einem künstlich über das gesamte Rohteil laufenden Abtrag.
+All times are in ms, with min–max ranges. Both implementations run scalar code with one worker and no explicit `@Vector`. The reference is already bounded to candidate blocks; it does not artificially scan the entire stock.
 
-| Raster mm | Referenz Median (Min–Max) | Blockmasken Median (Min–Max) | gemessener Medianquotient |
+| Grid spacing mm | Reference median (min–max) | Block-mask median (min–max) | Measured median ratio |
 |---:|---:|---:|---:|
 | 0.25 | 0.263 (0.263–0.275) | 0.032 (0.031–0.035) | 8.23× |
 | 0.1 | 2.823 (2.808–2.901) | 0.207 (0.204–0.233) | 13.62× |
 | 0.05 | 20.439 (20.307–20.546) | 1.102 (1.097–1.155) | 18.54× |
 | 0.025 | 154.280 (152.902–155.228) | 7.186 (7.090–7.371) | 21.47× |
 
-Diese Quotienten gelten ausschließlich für dieses Szenario und diese Messreihe. Es wird kein allgemeiner Geschwindigkeitsvorteil für beliebige Bahnfolgen oder Hardware zugesichert.
+These ratios apply only to this scenario and measurement series. They do not establish a general speed advantage for arbitrary toolpaths or hardware.
 
-## Getrennte Phasen der optimierten Variante
+## Separate phases of the optimized implementation
 
-Mediane in ms; Min/Max jeder einzelnen Phase stehen vollständig in den JSON-Dateien.
+Medians are in ms. The JSON files contain the complete min/max results for every phase.
 
-| Raster mm | Initialisierung | Abtrag | Statistik | Oberfläche | PPM + OBJ Export |
+| Grid spacing mm | Initialization | Cutting | Statistics | Surface | PPM + OBJ export |
 |---:|---:|---:|---:|---:|---:|
 | 0.25 | 0.002 | 0.032 | 0.003 | 0.538 | 0.989 |
 | 0.1 | 0.012 | 0.207 | 0.051 | 7.491 | 5.628 |
 | 0.05 | 0.067 | 1.102 | 0.393 | 15.233 | 20.041 |
 | 0.025 | 0.477 | 7.186 | 3.107 | 79.688 | 80.127 |
 
-Oberfläche und Export dominieren den 25-µm-Lauf. Das spricht für spätere inkrementelle Oberflächenpflege oder effizientere Mesh-Serialisierung, bevor SIMD oder CPU-Worker im Abtrag ergänzt werden. Die Baseline wurde vor solchen Erweiterungen gemessen; diese Erweiterungen sind hier nicht implementiert.
+Surface generation and export dominate the 25 µm run. This favors future incremental surface updates or more efficient mesh serialization before adding SIMD or CPU workers to cutting. The baseline was measured before such extensions; they are not implemented here.
 
-## Speicher
+## Memory
 
-Die folgenden Gitter-/Meshzahlen werden aus den tatsächlich angelegten Pufferlängen und Kapazitäten des laufenden Programms erfasst. Sie sind **keine Prozess-RSS-Schätzung**. Allocator-Seitenrundung, Stack, Code, Laufzeit und Bildpuffer sind darin nicht enthalten. Einheiten: Byte, nicht MiB.
+The grid and mesh figures below are captured from actual allocated buffer lengths and capacities in the running program. They are **not process RSS estimates**. Allocator page rounding, stack, code, runtime, and image buffers are excluded. Units are bytes, not MiB.
 
-| Raster mm | logische Anfangsvoxel | Deskriptoren | Poolkapazität | Gitter gesamt | Meshkapazität | aktuell gemischte Blöcke |
+| Grid spacing mm | Logical initial voxels | Descriptors | Pool capacity | Total grid | Mesh capacity | Currently mixed blocks |
 |---:|---:|---:|---:|---:|---:|---:|
 | 0.25 | 768,000 | 6,000 | 1,280 | 7,280 | 76,560 | 20 |
 | 0.1 | 12,000,000 | 98,800 | 32,512 | 131,312 | 388,224 | 508 |
 | 0.05 | 96,000,000 | 750,000 | 26,880 | 776,880 | 1,966,128 | 420 |
 | 0.025 | 768,000,000 | 6,000,000 | 128,000 | 6,128,000 | 6,636,048 | 2,000 |
 
-Separater 25-µm-Demoprozess mit PPM, OBJ und JSON: **19.349.504 Byte maximale RSS**, erfasst sowohl mit `getrusage` als auch `/usr/bin/time -l`; **18.776.448 Byte peak memory footprint** laut macOS. Reale Prozesszeit **0,17 s**, ein einzelner Lauf, kein Median. Siehe [`demo-0.025-time.txt`](../benchmarks/demo-0.025-time.txt) und [`demo-0.025.json`](../benchmarks/demo-0.025.json). RSS der Benchmarkberichte ist der bisherige Prozesshöchststand einschließlich vorheriger Validierung/Warm-ups, keine isolierte RAM-Messung einer Wiederholung.
+A separate 25 µm demo process exporting PPM, OBJ, and JSON reached **19,349,504 bytes peak RSS**, recorded with both `getrusage` and `/usr/bin/time -l`, and **18,776,448 bytes peak memory footprint** according to macOS. Wall-clock time was **0.17 s**, a single run rather than a median. See [`demo-0.025-time.txt`](../benchmarks/demo-0.025-time.txt) and [`demo-0.025.json`](../benchmarks/demo-0.025.json). RSS in benchmark reports is the process high-water mark, including earlier validation and warm-ups, rather than an isolated memory measurement for one repetition.
 
-Die 25-µm-Oberfläche besteht aus **112.024 Quads / 224.048 Dreiecken**. Der separate Viewer lud und baute dieses OBJ in einem tatsächlich ausgeführten Snapshot-Lauf in **0,874 s** auf. Dies ist eine einzelne Ladezeit inklusive Scene-Aufbau, **keine Renderzeit oder FPS-Messung**. Der PNG-Snapshot wurde erzeugt und visuell geprüft. Viewer-RAM und interaktive Bildraten wurden nicht vermessen.
+The 25 µm surface contains **112,024 quads / 224,048 triangles**. In a completed snapshot run, the separate viewer loaded and constructed this OBJ in **0.874 s**. This is a single loading measurement including scene construction, **not rendering time or an FPS measurement**. The PNG snapshot was generated and visually inspected. Viewer RAM usage and interactive frame rates were not measured.
 
-## Volumengenauigkeit
+## Volume accuracy
 
-Analytisch: `(2 r L + π r²) × Tiefe = (2 × 3 × 20 + π × 9) × 4 = 593,0973355292325 mm³`. Numerisch: entfernte Voxel × h³. Vorzeichenbehafteter Fehler = Rasterabtrag minus analytischer Abtrag.
+Analytical volume: `(2 r L + π r²) × depth = (2 × 3 × 20 + π × 9) × 4 = 593.0973355292325 mm³`. Numerical volume: removed voxels × h³. Signed error is voxelized removal minus analytical removal.
 
-| Raster mm | belegte Voxel danach | abgetragen mm³ | Fehler mm³ | relativer Fehler % |
+| Grid spacing mm | Remaining occupied voxels | Removed mm³ | Error mm³ | Relative error % |
 |---:|---:|---:|---:|---:|
 | 0.25 | 730,112 | 592.000000 | -1.097335529 | -0.185018 |
 | 0.1 | 11,406,880 | 593.120000 | +0.022664471 | +0.003821 |
 | 0.05 | 91,255,680 | 593.040000 | -0.057335529 | -0.009667 |
 | 0.025 | 730,040,960 | 593.110000 | +0.012664471 | +0.002135 |
 
-Die Fehler wechseln das Vorzeichen und konvergieren **nicht monoton**: 0,05 mm hat hier einen größeren Absolutfehler als 0,1 mm. Das wurde nicht korrigiert oder verschwiegen. Ein kleiner Volumenfehler ist keine Schranke für lokale Oberflächenfehler. 25 µm sind die Rasterweite, nicht eine zugesicherte geometrische Genauigkeit.
+Errors change sign and convergence is **not monotonic**: 0.05 mm has a larger absolute error here than 0.1 mm. These results have not been adjusted or omitted. Small volume error does not bound local surface error. The 25 µm value is grid spacing, not guaranteed geometric accuracy.
 
-## Reproduktion und Prüfung
+## Reproduction and validation
 
 ```sh
 ./zig build test --summary all
@@ -77,4 +77,4 @@ python3 scripts/validate-exports.py out/bench-0.025
 zig-out/bin/menkh-viewer out/demo-0.025/surface.obj --snapshot out/demo-0.025/view.png
 ```
 
-Ausgeführt: **11/11 Testgruppen in Debug und ReleaseFast erfolgreich**, darunter 35 deterministische Zufallsszenarien mit jeweils acht Schnitten, Mittelpunktoracle ohne AABB, exakte Referenzgleichheit, Allocation-Failure-Injektion, Randblöcke, stationäre/umgekehrte/geteilte Bahnen, Idempotenz, monotone Materialabnahme und Oberfläche. PPM und orientiertes OBJ-Volumen wurden für **alle vier** Rasterweiten zusätzlich mit dem unabhängigen Python-Skript geprüft. Keine globalen Abhängigkeiten wurden installiert.
+At the original core checkpoint, **11/11 test groups passed in Debug and ReleaseFast**, including 35 deterministic random scenarios with eight cuts each, a center oracle without AABB restrictions, exact reference equality, allocation-failure injection, boundary blocks, stationary/reversed/split paths, idempotence, monotonically decreasing occupancy, and surfaces. PPM files and oriented OBJ volumes were independently checked for **all four** spacings using the Python script. No global dependencies were installed.

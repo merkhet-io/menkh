@@ -1,61 +1,61 @@
-# Vom Zylinder zum Spiralbohrer
+# From a cylinder to a twist drill
 
-Die neue Demo zeigt zeitlich fortschreitenden **echten Voxelabtrag**, nicht eine Überblendung zwischen zwei fertigen Modellen. Der Zig-Prozess hält genau einen Materialbestand und führt die Schnitte nacheinander aus. Für jeden Animationsschritt wird dessen unverfälschte Rasteroberfläche exportiert. Der separate Player lädt diese Zustände bedarfsgerecht; Pause und Zurückspulen wiederholen keinen Materialabtrag.
+This demo shows progressive **actual voxel removal**. The Zig process maintains a single material state and applies cuts sequentially, exporting its unmodified voxel surface at every animation step. The separate player loads these states on demand; pausing and rewinding do not repeat material removal.
 
-## Anschauen
+## Watching the demo
 
-- [Fertige MP4-Animation](drill-demo.mp4): 273 Videoframes bei 12 fps, 22,75 s, 960 × 960, H.264. 1 s Anfangsansicht, 225 Materialzustände, 3 s Schlussansicht.
-- Interaktiv: `./scripts/drill-demo.sh` erzeugt die Daten und startet den Viewer. Pause/Abspielen, Neu starten, Zeitschieber, Kamera zurücksetzen; Maus dreht und Scrollen zoomt.
-- Vorhandene Animation direkt öffnen: `zig-out/bin/menkh-viewer out/drill/animation.json`.
+- [Rendered MP4 animation](drill-demo.mp4): 273 video frames at 12 fps, 22.75 s, 960 × 960, H.264. A 1 s opening view, 225 material states, and a 3 s closing view.
+- Interactive: `./scripts/drill-demo.sh` generates the data and launches the viewer. Controls include pause/play, restart, timeline, and camera reset; dragging rotates and scrolling zooms.
+- Open an existing animation directly: `zig-out/bin/menkh-viewer out/drill/animation.json`.
 
-## Geometrie
+## Geometry
 
-Zylindrischer Rohling Ø 12 × 60 mm, Achse Z, Mittelpunkt XY = (6,6), Raster 0,25 mm. Die Initialisierung entfernt alle Voxelmittelpunkte außerhalb des Radius 6 aus dem begrenzten Blockgitter. Die Darstellung bleibt sichtbar gerastert.
+The cylindrical blank is Ø 12 × 60 mm, aligned with Z, with XY center (6,6) and 0.25 mm voxel spacing. Initialization removes every voxel center outside radius 6 from the bounded block grid. The rendered surface remains visibly voxelized.
 
-Zwei um 180° versetzte Bahnen mit Helixradius 5,4 mm und Steigung 32 mm/Umdrehung werden von Z = 16 bis Z = 62 abgefahren. Jede Helix besteht aus 96 geraden **räumlichen** Segmenten. Ein idealisierter kugelförmiger Fräskopf mit Radius 3,3 mm entfernt je Segment die komplette überstrichene 3D-Kapsel. Es gibt keine isolierten Kugelstempel mit Lücken zwischen den Werkzeugpositionen. Die Helix selbst ist eine Polygonzugapproximation; die Sehnenabweichung beträgt bei diesen Parametern ungefähr 0,006 mm, zusätzlich zur Voxelapproximation.
+Two paths, offset by 180°, follow helices with radius 5.4 mm and pitch 32 mm per revolution from Z = 16 to Z = 62. Each helix consists of 96 straight **3D** segments. An idealized spherical cutting head with radius 3.3 mm removes the entire swept 3D capsule along each segment, leaving no gaps between discrete tool positions. The helix itself is a polyline approximation; its chord deviation at these parameters is approximately 0.006 mm, in addition to voxel approximation.
 
-Danach erzeugen 32 nacheinander angewendete geneigte Halbebenen die facettierte Spitze. Für Winkel α entfernt ein Pass die Mittelpunkte mit
+Next, 32 sequential inclined half-space cuts form the faceted tip. At angle α, a pass removes centers satisfying
 
 ```text
 (x−6) cos(α) + (y−6) sin(α) > 60−z + 1e−10
 ```
 
-Das ergibt eine vereinfachte Spitze mit ungefähr 90° eingeschlossenem Winkel. Es sind **keine** fertigen Span-/Freiwinkel, keine Querschneidenkorrektur und keine funktionsgeprüfte Bohrergeometrie modelliert. Die Spitzenoperation ist eine idealisierte ebene Formbearbeitung; die eingeblendete orange Platte ist ihre Positions-/Orientierungsanzeige, keine validierte endliche Werkzeug-/Haltergeometrie. Auch bei den Kugelbahnen werden Halterkollisionen nicht simuliert.
+This produces a simplified tip with an approximately 90° included angle. Finished rake and clearance angles, chisel-edge correction, and a functionally validated drill geometry are **not** modeled. The tip operation is an idealized planar shaping cut; the orange plate indicates its position and orientation, rather than a validated finite tool or holder. Holder collisions are also absent from the spherical-tool paths.
 
-Die Kugel und die Platte werden transparent ohne Tiefenverdeckung gezeichnet, damit die aktuelle Werkzeugposition auch bei rückseitigem Abtrag erkennbar bleibt. Diese Anzeige verändert das Material nicht.
+The sphere and plate are rendered transparently without depth occlusion so that the current tool position remains visible during cuts on the far side. These annotations do not change the material.
 
-Die zuvor implementierte `Grid.cut`-API für senkrechte Schaftfräser und konstantes Z bleibt unverändert und lehnt Z-Bewegungen weiterhin ab. Die neuen, ausdrücklich anderen Demooperationen liegen separat in `src/drill.zig`; es wird keine räumliche Bewegung heimlich auf die alte XY-Kapsel reduziert.
+The original `Grid.cut` API for vertical end mills at constant Z remains unchanged and continues to reject Z motion. The distinct demo operations live separately in `src/drill.zig`; 3D motion is never silently reduced to the original XY capsule.
 
-## Daten und Ablauf
+## Data and execution
 
-`animation.json` beschreibt Rasterweite, Werkzeugradius, Abspielrate und jeden Schritt mit Werkzeugposition, belegten Voxeln, Phase und Dateiname. Die `frame-NNNN.mq`-Dateien enthalten nur zusammengefasste sichtbare Quads: 12 Byte pro Quad, fünf little-endian u16 (x, y, z, Breite, Höhe), ein Achsenbyte, ein Vorzeichenbyte. Diese Meshes sind abgeleitete Renderdaten; der einzig maßgebliche Simulationsbestand bleibt das Block-Voxelgitter. Der Viewer hält nur einen kleinen benachbarten Framecache, nicht sämtliche Meshes im GPU-Speicher.
+`animation.json` describes voxel spacing, tool radius, playback rate, and each step's tool position, occupied voxel count, phase, and filename. The `frame-NNNN.mq` files contain merged visible quads only: 12 bytes per quad, comprising five little-endian u16 values (x, y, z, width, height), one axis byte, and one sign byte. These meshes are derived rendering data; the block voxel grid remains the authoritative simulation state. The viewer retains a small cache of neighboring frames rather than all meshes in GPU memory.
 
-Poolkapazität wird vor jeder Operation als konservative Obergrenze vorbereitet. Allokationsfehler verändern keine Belegung; während der Voxelprüfung wird nicht alloziert. Kapsel-AABBs begrenzen die zu bearbeitenden Blöcke. Die Oberflächen werden pro Animationszustand vollständig erzeugt. Die Demo ist vorab berechnet, keine Live-Kopplung des Renderthreads mit dem Simulationskern.
+Before every operation, pool capacity is prepared using a conservative upper bound. Allocation failures leave occupancy unchanged; voxel tests perform no allocations. Capsule AABBs bound the blocks to process. Surfaces are fully regenerated for each animation state. The demo is precomputed, with no live coupling between the render thread and simulation core.
 
-Der CLI-Parameter `--voxel` erlaubt für diese bewusst begrenzte Demo 0,1 bis 0,5 mm. Das erste Video verwendet 0,25 mm und ist keine 25-µm-Demo. Die vier ursprünglichen Quaderbenchmarks und ihr 25-µm-Modus bleiben verfügbar.
+For this deliberately bounded demo, the `--voxel` CLI option accepts 0.1 to 0.5 mm. The first video uses 0.25 mm; it is not a 25 µm demo. The four original cuboid benchmarks, including their 25 µm configuration, remain available.
 
-## Reproduktion
+## Reproduction
 
 ```sh
 ./zig build drill -Doptimize=ReleaseFast -- --voxel 0.25 --out out/drill
 ./scripts/build-viewer.sh
 zig-out/bin/menkh-viewer out/drill/animation.json
 
-# Einzelnen Animationszustand rendern:
+# Render a single animation state:
 zig-out/bin/menkh-viewer out/drill/animation.json --frame 224 --snapshot out/drill/final.png
 
-# Video exportieren; der Zielname muss neu sein:
+# Export a video; the destination must not already exist:
 zig-out/bin/menkh-viewer out/drill/animation.json --movie out/drill/new-demo.mp4
 
 ./zig build test --summary all
 ./zig build test -Doptimize=ReleaseFast --summary all
 ```
 
-Der MP4-Export benutzt die vorhandenen Apple-Systemframeworks AVFoundation und SceneKit. Keine neue globale Abhängigkeit wurde installiert. Das bereits vorhandene FFmpeg wurde nur zur unabhängigen Prüfung des fertigen Videos eingesetzt.
+MP4 export uses the existing Apple AVFoundation and SceneKit frameworks. No new global dependencies were installed. The existing FFmpeg installation was used only to independently verify the completed video.
 
-## Ausgeführt und geprüft
+## Completed validation
 
-- 225 Materialzustände tatsächlich erzeugt; erste gemessene Generierung einschließlich aller Meshdateien und finalem OBJ: 1,95 s auf dem M5 Max, ReleaseFast, ein Worker. Einzelmessung, kein Benchmarkmedian.
-- Endbestand: 267.344 Voxel; 2.587,75 mm³ abgetragen. Der Bestand nimmt zwischen den Zuständen niemals zu.
-- 14/14 Testgruppen erfolgreich in Debug und ReleaseFast, einschließlich der bisherigen Kernprüfungen. Neu: räumliche Kapsel gegen vollständige Mittelpunktprüfung, Idempotenz, Umkehrung, ungültige Werkzeuge, Allocation-Failure-Injektion sowie Erhalt von Schaft/Kern und Abtrag an Nuten/Spitze.
-- Endgeometrie und ein Zwischenbild aus der tatsächlich encodierten MP4 visuell geprüft. Die komplette MP4 wurde unabhängig fehlerfrei decodiert; Format, Auflösung, Bildzahl und Dauer wurden ausgelesen.
+- All 225 material states were generated. The first measured generation, including all mesh files and the final OBJ, took 1.95 s on the M5 Max in ReleaseFast with one worker. This is a single measurement, not a benchmark median.
+- Final occupancy: 267,344 voxels; removed volume: 2,587.75 mm³. Occupancy never increases between states.
+- At this stage, 14/14 test groups passed in Debug and ReleaseFast, including the existing core checks. Added coverage included 3D capsules against exhaustive center tests, idempotence, reversal, invalid tools, allocation-failure injection, preservation of the shank and core, and removal at the flutes and tip.
+- The final geometry and an intermediate frame from the actual encoded MP4 were visually inspected. The entire MP4 was independently decoded without errors; format, resolution, frame count, and duration were checked.
