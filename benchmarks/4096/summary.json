@@ -1,0 +1,55 @@
+{
+  "hardware": "Apple M5 Max, 18 CPU cores, 128 GB RAM",
+  "os": "macOS 27.0.1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "grid": [
+    4096,
+    4096,
+    4096
+  ],
+  "warmups": 1,
+  "repetitions": 3,
+  "fresh_process_and_stock_each_repeat": true,
+  "phases_ms": {
+    "total": {
+      "min": 3155.442542,
+      "median": 3160.170209,
+      "max": 3404.7645
+    },
+    "init": {
+      "min": 176.044958,
+      "median": 180.049875,
+      "max": 182.31625
+    },
+    "initial_stats": {
+      "min": 73.758917,
+      "median": 86.706875,
+      "max": 90.126625
+    },
+    "initial_export": {
+      "min": 70.592958,
+      "median": 80.487958,
+      "max": 80.95125
+    },
+    "all_cuts": {
+      "min": 2677.670374,
+      "median": 2705.943825,
+      "max": 2942.377907
+    },
+    "all_delta_exports": {
+      "min": 48.780294,
+      "median": 49.844838,
+      "max": 51.647083
+    }
+  },
+  "peak_rss_bytes": {
+    "min": 647512064,
+    "median": 647528448,
+    "max": 647528448
+  },
+  "grid_descriptor_bytes": 536870912,
+  "pool_capacity_bytes": 51714560,
+  "history_bytes": 126358276
+}

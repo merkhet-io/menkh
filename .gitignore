@@ -1,0 +1,5 @@
+.tools/
+.zig-cache/
+zig-out/
+out/
+.DS_Store
