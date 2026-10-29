@@ -1,0 +1,18 @@
+{
+  "averaged_normals" : true,
+  "frame" : 224,
+  "gpu_ms_max" : 1.9599583320086822,
+  "gpu_ms_median" : 1.8724791661952622,
+  "gpu_ms_min" : 1.7185000033350661,
+  "grid" : [
+    4096,
+    4096,
+    4096
+  ],
+  "height" : 900,
+  "note" : "GPU command duration only, offscreen static view; not interactive FPS",
+  "samples" : 10,
+  "samples_per_pixel" : 4,
+  "warmups" : 3,
+  "width" : 1280
+}
