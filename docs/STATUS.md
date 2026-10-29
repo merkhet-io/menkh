@@ -1,25 +1,25 @@
-# Gesicherter Projektstand
+# Saved project state
 
-Dieser erste Projektstand umfasst den Zig-Simulationskern, reproduzierbare Messdaten und zwei animierte Bohrerdemos einschließlich einer tatsächlich ausgeführten 4096³-Konfiguration. Quellcode, Build-/Startskripte, Dokumentation, kleine Demo-Videos und Messberichte werden gemeinsam versioniert. Die bisherigen lokalen Dateien bleiben erhalten.
+This first project checkpoint includes the Zig simulation core, reproducible measurements, and two animated drill demos, including a 4096³ configuration that has actually been run. Source code, build and launch scripts, documentation, small demo videos, and measurement reports are versioned together. Existing local files are preserved.
 
-## Enthalten
+## Included features
 
-| Einstieg | Funktionsumfang |
+| Entry point | Features |
 |---|---|
-| `./zig build demo` / `export` | Quader, senkrechter Schaftfräser, kontinuierlich überstrichene XY-Kapsel bei konstantem Z; skalare Referenz und blockweise Optimierung; PPM, OBJ und JSON |
-| `./zig build bench -Doptimize=ReleaseFast` | Referenzvergleich, Warm-up, Wiederholungen und getrennte Phasenmessungen |
-| `./scripts/drill-demo.sh` | Zylindrischer Rohling, zwei helikale Nuten und vereinfachte Spitzen-Facettierung; 225 gerasterte Meshzustände mit animiertem Werkzeug |
-| `./scripts/drill-4096.sh` | Exakt 4096 × 4096 × 4096 Rasterzellen im 60-mm-Würfel; 14,6484375 µm große Voxel; CPU-Abtrag, umkehrbare Blockänderungen und direkte Metal-Darstellung |
-| Viewer | Pause, Neustart, Historienregler, Drehen, Zoom; im Metal-Modus zusätzlich Pan und Oberflächenfokus per Doppelklick |
+| `./zig build demo` / `export` | Cuboid stock, vertical end mill, continuous XY capsule sweep at constant Z; scalar reference and block-based optimization; PPM, OBJ, and JSON |
+| `./zig build bench -Doptimize=ReleaseFast` | Reference comparison, warm-up, repetitions, and separate phase timings |
+| `./scripts/drill-demo.sh` | Cylindrical blank, two helical flutes, and simplified tip faceting; 225 voxel-surface mesh states with an animated tool |
+| `./scripts/drill-4096.sh` | Exactly 4096 × 4096 × 4096 grid cells in a 60 mm cube; 14.6484375 µm voxels; CPU cutting, reversible block changes, and direct Metal rendering |
+| Viewer | Pause, restart, timeline slider, orbit, and zoom; Metal mode also provides pan and surface focus by double-clicking |
 
-Materialbestand: kompakte Deskriptoren für 8³-Blöcke und ein zusammenhängender Pool aus 512-Bit-Belegungsfeldern. CPU-Geometrieprädikate verwenden `f64`; der Renderer benutzt `f32`. Der Metal-Shader liest den Bestand, er berechnet keinen Materialabtrag. Weder ein Octree noch explizite SIMD- oder Mehrworker-Optimierungen sind enthalten.
+Material is stored as compact descriptors for 8³ blocks and a contiguous pool of 512-bit occupancy fields. CPU geometry predicates use `f64`; the renderer uses `f32`. The Metal shader reads the material state and does not perform material removal. There is no octree, explicit SIMD, or multiworker optimization.
 
-## Wiederherstellen und starten
+## Restore and run
 
-Zielplattform ist ausschließlich macOS auf Apple Silicon. Verwendet wurden Zig **0.15.2**, Apple Command Line Tools, das bereits installierte macOS-15.4-SDK für Zig und Apple Swift für die Viewer. Der projektspezifische SDK-Wrapper ist in der [README](../README.md) erklärt.
+The only supported platform is macOS on Apple Silicon. Development used Zig **0.15.2**, Apple Command Line Tools, the already installed macOS 15.4 SDK for Zig, and Apple Swift for the viewers. The project-specific SDK wrapper is explained in the [README](../README.md).
 
 ```sh
-./scripts/bootstrap-zig.sh        # Toolchain nur lokal nach .tools/, mit SHA-256-Prüfung
+./scripts/bootstrap-zig.sh        # Local toolchain in .tools/, verified with SHA-256
 ./zig build
 ./zig build test --summary all
 ./zig build test -Doptimize=ReleaseFast --summary all
@@ -27,33 +27,33 @@ Zielplattform ist ausschließlich macOS auf Apple Silicon. Verwendet wurden Zig 
 ./scripts/drill-4096.sh
 ```
 
-Die Toolchain, Compiler-Caches, Binärdateien und großen regenerierbaren Simulationsdaten in `.tools/`, `.zig-cache/`, `zig-out/` und `out/` sind bewusst nicht Bestandteil der Git-Historie. Die Skripte erzeugen sie erneut. Es wurden keine globalen Abhängigkeiten installiert. Bestehende macOS-SDKs/Systemframeworks sind Voraussetzungen, nicht mitgelieferte Pakete.
+The toolchain, compiler caches, binaries, and large regenerable simulation files in `.tools/`, `.zig-cache/`, `zig-out/`, and `out/` are intentionally excluded from Git. The scripts regenerate them. No global dependencies were installed. Existing macOS SDKs and system frameworks are prerequisites, not bundled packages.
 
-## Validierung und Belege
+## Validation and evidence
 
-Vor dem Einchecken erneut ausgeführt:
+The following checks were rerun before the initial code commit:
 
-- **17/17 Testgruppen in Debug und ReleaseFast erfolgreich**.
-- ReleaseFast-CLI und nativer Viewer erfolgreich gebaut.
-- Zig-Formatprüfung und Syntaxprüfung der Shellskripte erfolgreich.
+- **17/17 test groups passed in both Debug and ReleaseFast**.
+- The ReleaseFast CLI and native viewer built successfully.
+- Zig formatting and shell script syntax checks passed.
 
-Bereits während der Implementierung tatsächlich ausgeführt und dokumentiert:
+The following were also run and documented during implementation:
 
-- 25-µm-Quaderlauf und Benchmarks aller vier ursprünglichen Rasterweiten, voxelgenau gegen die Referenz geprüft.
-- Unabhängige PPM-/OBJ-Prüfung einschließlich orientiertem Meshvolumen.
-- Exakte 4096³-Demo: 2.159.116.288 anfänglich belegte Voxel und 1.333.399.870 nach den Schnitten.
-- Am großen Datensatz vorwärts, zurück und erneut vorwärts abgespielt; Initialdeskriptoren und ursprüngliche Bitfelder nach Rücklauf bytegenau identisch.
-- Beide Demo-Videos tatsächlich gerendert, vollständig decodiert und anhand von Zwischen-/Endbildern geprüft.
+- A 25 µm cuboid run and benchmarks at all four original grid spacings, checked voxel by voxel against the reference.
+- Independent PPM/OBJ validation, including oriented mesh volume.
+- The exact 4096³ demo: 2,159,116,288 initially occupied voxels and 1,333,399,870 after cutting.
+- Forward, backward, and forward replay of the full-size dataset; initial descriptors and original bit fields were byte-identical after rewinding.
+- Both demo videos were rendered, fully decoded, and checked using intermediate and final images.
 
-Messungen sind im [Benchmarkbericht](BENCHMARKS.md) und [4096³-Bericht](VOXEL-4096.md) beschrieben; Rohdaten liegen unter [`benchmarks/`](../benchmarks/). Der 4096³-Bericht trennt Gesamtgenerierung, CPU-Abtrag, Dateiexport und reine GPU-Renderzeit. Historische Messergebnisse werden nicht als bei jedem Checkout erneut erzielte Garantien ausgegeben.
+Measurements are described in the [benchmark report](BENCHMARKS.md) and [4096³ report](VOXEL-4096.md); raw data is in [`benchmarks/`](../benchmarks/). The 4096³ report separates total generation, CPU cutting, file export, and GPU rendering time. Historical measurements are recorded results, not guarantees that every checkout will reproduce the same timings.
 
-## Bekannte Grenzen
+## Known limitations
 
-- Mittelpunktbelegung und Volumen `Voxelanzahl × h³` sind Rasterapproximationen. Rasterweite ist keine garantierte maximale Oberflächenabweichung.
-- Der Bohrer ist eine idealisierte Geometriedemo, keine produktionsgeprüfte Schneidengeometrie oder NC-Ausgabe. Halterkollisionen und Maschinenkinematik fehlen.
-- Die Animation spielt vorberechnete Materialzustände bzw. Blockänderungen ab; sie ist noch keine laufende Kopplung von Simulation und Renderthread.
-- Im Metal-Modus ist die optionale Normalenmittelung reine Beleuchtung. Sie verändert weder Belegung noch Konturen; sie ist im Viewer abschaltbar.
-- Keine zugesicherte interaktive FPS-Zahl, kein allgemeiner CAD-/G-Code-Import und noch kein signiertes macOS-App-Bundle.
-- Der ältere Mesh-Viewer verwendet SceneKit; der neue Voxelrenderer verwendet direkt Metal/MetalKit.
+- Center-sampled occupancy and `voxel count × h³` volume are raster approximations. Grid spacing is not a guaranteed maximum surface deviation.
+- The drill is an idealized geometry demo, not a production-validated cutting tool or NC program. Holder collisions and machine kinematics are not modeled.
+- The animation replays precomputed material states or block changes; simulation and rendering are not yet coupled live.
+- Optional normal averaging in Metal mode affects lighting only. It leaves occupancy and contours unchanged and can be disabled in the viewer.
+- There is no guaranteed interactive frame rate, general CAD/G-code import, or signed macOS app bundle.
+- The older mesh viewer uses SceneKit; the newer voxel renderer uses Metal/MetalKit directly.
 
-Die [Architekturdokumentation](ARCHITECTURE.md) beschreibt Koordinaten, Speicherverwaltung, konservative Geometrieprüfungen und Fehlerverhalten. Die PR-Beschreibung fasst diesen Stand für die Erstbegutachtung zusammen.
+The [architecture documentation](ARCHITECTURE.md) describes coordinates, memory management, conservative geometry checks, and error behavior. The initial PR description summarizes this checkpoint for review.
