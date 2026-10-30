@@ -1,0 +1,18 @@
+{
+  "format": "menkh-state-inspection-v1",
+  "grid": [
+    1200,
+    960,
+    640
+  ],
+  "voxel_mm": 0.025,
+  "occupied_voxels": 170711351,
+  "boundary": {
+    "surface_voxels": 2819284,
+    "exposed_faces": 2883920
+  },
+  "definition": "Occupied voxels with at least one empty face-neighbor; outside grid is empty; enclosed cavities included. Exposed faces counted separately. No mesh generated.",
+  "load_ns": 4007375,
+  "statistics_ns": 1216416,
+  "boundary_ns": 39356667
+}

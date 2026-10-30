@@ -32,3 +32,63 @@ jobs:
           ./zig build test -Doptimize=ReleaseFast --summary all
       - name: Geometry proofs, axiom audit, and Zig differential tests
         run: ./scripts/verify-formal.sh
+  windows-cli:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install pinned repository-local Zig
+        shell: pwsh
+        run: ./scripts/bootstrap-zig.ps1
+      - name: Build CLI and predicate benchmark
+        shell: pwsh
+        run: ./zig.ps1 build -Doptimize=ReleaseFast
+      - name: Debug tests
+        shell: pwsh
+        run: ./zig.ps1 build test --summary all
+      - name: ReleaseFast tests
+        shell: pwsh
+        run: ./zig.ps1 build test -Doptimize=ReleaseFast --summary all
+      - name: Execute pocket demo and inspect its surface
+        shell: pwsh
+        run: |
+          ./zig-out/bin/menkh.exe job examples/pocket-25um.json --out out/windows-pocket
+          if ($LASTEXITCODE -ne 0) { throw 'Simulation failed' }
+          ./zig-out/bin/menkh.exe inspect-state out/windows-pocket/final.menkh | Out-File -Encoding utf8 out/windows-surface.json
+          if ($LASTEXITCODE -ne 0) { throw 'Inspection failed' }
+          $result = Get-Content out/windows-surface.json -Raw | ConvertFrom-Json
+          if ($result.occupied_voxels -ne 170711351) { throw 'Unexpected final material count' }
+          if ($result.boundary.surface_voxels -ne 2819284) { throw 'Unexpected surface count' }
+
+      - name: Build native D3D12 viewer with MSVC
+        shell: pwsh
+        run: |
+          cmd /c viewer\windows\build.bat 2>&1 | Tee-Object out/windows-viewer-build.log
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer batch build failed' }
+          cmd /c "viewer\windows\build.bat --project" 2>&1 | Tee-Object out/windows-viewer-project.log
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer project build failed' }
+      - name: Reject malformed viewer histories
+        shell: pwsh
+        run: python scripts/test-viewer-history.py --exe out/windows-viewer/menkh-viewer.exe --history out/windows-pocket/voxel-animation.json --viewer
+      - name: Verify history and render initial middle final and rewind with WARP
+        shell: pwsh
+        run: |
+          ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --verify-history --warp --debug --smoke out/windows-viewer-smoke 2>&1 | Tee-Object out/windows-viewer-render.log
+          if ($LASTEXITCODE -ne 0) { throw 'D3D12 viewer smoke test failed' }
+          ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --warp --debug --window-smoke out/windows-viewer-smoke 2>&1 | Tee-Object out/windows-viewer-window.log
+          if ($LASTEXITCODE -ne 0) { throw "D3D12 window smoke test failed: exit $LASTEXITCODE" }
+      - name: Package ready-to-run viewer and pocket history
+        shell: pwsh
+        run: python scripts/package-windows-viewer.py --binary-dir out/windows-viewer --history out/windows-pocket/voxel-animation.json --out out/menkh-windows-viewer-demo.zip
+      - name: Upload Windows viewer and rendered evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-d3d12-viewer
+          path: |
+            out/windows-viewer/menkh-viewer.exe
+            out/windows-viewer/Voxel.hlsl
+            out/windows-viewer-smoke/
+            out/windows-viewer-*.log
+            out/menkh-windows-viewer-demo.zip
+          if-no-files-found: error
