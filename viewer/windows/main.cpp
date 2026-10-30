@@ -56,9 +56,9 @@ LRESULT CALLBACK procedure(HWND w,UINT msg,WPARAM wp,LPARAM lp){
     return DefWindowProcW(w,msg,wp,lp);
 }
 int wmain(int argc,wchar_t** argv){try{
-    if(argc<2){std::cerr<<"menkh-viewer.exe HISTORY.json [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--frame N]\n";return 1;}
-    bool warp=false,debug=false,verify=false;fs::path smoke,snapshot;size_t frame=0;
-    for(int i=2;i<argc;i++){std::wstring a=argv[i];if(a==L"--warp")warp=true;else if(a==L"--debug")debug=true;else if(a==L"--verify-history")verify=true;else if((a==L"--smoke"||a==L"--snapshot"||a==L"--frame")&&i+1<argc){if(a==L"--smoke")smoke=argv[++i];else if(a==L"--snapshot")snapshot=argv[++i];else{std::wstring value=argv[++i];size_t used=0;frame=std::stoull(value,&used);require(used==value.size(),"Invalid frame");}}else throw std::runtime_error("Unknown or incomplete option");}
+    if(argc<2){std::cerr<<"menkh-viewer.exe HISTORY.json [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";return 1;}
+    bool warp=false,debug=false,verify=false;fs::path smoke,snapshot,windowSmoke;size_t frame=0;
+    for(int i=2;i<argc;i++){std::wstring a=argv[i];if(a==L"--warp")warp=true;else if(a==L"--debug")debug=true;else if(a==L"--verify-history")verify=true;else if((a==L"--smoke"||a==L"--snapshot"||a==L"--frame"||a==L"--window-smoke")&&i+1<argc){if(a==L"--window-smoke")windowSmoke=argv[++i];else if(a==L"--smoke")smoke=argv[++i];else if(a==L"--snapshot")snapshot=argv[++i];else{std::wstring value=argv[++i];size_t used=0;frame=std::stoull(value,&used);require(used==value.size(),"Invalid frame");}}else throw std::runtime_error("Unknown or incomplete option");}
     App app{fs::path(argv[1])};if(verify){app.history.verify();std::cout<<"Byte-exact forward/backward history verified\n";if(smoke.empty()&&snapshot.empty())return 0;}
     wchar_t exe[32768];const DWORD len=GetModuleFileNameW(nullptr,exe,32768);require(len>0&&len<32768,"Cannot locate viewer executable");
     app.renderer=std::make_unique<Renderer>(app.history,fs::path(exe).parent_path()/"Voxel.hlsl",warp,debug);std::wcout<<L"D3D12 adapter: "<<app.renderer->adapterName()<<L'\n';
@@ -82,6 +82,14 @@ int wmain(int argc,wchar_t** argv){try{
     app.status=CreateWindowExW(0,L"STATIC",L"",WS_CHILD|WS_VISIBLE,0,0,1,1,app.window,nullptr,wc.hInstance,nullptr);
     require(app.viewport&&app.playButton&&app.slider&&app.status,"Create controls failed");SendMessageW(app.slider,TBM_SETRANGE,TRUE,MAKELPARAM(0,0));SendMessageW(app.slider,TBM_SETRANGEMAX,TRUE,LPARAM(app.history.steps.size()));
     app.renderer->attach(app.viewport);app.layout();app.refresh();ShowWindow(app.window,SW_SHOW);SetFocus(app.viewport);
+    if(!windowSmoke.empty()){
+        fs::create_directories(windowSmoke);SetWindowPos(app.window,nullptr,0,0,960,720,SWP_NOMOVE|SWP_NOZORDER);
+        SendMessageW(app.slider,TBM_SETPOS,TRUE,LPARAM(app.history.steps.size()));SendMessageW(app.window,WM_HSCROLL,SB_THUMBPOSITION,reinterpret_cast<LPARAM>(app.slider));
+        require(app.history.frame==app.history.steps.size(),"Slider did not scrub to final frame");app.draw();app.renderer->snapshot(windowSmoke/"window-final.ppm");
+        SendMessageW(app.viewport,WM_KEYDOWN,VK_HOME,0);require(app.history.frame==0,"Home key failed");app.draw();
+        SendMessageW(app.viewport,WM_KEYDOWN,VK_END,0);require(app.history.frame==app.history.steps.size(),"End key failed");SendMessageW(app.viewport,WM_KEYDOWN,'R',0);app.draw();
+        DestroyWindow(app.window);std::cout<<"Window, swapchain, resize, slider and Home/End controls passed\n";return 0;
+    }
     MSG msg{};bool running=true;while(running){while(PeekMessageW(&msg,nullptr,0,0,PM_REMOVE)){if(msg.message==WM_QUIT){running=false;break;}TranslateMessage(&msg);DispatchMessageW(&msg);}if(!running)break;
         const auto now=std::chrono::steady_clock::now();if(app.playing&&now-app.tick>=std::chrono::milliseconds(80)){if(app.history.frame<app.history.steps.size())app.history.seek(app.history.frame+1);else app.playing=false;app.tick=now;app.dirty=true;app.refresh();}
         app.draw();MsgWaitForMultipleObjects(0,nullptr,FALSE,app.playing?8:50,QS_ALLINPUT);

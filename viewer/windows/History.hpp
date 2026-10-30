@@ -42,8 +42,8 @@ struct Step { fs::path file; std::string stage; uint64_t occupied=0; size_t chan
 class History {
 public:
     fs::path root; std::array<uint32_t,3> n{},nb{}; Vec origin{},low{},high{};
-    float h=0, tolerance=0; uint64_t initial=0,final=0; size_t frame=0,initialSlots=0;
-    std::vector<uint32_t> blocks; std::vector<uint64_t> pool; std::vector<Step> steps;
+    float h=0, tolerance=0; uint64_t initial=0,final=0; size_t frame=0,initialSlots=0,declaredSlots=0;
+    std::vector<uint32_t> blocks,slotOwner; std::vector<uint64_t> pool; std::vector<Step> steps;
     std::vector<size_t> dirtyBlocks,dirtySlots;
     explicit History(const fs::path& path) {
         root=path.parent_path(); const auto text=read(path,64<<20); auto j=Json::parse(text);
@@ -56,18 +56,18 @@ public:
         for(size_t k=0;k<3;k++)require(low[k]<high[k],"Invalid scene bounds");
         tolerance=j.value("motion_tolerance_mm",0.f);require(std::isfinite(tolerance)&&tolerance>=0,"Invalid motion tolerance");
         initial=integer(j.at("initial_occupied"),size_t(cells));final=integer(j.at("final_occupied"),size_t(initial));
-        const size_t slots=integer(j.at("pool_slots"),count);require(slots<=(size_t(1)<<30)/64,"Viewer pool exceeds 1 GiB limit");
+        const size_t slots=integer(j.at("pool_slots"),count);declaredSlots=slots;require(slots<=(size_t(1)<<30)/64,"Viewer pool exceeds 1 GiB limit");
         const auto bd=read(root/"initial.blocks");require(bd.size()==count*4,"Invalid block file length");blocks.resize(count);
         const auto pd=read(root/"initial.pool");require(pd.size()%64==0&&pd.size()/64<=slots,"Invalid pool file length");initialSlots=pd.size()/64;
         pool.resize(std::max(size_t(8),slots*8));for(size_t i=0;i<pd.size()/8;i++)pool[i]=u64(pd.data()+i*8);
-        std::vector<bool> owners(slots,false);
-        for(size_t i=0;i<count;i++){const auto d=u32(bd.data()+i*4);blocks[i]=d;if(d<Full){require(d<initialSlots&&!owners[d],"Invalid or aliased initial slot");owners[d]=true;validBits(i,pd.data()+size_t(d)*64);}}
+        slotOwner.assign(slots,Empty);
+        for(size_t i=0;i<count;i++){const auto d=u32(bd.data()+i*4);blocks[i]=d;if(d<Full){require(d<initialSlots&&slotOwner[d]==Empty,"Invalid or aliased initial slot");slotOwner[d]=uint32_t(i);validBits(i,pd.data()+size_t(d)*64);}}
         require(j.at("frames").is_array()&&j.at("frames").size()<=100000,"Too many frames");
         uint64_t previous=initial;
         for(const auto& f:j.at("frames")) {
             Step s;const auto name=f.at("file").get<std::string>();require(!name.empty()&&name!="."&&name!=".."&&name.find_first_of("/\\:")==std::string::npos,"Invalid delta filename");s.file=fs::u8path(name);
             s.stage=f.at("stage").get<std::string>();s.occupied=integer(f.at("occupied"),size_t(previous));previous=s.occupied;
-            s.changed=integer(f.at("changed_blocks"),count);s.bytes=integer(f.at("delta_bytes"),size_t(1)<<30);s.tool=vec(f.at("tool"));if(f.contains("axis"))s.axis=vec(f.at("axis"));
+            s.changed=integer(f.at("changed_blocks"),count);s.bytes=integer(f.at("delta_bytes"),size_t(1)<<30);require(s.changed<=s.bytes/12&&s.bytes<=s.changed*140,"Impossible delta record size");s.tool=vec(f.at("tool"));if(f.contains("axis"))s.axis=vec(f.at("axis"));
             const float len=s.axis[0]*s.axis[0]+s.axis[1]*s.axis[1]+s.axis[2]*s.axis[2];require(std::abs(len-1)<1e-4,"Invalid tool axis");
             if(f.contains("cutter")&&!f.at("cutter").is_null()){if(f.at("cutter").at("kind")=="flat")s.cutter=part(f.at("cutter"));else s.unsupportedCutter=true;}
             if(f.contains("shank")&&!f.at("shank").is_null())s.shank=part(f.at("shank"));if(f.contains("holder")&&!f.at("holder").is_null())s.holder=part(f.at("holder"));steps.push_back(s);
@@ -90,16 +90,21 @@ public:
         while(cursor<data.size()){
             require(data.size()-cursor>=12,"Truncated delta");Change c{u32(data.data()+cursor),u32(data.data()+cursor+4),u32(data.data()+cursor+8),0,0};cursor+=12;
             require(c.id<blocks.size()&&(first||c.id>previous),"Invalid delta block order");previous=c.id;first=false;
-            c.before=cursor;if(c.old<Full){require(size_t(c.old)<pool.size()/8&&data.size()-cursor>=64,"Invalid old pool slot");validBits(c.id,data.data()+cursor);cursor+=64;}
-            c.after=cursor;if(c.next<Full){require(size_t(c.next)<pool.size()/8&&data.size()-cursor>=64,"Invalid new pool slot");validBits(c.id,data.data()+cursor);cursor+=64;}
+            c.before=cursor;if(c.old<Full){require(size_t(c.old)<declaredSlots&&data.size()-cursor>=64,"Invalid old pool slot");validBits(c.id,data.data()+cursor);cursor+=64;}
+            c.after=cursor;if(c.next<Full){require(size_t(c.next)<declaredSlots&&data.size()-cursor>=64,"Invalid new pool slot");validBits(c.id,data.data()+cursor);cursor+=64;}
             const auto expected=forward?c.old:c.next;require(blocks[c.id]==expected,"History state mismatch");
+            const auto target=forward?c.next:c.old;
+            if(target<Full)require(slotOwner[target]==Empty||slotOwner[target]==c.id,"Aliased target slot");
             if(expected<Full)for(size_t z=0;z<8;z++)require(pool[size_t(expected)*8+z]==u64(data.data()+(forward?c.before:c.after)+8*z),"History bits mismatch");
             changes.push_back(c);
         }
         require(changes.size()==step.changed,"Delta record count mismatch");
+        std::vector<uint32_t> targets;targets.reserve(changes.size());
+        for(const auto& c:changes){const auto d=forward?c.next:c.old;if(d<Full)targets.push_back(d);}
+        std::sort(targets.begin(),targets.end());require(std::adjacent_find(targets.begin(),targets.end())==targets.end(),"Aliased delta targets");
         // All validation and reservations precede mutation. Existing producer never aliases slots.
         dirtyBlocks.reserve(dirtyBlocks.size()+changes.size());dirtySlots.reserve(dirtySlots.size()+changes.size());
-        for(const auto& c:changes){auto d=forward?c.next:c.old;blocks[c.id]=d;dirtyBlocks.push_back(c.id);if(d<Full){for(size_t z=0;z<8;z++)pool[size_t(d)*8+z]=u64(data.data()+(forward?c.after:c.before)+8*z);dirtySlots.push_back(d);}}
+        for(const auto& c:changes){auto d=forward?c.next:c.old;const auto old=blocks[c.id];if(old<Full)slotOwner[old]=Empty;if(d<Full){require(slotOwner[d]==Empty,"Aliased delta target");slotOwner[d]=c.id;}blocks[c.id]=d;dirtyBlocks.push_back(c.id);if(d<Full){for(size_t z=0;z<8;z++)pool[size_t(d)*8+z]=u64(data.data()+(forward?c.after:c.before)+8*z);dirtySlots.push_back(d);}}
     }
     void seek(size_t target) {require(target<=steps.size(),"Frame out of range");while(frame<target){apply(frame,true);frame++;}while(frame>target){apply(frame-1,false);frame--;}}
     void verify() {

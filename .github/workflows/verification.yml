@@ -62,13 +62,23 @@ jobs:
 
       - name: Build native D3D12 viewer with MSVC
         shell: cmd
-        run: viewer\windows\build.bat
+        run: |
+          call viewer\windows\build.bat
+          if errorlevel 1 exit /b 1
+          call viewer\windows\build.bat --project
+          if errorlevel 1 exit /b 1
+      - name: Reject malformed viewer histories
+        shell: pwsh
+        run: python scripts/test-viewer-history.py --exe out/windows-viewer/menkh-viewer.exe --history out/windows-pocket/voxel-animation.json --viewer
       - name: Verify history and render initial middle final and rewind with WARP
         shell: pwsh
         run: |
           ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --verify-history --warp --smoke out/windows-viewer-smoke
           if ($LASTEXITCODE -ne 0) { throw 'D3D12 viewer smoke test failed' }
+          ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --warp --window-smoke out/windows-viewer-smoke
+          if ($LASTEXITCODE -ne 0) { throw 'D3D12 window smoke test failed' }
       - name: Upload Windows viewer and rendered evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: windows-d3d12-viewer

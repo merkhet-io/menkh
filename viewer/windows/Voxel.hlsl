@@ -15,13 +15,14 @@ bool filled(int3 p) {
     if(d==0xffffffffu)return false;if(d==0xfffffffeu)return true;
     uint bit=uint(p.y&7)*8+uint(p.x&7);return (pool[d*16+uint(p.z&7)*2+(bit>>5)]&(1u<<(bit&31)))!=0;
 }
+float3 faceNormal(uint axis,float3 ray) { float s=ray[axis]>0?-1:1;return axis==0?float3(s,0,0):(axis==1?float3(0,s,0):float3(0,0,s)); }
 Hit trace(float3 ray) {
     float3 safe=float3(abs(ray.x)<1e-15?1e-15:ray.x,abs(ray.y)<1e-15?1e-15:ray.y,abs(ray.z)<1e-15?1e-15:ray.z);
     float3 inv=1/safe,a=(low.xyz-eye.xyz)*inv,b=(high.xyz-eye.xyz)*inv;
     float3 near=min(a,b),far=max(a,b);float enter=max(max(near.x,near.y),near.z),leave=min(min(far.x,far.y),far.z);
     Hit hit=miss();if(leave<max(enter,0))return hit;
     uint axis=near.x>near.y?(near.x>near.z?0:2):(near.y>near.z?1:2);
-    float3 normal=0;normal[axis]=ray[axis]>0?-1:1;float t=max(enter,0);const float epsilon=0.001;
+    float3 normal=faceNormal(axis,ray);float t=max(enter,0);const float epsilon=0.001;
     [loop] for(uint iter=0;iter<dimensions.x+dimensions.y+dimensions.z+8 && t<=leave;iter++) {
         int3 cell=int3(floor(eye.xyz+ray*(t+epsilon)));
         if(any(cell<0)||any(cell>=int3(dimensions.xyz)))break;
@@ -30,7 +31,7 @@ Hit trace(float3 ray) {
         int stride=d==0xffffffffu?8:1;int3 base=(cell/stride)*stride;
         float3 edge=float3(base)+float3(ray.x>0?stride:0,ray.y>0?stride:0,ray.z>0?stride:0);
         float3 next=(edge-eye.xyz)*inv;axis=next.x<next.y?(next.x<next.z?0:2):(next.y<next.z?1:2);
-        float nt=next[axis];if(nt<=t)nt=t+epsilon;t=nt;normal=0;normal[axis]=ray[axis]>0?-1:1;
+        float nt=next[axis];if(nt<=t)nt=t+epsilon;t=nt;normal=faceNormal(axis,ray);
     }return hit;
 }
 Hit cylinderHit(float3 ray,float4 part,float4 axial) {
