@@ -5,6 +5,14 @@ Standalone C++17 / Windows SDK viewer. It reads the existing Zig engine's
 It does not run the simulation and does not need Zig to build or operate.
 Keep the history directory intact when transferring it to another computer.
 
+The CI artifact includes `menkh-windows-viewer-demo.zip` after rendering tests
+pass. Extract that nested ZIP and double-click `open-demo.bat` to play the 25 µm
+pocket example without installing a compiler. To bundle another recorded job:
+
+```sh
+python scripts/package-windows-viewer.py --binary-dir out/windows-viewer --history out/windows-pocket/voxel-animation.json --out out/menkh-windows-viewer-demo.zip
+```
+
 ## Build and run
 
 With Visual Studio C++ desktop tools and the Windows SDK already installed:

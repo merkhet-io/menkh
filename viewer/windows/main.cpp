@@ -221,7 +221,7 @@ int wmain(int argc, wchar_t **argv) {
         if (verify) {
             app.history.verify();
             std::cout << "Byte-exact forward/backward history verified\n";
-            if (smoke.empty() && snapshot.empty())
+            if (smoke.empty() && snapshot.empty() && windowSmoke.empty())
                 return 0;
         }
         wchar_t exe[32768];
@@ -303,14 +303,18 @@ int wmain(int argc, wchar_t **argv) {
                     "Slider did not scrub to final frame");
             app.draw();
             app.renderer->snapshot(windowSmoke / "window-final.ppm");
+            std::cerr << "Window smoke: final snapshot saved\n";
             SendMessageW(app.viewport, WM_KEYDOWN, VK_HOME, 0);
             require(app.history.frame == 0, "Home key failed");
             app.draw();
+            std::cerr << "Window smoke: Home rendered\n";
             SendMessageW(app.viewport, WM_KEYDOWN, VK_END, 0);
             require(app.history.frame == app.history.steps.size(), "End key failed");
             SendMessageW(app.viewport, WM_KEYDOWN, 'R', 0);
             app.draw();
+            std::cerr << "Window smoke: End and reset rendered\n";
             DestroyWindow(app.window);
+            std::cerr << "Window smoke: window destroyed\n";
             std::cout << "Window, swapchain, resize, slider and Home/End controls passed\n";
             return 0;
         }

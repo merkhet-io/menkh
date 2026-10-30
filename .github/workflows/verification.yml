@@ -76,7 +76,10 @@ jobs:
           ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --verify-history --warp --debug --smoke out/windows-viewer-smoke 2>&1 | Tee-Object out/windows-viewer-render.log
           if ($LASTEXITCODE -ne 0) { throw 'D3D12 viewer smoke test failed' }
           ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --warp --debug --window-smoke out/windows-viewer-smoke 2>&1 | Tee-Object out/windows-viewer-window.log
-          if ($LASTEXITCODE -ne 0) { throw 'D3D12 window smoke test failed' }
+          if ($LASTEXITCODE -ne 0) { throw "D3D12 window smoke test failed: exit $LASTEXITCODE" }
+      - name: Package ready-to-run viewer and pocket history
+        shell: pwsh
+        run: python scripts/package-windows-viewer.py --binary-dir out/windows-viewer --history out/windows-pocket/voxel-animation.json --out out/menkh-windows-viewer-demo.zip
       - name: Upload Windows viewer and rendered evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -87,4 +90,5 @@ jobs:
             out/windows-viewer/Voxel.hlsl
             out/windows-viewer-smoke/
             out/windows-viewer-*.log
+            out/menkh-windows-viewer-demo.zip
           if-no-files-found: error
