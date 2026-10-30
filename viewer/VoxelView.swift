@@ -18,10 +18,12 @@ struct VoxelUniforms {
     var dimensions:SIMD4<UInt32>;var blockDimensions:SIMD4<UInt32>
     var shank:SIMD4<Float>;var shankAxis:SIMD4<Float>;var holder:SIMD4<Float>;var holderAxis:SIMD4<Float>
     var cutter:SIMD4<Float>;var cutterAxis:SIMD4<Float>
+    var provenance:SIMD4<UInt32>
 }
 final class VoxelRenderer:NSObject,MTKViewDelegate {
     let history:VoxelHistory;let root:URL;let device:MTLDevice;let queue:MTLCommandQueue;let pipeline:MTLComputePipelineState
     let blocks:MTLBuffer;let pool:MTLBuffer
+    var provenanceBuffer:MTLBuffer?;var provenanceCount:UInt32=0;var provenanceMode:UInt32=0
     var targetBlocks:MTLBuffer?;var targetPool:MTLBuffer?
     var fixtureBlocks:MTLBuffer?;var fixturePool:MTLBuffer?
     var showFixtures=true;var showHolder=true;var showStock=true
@@ -67,6 +69,7 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
             fixtureBlocks=device.makeBuffer(length:size,options:.storageModeShared);fixturePool=device.makeBuffer(length:max(64,tp.count),options:.storageModeShared)
             guard let t=fixtureBlocks,let p=fixturePool else {throw MeshError.noMetal};tb.copyBytes(to:t.contents().assumingMemoryBound(to:UInt8.self),count:tb.count);tp.copyBytes(to:p.contents().assumingMemoryBound(to:UInt8.self),count:tp.count)
         }
+        try loadProvenance()
         resetView()
 
     }
@@ -126,13 +129,14 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         if showHolder,frame>0 {let step=history.frames[frame-1];let axis=step.axis ?? [0,0,1]
             if axis.count==3,step.tool.count==3 {let u=SIMD3<Float>(axis[0],axis[1],axis[2]);let p=SIMD3<Float>(step.tool[0],step.tool[1],step.tool[2]);if let part=step.cutter,(part.kind=="flat" || part.kind=="ball") {cutter=SIMD4((p-origin)/h,part.radius/h);cutterAxis=SIMD4(u,part.length/h)};if let part=step.shank {shank=SIMD4((p+u*part.offset-origin)/h,part.radius/h);shankAxis=SIMD4(u,part.length/h)};if let part=step.holder {holder=SIMD4((p+u*part.offset-origin)/h,part.radius/h);holderAxis=SIMD4(u,part.length/h)}}
         }
-        return VoxelUniforms(eye:SIMD4((eye-origin)/h,frame>0 && history.frames[frame-1].cutter?.kind=="ball" ? 1:0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis)
+        return VoxelUniforms(eye:SIMD4((eye-origin)/h,frame>0 && history.frames[frame-1].cutter?.kind=="ball" ? 1:0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis,provenance:SIMD4(provenanceCount,frame==history.frames.count && !compareTarget ? provenanceMode:0,0,0))
     }
     func encode(_ texture:MTLTexture)->MTLCommandBuffer? {
         guard let command=queue.makeCommandBuffer(),let encoder=command.makeComputeCommandEncoder() else {return nil}
         var u=uniforms(width:texture.width,height:texture.height)
         encoder.setBuffer(targetBlocks ?? blocks,offset:0,index:3);encoder.setBuffer(targetPool ?? pool,offset:0,index:4)
         encoder.setBuffer(fixtureBlocks ?? blocks,offset:0,index:5);encoder.setBuffer(fixturePool ?? pool,offset:0,index:6)
+        encoder.setBuffer(provenanceBuffer ?? pool,offset:0,index:7)
         encoder.setComputePipelineState(pipeline);encoder.setTexture(texture,index:0);encoder.setBuffer(blocks,offset:0,index:0);encoder.setBuffer(pool,offset:0,index:1);encoder.setBytes(&u,length:MemoryLayout<VoxelUniforms>.stride,index:2)
         encoder.dispatchThreads(MTLSize(width:texture.width,height:texture.height,depth:1),threadsPerThreadgroup:MTLSize(width:8,height:8,depth:1));encoder.endEncoding()
         return command
@@ -159,7 +163,7 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         let occupied=frame==0 ? history.initial_occupied:history.frames[frame-1].occupied
         let stage=frame==0 ? "Initial stock":frame==history.frames.count ? "Complete":history.frames[frame-1].stage
         let approximation=history.motion_tolerance_mm.map {String(format:" · motion budget %.4f mm",$0)} ?? ""
-        return "\(stage) · \(frame)/\(history.frames.count) · \(history.grid[0]) × \(history.grid[1]) × \(history.grid[2]) · \(String(format:"%.3f",history.voxel_mm*1000)) µm · \(occupied.formatted()) occupied · GPU \(String(format:"%.1f",lastGPUms)) ms\(approximation) · \(picked)"
+        return "\(stage) · \(frame)/\(history.frames.count) · \(history.grid[0]) × \(history.grid[1]) × \(history.grid[2]) · \(String(format:"%.3f",history.voxel_mm*1000)) µm · \(occupied.formatted()) occupied · GPU \(String(format:"%.1f",lastGPUms)) ms\(approximation)\(provenanceMode == 0 ? "" : (frame == history.frames.count && !compareTarget ? " · final surface provenance" : " · provenance inactive (final state only; target comparison takes precedence)")) · \(picked)"
     }
 }
 final class VoxelMetalView:MTKView {
@@ -220,6 +224,8 @@ final class VoxelController:NSViewController {
         let holder=holderControl;holder.target=self;holder.action=#selector(holder(_:));holder.state = .on
         let buttons=NSStackView(views:[play,restart,reset,lighting,background]);buttons.spacing=12
         let axes=axesControl;axes.addItems(withTitles:["Section X","Section Y","Section Z"]);axes.selectItem(at:renderer.sectionAxis);axes.target=self;axes.action=#selector(sectionAxis(_:))
+        let provenance=NSPopUpButton();provenance.addItems(withTitles:["Material color","Exposure operation","Exposure tool"]);provenance.isEnabled=renderer.provenanceBuffer != nil;provenance.target=self;provenance.action=#selector(provenance(_:))
+        buttons.addArrangedSubview(provenance)
         let inspection=NSStackView(views:[stock,comparison,fixtures,holder,axes,section]);inspection.spacing=12
         do {findings=try renderer.loadFindings();filterFindings()}
         catch {findingDetail.stringValue="Inspection unavailable: \(error)"}
@@ -251,6 +257,7 @@ final class VoxelController:NSViewController {
     @objc func restart() {playing=true;seek(0)}
     @objc func scrub() {playing=false;seek(Int(slider.doubleValue.rounded()))}
     @objc func resetCamera() {renderer.resetView()}
+    @objc func provenance(_ sender:NSPopUpButton) {playing=false;renderer.provenanceMode=UInt32(sender.indexOfSelectedItem);if renderer.provenanceMode != 0 {seek(renderer.history.frames.count)};refresh()}
     @objc func stock(_ sender:NSButton) {renderer.showStock=sender.state == .on}
     @objc func fixtures(_ sender:NSButton) {renderer.showFixtures=sender.state == .on}
     @objc func holder(_ sender:NSButton) {renderer.showHolder=sender.state == .on}
@@ -286,6 +293,7 @@ extension Delegate {
             }
             try JSONSerialization.data(withJSONObject:rows,options:[.prettyPrinted,.sortedKeys]).write(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return
         }
+        if args.contains("--color-operation") || args.contains("--color-tool") {guard renderer.provenanceBuffer != nil else {throw MeshError.invalidOBJ("No surface provenance; enable export_provenance in the job")};renderer.provenanceMode=args.contains("--color-tool") ? 2:1;if !args.contains("--frame") {try renderer.seek(renderer.history.frames.count)}}
         if args.contains("--pick-center") {renderer.focus(x:0.5,y:0.5,aspect:1280/900);guard !renderer.picked.isEmpty else {throw MeshError.invalidOBJ("Center pick missed material")}}
         if let i=args.firstIndex(of:"--movie"),i+1<args.count {try renderer.movie(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
         if let i=args.firstIndex(of:"--verify-history"),i+1<args.count {try renderer.verifyHistory(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
@@ -385,6 +393,7 @@ extension VoxelRenderer {
         var inverse=SIMD3<Float>();for j in 0..<3 {inverse[j]=1/(abs(ray[j])<1e-15 ? 1e-15:ray[j])}
         let low=SIMD3(u.low.x,u.low.y,u.low.z);let high=SIMD3(u.high.x,u.high.y,u.high.z)
         let near=simd_min((low-eye)*inverse,(high-eye)*inverse);let far=simd_max((low-eye)*inverse,(high-eye)*inverse)
+        var faceAxis=near.x>near.y ? (near.x>near.z ? 0:2):(near.y>near.z ? 1:2)
         var t=max(0,max(near.x,max(near.y,near.z)));let end=min(far.x,min(far.y,far.z));if t>end {return}
         let n=history.grid;let nb=history.block_grid
         let descriptors=blocks.contents().assumingMemoryBound(to:UInt32.self);let words=pool.contents().assumingMemoryBound(to:UInt64.self)
@@ -396,12 +405,18 @@ extension VoxelRenderer {
             if occupied {
                 let hit=(eye+ray*t)*history.voxel_mm+origin;let oldEye=eye*history.voxel_mm+origin
                 picked=String(format:"occupied @ (%.4f, %.4f, %.4f) mm",hit.x,hit.y,hit.z)
+                if provenanceBuffer != nil && frame==history.frames.count {
+                    var neighbor=p;neighbor[faceAxis] += ray[faceAxis]>0 ? -1:1
+                    if abs((eye+ray*t)[faceAxis] - round((eye+ray*t)[faceAxis]))<0.01, let (op,tool)=provenanceAt(neighbor) {picked += " · exposed by \(history.frames[Int(op)-1].stage) (operation \(op), tool \(tool == 0 ? "none":String(tool-1)))"}
+                    else {picked += " · initial/prehistory boundary or section interior"}
+                }
                 let offset=oldEye-hit;let length=simd_length(offset)
                 if length>0.01 {target=hit;distance=length;yaw=atan2(offset.y,offset.x);elevation=asin(offset.z/length)}
                 return
             }
             let step=d==0xffffffff ? 8:1
             var next=SIMD3<Float>();for j in 0..<3 {let edge=Float((p[j]/step)*step+(ray[j]>0 ? step:0));next[j]=(edge-eye[j])*inverse[j]}
+            faceAxis=next.x<next.y ? (next.x<next.z ? 0:2):(next.y<next.z ? 1:2)
             t=max(min(next.x,min(next.y,next.z)),t+0.001);if t>end {return}
         }
     }

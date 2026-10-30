@@ -224,3 +224,7 @@ and fixtures all use the override; saved states must already have that spacing
 The default `drill` command also emits `voxel-animation.json`. Its `animation.json`
 continues to open the mesh animation on macOS and now routes the Windows viewer
 to the matching voxel history. Regenerate older mesh-only outputs once.
+
+Optional [final-surface exposure coloring](docs/SURFACE-PROVENANCE.md) identifies
+the operation that exposed each surviving voxel face. Enable `export_provenance`
+in a job and use `--color-operation` or `--color-tool` in the macOS viewer.

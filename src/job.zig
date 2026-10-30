@@ -32,6 +32,7 @@ pub const Job = struct {
     rays: []const Ray = &.{},
     export_mesh: bool = true,
     export_defects: bool = false,
+    export_provenance: bool = false,
 };
 fn read(a: std.mem.Allocator, path: []const u8) ![]u8 {
     return std.fs.cwd().readFileAlloc(a, path, 1024 * 1024 * 1024);
@@ -156,8 +157,7 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
     try std.fs.cwd().makePath(out);
     var dir = try std.fs.cwd().openDir(out, .{});
     defer dir.close();
-    // Reusing an output directory must not leave findings for an older run.
-    dir.deleteFile("defects.json") catch |err| switch (err) {
+    for ([_][]const u8{ "defects.json", "surface-provenance.json", "surface-provenance.bin" }) |name| dir.deleteFile(name) catch |err| switch (err) {
         error.FileNotFound => {},
         else => return err,
     };
@@ -267,6 +267,29 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
         try writeDefects(a, dir, j, g, t);
     }
     const defects_ns = timer.lap();
+    // Optional derived metadata: inspect only final exposed faces, then intersect
+    // their empty-neighbor masks with the already-written removal deltas.
+    if (j.export_provenance) {
+        var provenance = try @import("provenance.zig").Index.init(a, g);
+        defer provenance.deinit();
+        for (names.items, j.operations, 0..) |name, op, index| {
+            const delta = try dir.readFileAlloc(a, name, 1024 * 1024 * 1024);
+            defer a.free(delta);
+            try provenance.consume(delta, @intCast(index + 1), if (op.tool) |t| @intCast(t + 1) else 0);
+        }
+        provenance.sort();
+        // Explicit little-endian wire encoding, independent of host struct padding.
+        const provenance_bytes = try a.alloc(u8, try std.math.mul(usize, provenance.entries.items.len, 16));
+        defer a.free(provenance_bytes);
+        for (provenance.entries.items, 0..) |entry, i| {
+            std.mem.writeInt(u64, provenance_bytes[i * 16 ..][0..8], entry.cell, .little);
+            std.mem.writeInt(u32, provenance_bytes[i * 16 + 8 ..][0..4], entry.operation, .little);
+            std.mem.writeInt(u32, provenance_bytes[i * 16 + 12 ..][0..4], entry.tool, .little);
+        }
+        try dir.writeFile(.{ .sub_path = "surface-provenance.bin", .data = provenance_bytes });
+        try json(a, dir, "surface-provenance.json", .{ .format = "menkh-surface-provenance-v1", .scope = "final_surface", .grid = g.n, .origin_mm = g.origin, .voxel_mm = g.h, .final_occupied = occupied, .operations = j.operations, .entries = provenance.entries.items.len, .bytes = provenance_bytes.len, .record_bytes = 16, .initial_id = 0 });
+    }
+    const provenance_ns = timer.lap();
     const point_results = try a.alloc(bool, j.points.len);
     defer a.free(point_results);
     for (j.points, 0..) |p, i| {
@@ -324,7 +347,7 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
     const checkpoint_write_ns = timer.lap();
     const export_ns = image_export_ns + checkpoint_encode_ns + checkpoint_write_ns;
     try json(a, dir, "voxel-animation.json", .{ .format = "menkh-voxel-history-v1", .grid = g.n, .block_grid = g.nb, .origin_mm = g.origin, .voxel_mm = g.h, .stock_min = j.bounds.lo, .stock_max = j.bounds.hi, .initial_occupied = initial, .final_occupied = occupied, .initial_pool_slots = initial_slots, .pool_slots = g.pool.items.len, .motion_tolerance_mm = j.motion_tolerance_mm, .frames = frames });
-    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .input_voxel_mm = parsed.value.voxel_mm, .voxel_override_mm = voxel_override, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .defects_ns = defects_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
+    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .input_voxel_mm = parsed.value.voxel_mm, .voxel_override_mm = voxel_override, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .defects_ns = defects_ns, .provenance_ns = provenance_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
 }
 
 fn writeDefects(a: std.mem.Allocator, dir: std.fs.Dir, j: Job, g: c.Grid, target: c.Grid) !void {

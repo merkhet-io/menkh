@@ -723,3 +723,78 @@ test "defect extraction allocation failures preserve inputs" {
     target.origin[0] = 1;
     try std.testing.expectError(error.GridMismatch, @import("defects.zig").regions(a, stock, target));
 }
+
+test "final surface exposure IDs match independent per-cell removal chronology" {
+    const provenance = @import("provenance.zig");
+    const b = e.Bounds{ .lo = .{ -2, -1, -1 }, .hi = .{ 8, 4, 3 } };
+    var g = try e.stock(a, b, 1, &.{.{ .box = b }});
+    defer g.deinit();
+    var deltas: std.ArrayList([]u8) = .empty;
+    defer {
+        for (deltas.items) |d| a.free(d);
+        deltas.deinit(a);
+    }
+    var when = [_]u32{0} ** 200;
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    var rng = std.Random.DefaultPrng.init(841);
+    for (0..20) |op| {
+        const center = e.V{ rng.random().float(f64) * 10 - 2, rng.random().float(f64) * 5 - 1, rng.random().float(f64) * 4 - 1 };
+        try e.subtract(&g, .{ .primitive = .{ .sphere = .{ .center = center, .radius = 1.4 } } }, &changes, false);
+        try deltas.append(a, try a.dupe(u8, changes.bytes.items));
+        for (0..200) |i| if (when[i] == 0 and !g.occupied(.{ i % 10, i / 10 % 5, i / 50 })) {
+            when[i] = @intCast(op + 1);
+        };
+    }
+    var index = try provenance.Index.init(a, g);
+    defer index.deinit();
+    for (deltas.items, 0..) |delta, op| try index.consume(delta, @intCast(op + 1), @intCast(op % 3 + 1));
+    index.sort();
+    var expected: usize = 0;
+    for (0..200) |i| {
+        if (when[i] == 0) continue;
+        const p = [3]usize{ i % 10, i / 10 % 5, i / 50 };
+        var adjacent = false;
+        for (0..3) |axis| for (0..2) |side| {
+            var q = p;
+            if (side == 0) {
+                if (q[axis] == 0) continue;
+                q[axis] -= 1;
+            } else {
+                q[axis] += 1;
+                if (q[axis] >= g.n[axis]) continue;
+            }
+            adjacent = adjacent or g.occupied(q);
+        };
+        if (!adjacent) continue;
+        try std.testing.expectEqual(@as(u64, @intCast(i)), index.entries.items[expected].cell);
+        try std.testing.expectEqual(when[i], index.entries.items[expected].operation);
+        try std.testing.expectEqual((when[i] - 1) % 3 + 1, index.entries.items[expected].tool);
+        expected += 1;
+    }
+    try std.testing.expect(expected > 0);
+    try std.testing.expectEqual(expected, index.entries.items.len);
+    try std.testing.expectError(error.CorruptHistory, index.consume(&.{ 1, 2 }, 1, 0));
+    try std.testing.expectError(error.InvalidOperationId, index.consume(&.{}, 0, 0));
+}
+
+fn provenanceAllocations(allocator: std.mem.Allocator, g: @import("core.zig").Grid, delta: []const u8) !void {
+    var index = try @import("provenance.zig").Index.init(allocator, g);
+    defer index.deinit();
+    try index.consume(delta, 1, 1);
+    index.sort();
+}
+test "provenance allocation failures leave authoritative stock unchanged" {
+    const b = e.Bounds{ .lo = .{ 0, 0, 0 }, .hi = .{ 10, 3, 3 } };
+    var g = try e.stock(a, b, 1, &.{.{ .box = b }});
+    defer g.deinit();
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    try e.subtract(&g, .{ .primitive = .{ .sphere = .{ .center = .{ 8, 1, 1 }, .radius = 1.4 } } }, &changes, false);
+    const before = try state.encode(a, g);
+    defer a.free(before);
+    try std.testing.checkAllAllocationFailures(a, provenanceAllocations, .{ g, changes.bytes.items });
+    const after = try state.encode(a, g);
+    defer a.free(after);
+    try std.testing.expectEqualSlices(u8, before, after);
+}

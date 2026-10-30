@@ -32,6 +32,10 @@ jobs:
           ./zig build test -Doptimize=ReleaseFast --summary all
       - name: Job CLI voxel overrides
         run: python3 scripts/test-job-options.py
+      - name: Independent final-surface provenance oracle
+        run: |
+          python3 scripts/test-provenance.py
+          ./scripts/build-viewer.sh
       - name: Geometry proofs, axiom audit, and Zig differential tests
         run: ./scripts/verify-formal.sh
       - name: Imported finishing mesh oracles
