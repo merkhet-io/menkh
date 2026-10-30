@@ -137,3 +137,49 @@ pub fn obj(g: core.Grid, quads: []const Quad, dir: std.fs.Dir) !void {
     }
     try file.writeAll(storage[0..used]);
 }
+
+pub const BoundaryCounts = struct { surface_voxels: u64 = 0, exposed_faces: u64 = 0 };
+// A surface voxel is occupied and has at least one empty face-neighbor.
+// Outside the finite grid is empty; enclosed cavities are included.
+pub fn boundaryCounts(g: core.Grid) BoundaryCounts {
+    var result: BoundaryCounts = .{};
+    for (g.blocks, 0..) |descriptor, i| {
+        if (descriptor == core.empty) continue;
+        const b = g.blockCoords(i);
+        var neighbors: [6]core.Bits = undefined;
+        for (0..3) |axis| {
+            var p = b;
+            neighbors[axis * 2] = @splat(0);
+            neighbors[axis * 2 + 1] = @splat(0);
+            if (b[axis] > 0) {
+                p[axis] -= 1;
+                neighbors[axis * 2] = g.bits(g.blockIndex(p));
+            }
+            p = b;
+            if (b[axis] + 1 < g.nb[axis]) {
+                p[axis] += 1;
+                neighbors[axis * 2 + 1] = g.bits(g.blockIndex(p));
+            }
+        }
+        const bits = g.bits(i);
+        for (bits, 0..) |w, z| {
+            if (w == 0) continue;
+            const adjacent = [6]u64{
+                ((w << 1) & 0xfefefefefefefefe) | ((neighbors[0][z] >> 7) & 0x0101010101010101),
+                ((w >> 1) & 0x7f7f7f7f7f7f7f7f) | ((neighbors[1][z] << 7) & 0x8080808080808080),
+                (w << 8) | (neighbors[2][z] >> 56),
+                (w >> 8) | (neighbors[3][z] << 56),
+                if (z == 0) neighbors[4][7] else bits[z - 1],
+                if (z == 7) neighbors[5][0] else bits[z + 1],
+            };
+            var boundary: u64 = 0;
+            for (adjacent) |other| {
+                const exposed = w & ~other;
+                boundary |= exposed;
+                result.exposed_faces += @popCount(exposed);
+            }
+            result.surface_voxels += @popCount(boundary);
+        }
+    }
+    return result;
+}

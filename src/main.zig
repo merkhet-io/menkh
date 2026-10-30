@@ -63,7 +63,7 @@ fn run(a: std.mem.Allocator, h: f64, reference: bool, dir: ?std.fs.Dir, mesh: bo
         if (p >= 6 - core.tolerance and p <= 16 + core.tolerance) layers += 1;
     }
     if (initial - s.occupied != columns * layers) return error.InvalidBenchmarkResult;
-    return .{ .process_peak_rss_bytes = @intCast(std.posix.getrusage(std.posix.rusage.SELF).maxrss), .voxel_mm = h, .stats = s, .grid_bytes = s.descriptor_bytes + s.pool_bytes, .mesh_capacity_bytes = quads.capacity * @sizeOf(surface.Quad), .occupied_volume_mm3 = @as(f64, @floatFromInt(s.occupied)) * h * h * h, .removed_volume_mm3 = removed, .error_mm3 = removed - analytic, .quads = quads.items.len, .timing = .{ .init_ns = init_ns, .cut_ns = cut_ns, .stats_ns = stats_ns, .surface_ns = surface_ns, .export_ns = export_ns } };
+    return .{ .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .voxel_mm = h, .stats = s, .grid_bytes = s.descriptor_bytes + s.pool_bytes, .mesh_capacity_bytes = quads.capacity * @sizeOf(surface.Quad), .occupied_volume_mm3 = @as(f64, @floatFromInt(s.occupied)) * h * h * h, .removed_volume_mm3 = removed, .error_mm3 = removed - analytic, .quads = quads.items.len, .timing = .{ .init_ns = init_ns, .cut_ns = cut_ns, .stats_ns = stats_ns, .surface_ns = surface_ns, .export_ns = export_ns } };
 }
 const Distribution = struct { min_ns: u64, median_ns: u64, max_ns: u64 };
 fn distribution(values: []u64) Distribution {
@@ -114,10 +114,38 @@ fn execute() !void {
     const args = try std.process.argsAlloc(a);
     defer std.process.argsFree(a, args);
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help")) {
-        std.debug.print("menkh job FILE [--out DIR] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
+        std.debug.print("menkh inspect-state FILE\nmenkh job FILE [--out DIR] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
         return;
     }
     const command = args[1];
+    if (std.mem.eql(u8, command, "inspect-state")) {
+        if (args.len != 3) return error.ExpectedInputState;
+        var timer = try std.time.Timer.start();
+        const data = try std.fs.cwd().readFileAlloc(a, args[2], 1024 * 1024 * 1024);
+        defer a.free(data);
+        var g = try @import("state.zig").decode(a, data);
+        defer g.deinit();
+        const load_ns = timer.lap();
+        const stats = g.stats();
+        const stats_ns = timer.lap();
+        const boundary = surface.boundaryCounts(g);
+        const boundary_ns = timer.lap();
+        const json = try std.json.Stringify.valueAlloc(a, .{
+            .format = "menkh-state-inspection-v1",
+            .grid = g.n,
+            .voxel_mm = g.h,
+            .occupied_voxels = stats.occupied,
+            .boundary = boundary,
+            .definition = "Occupied voxels with at least one empty face-neighbor; outside grid is empty; enclosed cavities included. Exposed faces counted separately. No mesh generated.",
+            .load_ns = load_ns,
+            .statistics_ns = stats_ns,
+            .boundary_ns = boundary_ns,
+        }, .{ .whitespace = .indent_2 });
+        defer a.free(json);
+        try std.fs.File.stdout().writeAll(json);
+        try std.fs.File.stdout().writeAll("\n");
+        return;
+    }
     if (std.mem.eql(u8, command, "compact-state")) {
         if (args.len != 4) return error.ExpectedInputAndOutputState;
         const data = try std.fs.cwd().readFileAlloc(a, args[2], 1024 * 1024 * 1024);

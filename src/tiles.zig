@@ -73,7 +73,7 @@ pub fn benchmark(a: std.mem.Allocator, out: []const u8) !void {
     try std.fs.cwd().makePath(out);
     var dir = try std.fs.cwd().openDir(out, .{});
     defer dir.close();
-    const Record = struct { case: []const u8, dense_bytes: usize, tiled_bytes: usize, convert_ns: u64, dense_query_ns: u64, tiled_query_ns: u64, hits: u64, peak_rss_bytes: isize };
+    const Record = struct { case: []const u8, dense_bytes: usize, tiled_bytes: usize, convert_ns: u64, dense_query_ns: u64, tiled_query_ns: u64, hits: u64, peak_rss_bytes: usize };
     var records: [10]Record = undefined;
     for (0..2) |scene| for (0..5) |rep| {
         var g = if (scene == 0) try @import("fine.zig").cylinder(a, 4096) else try c.Grid.init(a, .{ 60, 60, 60 }, 60.0 / 4096.0);
@@ -100,7 +100,7 @@ pub fn benchmark(a: std.mem.Allocator, out: []const u8) !void {
         const tt = timer.lap();
         if (dense != tiled) return error.TiledMismatch;
         const stats = g.stats();
-        records[scene * 5 + rep] = .{ .case = if (scene == 0) "sparse-cylinder-4096" else "full-cube-4096", .dense_bytes = stats.descriptor_bytes + stats.pool_bytes, .tiled_bytes = s.bytes(), .convert_ns = convert, .dense_query_ns = dt, .tiled_query_ns = tt, .hits = tiled, .peak_rss_bytes = std.posix.getrusage(std.posix.rusage.SELF).maxrss };
+        records[scene * 5 + rep] = .{ .case = if (scene == 0) "sparse-cylinder-4096" else "full-cube-4096", .dense_bytes = stats.descriptor_bytes + stats.pool_bytes, .tiled_bytes = s.bytes(), .convert_ns = convert, .dense_query_ns = dt, .tiled_query_ns = tt, .hits = tiled, .peak_rss_bytes = try @import("platform.zig").peakResidentBytes() };
     };
     try @import("job.zig").json(a, dir, "tiles.json", .{ .warmups_per_scene = 1, .measured_repetitions = 4, .samples_including_warmup = records });
 }
