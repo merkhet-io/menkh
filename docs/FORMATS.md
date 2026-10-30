@@ -31,6 +31,7 @@ A tool assembly contains `cutter` and optional `shank`/`holder`, each noncutting
 Each operation has a unique nonempty `id` and one geometry definition:
 
 - `tool` index with `line: {a,b}` poses. Axes must be identical. Optional `feed_mm_min` supplies geometric length/feed timing.
+- `tool` index with `rotary: {a,b}`, where poses are `{position,a_deg,c_deg}`. Cylinder only; XYZ is the wheel center; angles are unwrapped degrees. [Coverage, restrictions and example](GRINDING.md).
 - `tool` index with `arc: {center,u?,v?,radius,start_angle,sweep_angle,rise?,axis?}`. Angles are radians. Defaults: XY plane, zero rise, +Z tool axis. The plane basis must be orthonormal. Signed sweep allows both directions, up to 32 revolutions. Arc shank/holder and feed inputs are currently rejected.
 - `subtract`: one primitive, for explicit geometric removal.
 - `turning`: `{spindle_origin,spindle_axis?,mode,radial_start,radial_end,axial_start,axial_end,insert_radial_width,insert_axial_width}`. Mode is `longitudinal` or `facing`; the other coordinate stays constant. This invokes the full-revolution envelope described in [ENGINE.md](ENGINE.md).
