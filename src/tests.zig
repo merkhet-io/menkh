@@ -441,3 +441,7 @@ test "boundary voxel and face counts match independent six-neighbor oracle" {
     @memset(g.blocks, c.empty);
     try std.testing.expectEqualDeep(surf.BoundaryCounts{}, surf.boundaryCounts(g));
 }
+
+test {
+    _ = @import("sparse.zig");
+}
