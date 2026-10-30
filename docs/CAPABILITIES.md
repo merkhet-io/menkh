@@ -6,6 +6,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 
 | Capability | Status | Evidence and boundary |
 |---|---|---|
+| 65,536³ virtual world / 2³² faces in 16 GB | Unsupported, resource failure reproduced | Even a 1 mm³ stock in these worlds fails the dense descriptor limit; tiled snapshots improve sparse inspection but regress on full cubes and do not support mutation/history. [Qualification](LARGE-WORLD-QUALIFICATION.md) |
 | Binary voxel material state | Implemented, validated | 8³ blocks, compact descriptors, pooled bits; disconnected pieces and enclosed cavities |
 | Explicit origin and finite domain | Implemented, validated | Negative/translated coordinates, non-cubic grids, edge blocks; common workpiece coordinates |
 | Cuboid, cylinder, sphere stock and primitive unions | Implemented, validated | Independent exhaustive center oracles; cylinders accept a fixed unit axis |
