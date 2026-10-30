@@ -1,0 +1,7 @@
+Missing region 126 · 1 voxels · 1.5625e-05 mm³ · final state; responsible operation unknown · center (7.9255, 7.8205004, 6.0715) mm
+Complete · 5199/5199 · 1200 × 880 × 560 · 25.000 µm · 146.096.939 occupied · GPU 18.4 ms · motion budget 0.0050 mm · Missing region 126 · 1 voxels · 1.5625e-05 mm³ · final state; responsible operation unknown · center (7.9255, 7.8205004, 6.0715) mm
+finish-01683 · Holder / fixture · contact · 36 occupied centers along sweep; assembly shown at segment end; stock checks use pre-operation stock · center (-0.0995, 5.083, 12.984) mm
+finish-01683 · 1684/5199 · 1200 × 880 × 560 · 25.000 µm · 158.059.083 occupied · GPU 16.7 ms · motion budget 0.0050 mm · finish-01683 · Holder / fixture · contact · 36 occupied centers along sweep; assembly shown at segment end; stock checks use pre-operation stock · center (-0.0995, 5.083, 12.984) mm
+finish-01564 · Holder / fixture · unresolved · Possible voxel face/corner contact; first unresolved cell shown · center (-0.2995, 3.9955, 12.9965) mm
+finish-01564 · 1565/5199 · 1200 × 880 × 560 · 25.000 µm · 158.520.194 occupied · GPU 16.8 ms · motion budget 0.0050 mm · finish-01564 · Holder / fixture · unresolved · Possible voxel face/corner contact; first unresolved cell shown · center (-0.2995, 3.9955, 12.9965) mm
+Validated 127 regions: counts, saved-state regeneration, native selections and snapshots

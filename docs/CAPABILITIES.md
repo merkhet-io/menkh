@@ -26,6 +26,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Removed/remaining volume and engagement | Implemented, validated | Count × voxel volume; engagement is newly removed volume per operation |
 | Feed-derived quantities | Implemented, restricted | Straight-line length/feed only when supplied; no acceleration, dwell, spindle, or machine-cycle model |
 | Point, ray and arbitrary-plane sections | Implemented, validated | CPU occupancy, voxel-face ray hit, orthonormal plane PPM sampling; viewer X/Y/Z clipping |
+| Defect-region inspector | Implemented, validated on macOS | Exact six-connected regions, operation-linked contact/unresolved events, filter/focus/section/seek, JSON export and deterministic saved-state regeneration; no final-defect operation attribution. [Evidence](DEFECT-INSPECTOR.md) |
 | Target excess and missing material | Implemented, validated | Exact bitwise comparison on the same grid; sampled surface distances separately reported for one analytic target primitive |
 | Turning | Implemented, restricted | Complete-revolution rectangular-insert envelopes for longitudinal/facing cuts, explicit spindle origin/axis; independently validated radial profiles |
 | Combined milling and turning | Experimental geometric composition | Same stock and tilted/translated spindle transforms tested; no spindle-angle evolution, turret, synchronization, or production mill-turn claim |

@@ -79,6 +79,11 @@ milestone is not complete simply because more synthetic cases pass.
 
 ### 2. Make inspection and accuracy actionable
 
+**Delivered increment:** [the defect inspector](DEFECT-INSPECTOR.md) now groups
+exact raster differences and connects collision events to camera focus, sections
+and history selection. This does not complete the local-distance, external-part
+qualification or time-resolved clearance gates below.
+
 **User outcome:** a user can locate and interpret a potential gouge, excess region
 or assembly contact without mistaking raster or motion uncertainty for certainty.
 

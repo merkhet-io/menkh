@@ -114,10 +114,14 @@ fn execute() !void {
     const args = try std.process.argsAlloc(a);
     defer std.process.argsFree(a, args);
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help")) {
-        std.debug.print("menkh inspect-state FILE\nmenkh job FILE [--out DIR] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
+        std.debug.print("menkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--out DIR] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
         return;
     }
     const command = args[1];
+    if (std.mem.eql(u8, command, "inspect-defects")) {
+        if (args.len != 5) return error.ExpectedJobStateOutput;
+        return @import("job.zig").inspectDefects(a, args[2], args[3], args[4]);
+    }
     if (std.mem.eql(u8, command, "inspect-state")) {
         if (args.len != 3) return error.ExpectedInputState;
         var timer = try std.time.Timer.start();

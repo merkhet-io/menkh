@@ -84,3 +84,15 @@ conservative candidate voxel cube when center tests cannot resolve face/corner
 contact. `representation_clearance_uncertain` is true only for not-checked and
 unresolved cases. These are additive report fields; the state/history binary
 formats are unchanged. See [semantics and limits](MILLING-ROBUSTNESS.md).
+
+## Defect regions (`menkh-defects-v1`)
+
+A job's optional `export_defects` flag (default false) requires a target and writes
+`defects.json`. `inspect-defects JOB STATE OUT_DIR` regenerates the same file from
+a saved state. The header records grid dimensions, origin, voxel spacing, motion
+tolerance, remaining occupancy and `connectivity: 6`. Each region contains
+`kind` (`excess` or `missing`), `voxels`, `volume_mm3`, world-space voxel-cube
+`bounds` (`lo`, `hi`), and `operation: null`. Ordering is deterministic by type
+and first Z/Y/X run. No regions are silently filtered. Job reports include
+`timing.defects_ns` separately from aggregate statistics. State and history binary
+formats are unchanged. See [inspection semantics](DEFECT-INSPECTOR.md).
