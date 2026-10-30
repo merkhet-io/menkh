@@ -1,4 +1,5 @@
 #include "Renderer.hpp"
+#include "JobRunner.hpp"
 #include <chrono>
 #include <commctrl.h>
 #include <iostream>
@@ -183,18 +184,27 @@ LRESULT CALLBACK procedure(HWND w, UINT msg, WPARAM wp, LPARAM lp) {
     return DefWindowProcW(w, msg, wp, lp);
 }
 int wmain(int argc, wchar_t **argv) {
+    bool automated = false;
+    for (int i=1; i<argc; ++i) {const std::wstring option=argv[i];if(option==L"--run-only" || option==L"--smoke" || option==L"--snapshot" || option==L"--window-smoke" || option==L"--verify-history" || option==L"--cancel-after-ms") automated=true;}
     try {
-        if (argc < 2) {
-            std::cerr << "menkh-viewer.exe HISTORY.json [--warp] [--debug] [--verify-history] "
-                         "[--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";
-            return 1;
-        }
+        fs::path input = argc < 2 ? chooseInput() : fs::path(argv[1]);
+        if(input.empty()) return 0;
+        if(input==L"--help") {std::cout << "menkh-viewer.exe [JOB_OR_HISTORY.json] [--engine PATH] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";return 0;}
+        fs::path engine, jobOutput, workingDirectory;
+        bool runOnly=false, frameExplicit=false;
+        int cancelAfter=-1;
         bool warp = false, debug = false, verify = false;
         fs::path smoke, snapshot, windowSmoke;
         size_t frame = 0;
         for (int i = 2; i < argc; i++) {
             std::wstring a = argv[i];
-            if (a == L"--warp")
+            if (a == L"--run-only") runOnly=true;
+            else if ((a==L"--engine" || a==L"--job-output" || a==L"--working-dir" || a==L"--cancel-after-ms") && i+1<argc) {
+                const std::wstring value=argv[++i];
+                if(a==L"--engine")engine=value;else if(a==L"--job-output")jobOutput=value;else if(a==L"--working-dir")workingDirectory=value;
+                else {size_t used=0;cancelAfter=std::stoi(value,&used);require(used==value.size() && cancelAfter>=0,"Invalid cancellation delay");}
+            }
+            else if (a == L"--warp")
                 warp = true;
             else if (a == L"--debug")
                 debug = true;
@@ -213,12 +223,19 @@ int wmain(int argc, wchar_t **argv) {
                     std::wstring value = argv[++i];
                     size_t used = 0;
                     frame = std::stoull(value, &used);
+                    frameExplicit = true;
                     require(used == value.size(), "Invalid frame");
                 }
             } else
                 throw std::runtime_error("Unknown or incomplete option");
         }
-        App app{fs::path(argv[1])};
+        const auto header=Json::parse(read(input,64<<20));
+        const bool calculated=header.contains("version") && !header.contains("format");
+        if(calculated) {const auto result=calculateJob(input,engine,jobOutput,workingDirectory,cancelAfter);if(!result)return 2;input=*result;}
+        else require(!runOnly && engine.empty() && jobOutput.empty() && workingDirectory.empty() && cancelAfter<0,"Calculation options require a job JSON");
+        App app{input};
+        if(calculated && !frameExplicit)frame=app.history.steps.size();
+        if(runOnly){app.history.verify();std::cout << "Calculation and complete history verification passed\n";return 0;}
         if (verify) {
             app.history.verify();
             std::cout << "Byte-exact forward/backward history verified\n";
@@ -351,6 +368,7 @@ int wmain(int argc, wchar_t **argv) {
         return int(msg.wParam);
     } catch (const std::exception &e) {
         std::cerr << "Menkh viewer: " << e.what() << '\n';
+        if(!automated)MessageBoxW(nullptr,wide(e.what()).c_str(),L"Menkh — cannot open calculation",MB_OK|MB_ICONERROR);
         return 1;
     }
 }

@@ -128,7 +128,19 @@ pub fn json(a: std.mem.Allocator, dir: std.fs.Dir, name: []const u8, value: anyt
     defer a.free(bytes);
     try dir.writeFile(.{ .sub_path = name, .data = bytes });
 }
-pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: bool, voxel_override: ?f64) !void {
+const Progress = struct {
+    allocator: std.mem.Allocator,
+    file: ?std.fs.File,
+    total: usize,
+    fn emit(p: Progress, phase: []const u8, completed: usize, operation: ?[]const u8) !void {
+        const file = p.file orelse return;
+        const line = try std.json.Stringify.valueAlloc(p.allocator, .{ .version = 1, .phase = phase, .completed_operations = completed, .total_operations = p.total, .operation = operation }, .{});
+        defer p.allocator.free(line);
+        try file.writeAll(line);
+        try file.writeAll("\n");
+    }
+};
+pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: bool, voxel_override: ?f64, progress_path: ?[]const u8) !void {
     var total = try std.time.Timer.start();
     const bytes = try read(a, path);
     defer a.free(bytes);
@@ -140,6 +152,13 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
         j.voxel_mm = h;
     }
     try validate(a, j);
+    var progress = Progress{ .allocator = a, .file = null, .total = j.operations.len };
+    if (progress_path) |p| {
+        try std.fs.cwd().makePath(std.fs.path.dirname(p) orelse ".");
+        progress.file = try std.fs.cwd().createFile(p, .{});
+    }
+    defer if (progress.file) |file| file.close();
+    try progress.emit("initializing_stock", 0, null);
     const job_parse_validate_ns = total.read();
     var timer = try std.time.Timer.start();
     var stock_input: InputTiming = .{};
@@ -149,9 +168,11 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
     const init_ns = timer.lap();
     var target: ?c.Grid = null;
     defer if (target) |*v| v.deinit();
+    try progress.emit("initializing_target", 0, null);
     if (j.target) |t| target = try initialize(a, j, t, &auxiliary_input, reference);
     var fixtures: ?c.Grid = null;
     defer if (fixtures) |*v| v.deinit();
+    try progress.emit("initializing_fixtures", 0, null);
     if (j.fixtures) |f| fixtures = try initialize(a, j, f, &auxiliary_input, reference);
     const auxiliary_ns = timer.lap();
     try std.fs.cwd().makePath(out);
@@ -256,7 +277,9 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
         reports[index] = .{ .work = changes.work, .id = op.id, .removed_voxels = changes.removed, .engagement_volume_mm3 = volume, .remaining_voxels = occupied, .affected_region = changes.affected, .motion_over_removal_bound_mm = bound, .cut_ns = cut_ns, .collision_ns = collision_ns, .history_write_ns = history_ns, .shank_stock = shank, .holder_stock = holder, .shank_fixture = sf, .holder_fixture = hf, .cutter_fixture = cf, .geometric_feed_time_min = minutes, .average_removal_mm3_min = if (minutes != null and minutes.? > 0) volume / minutes.? else null };
         frames[index] = .{ .file = name, .stage = op.id, .occupied = occupied, .changed_blocks = changes.blocks, .delta_bytes = changes.bytes.items.len, .tool = toolpos, .axis = if (op.line) |l| l.b.axis else if (op.arc) |arc| arc.axis else .{ 0, 0, 1 }, .shank = if (op.tool) |t| j.tools[t].shank else null, .holder = if (op.tool) |t| j.tools[t].holder else null, .cutter = if (op.tool) |t| j.tools[t].cutter else null };
         std.debug.print("{s}: removed {d} voxels, {d:.3} ms\n", .{ op.id, changes.removed, @as(f64, @floatFromInt(cut_ns)) / 1e6 });
+        try progress.emit("cutting", index + 1, op.id);
     }
+    try progress.emit("finalizing", j.operations.len, null);
     timer.reset();
     const stats = g.stats();
     if (stats.occupied != occupied) return error.HistoryCountMismatch;
@@ -348,6 +371,7 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
     const export_ns = image_export_ns + checkpoint_encode_ns + checkpoint_write_ns;
     try json(a, dir, "voxel-animation.json", .{ .format = "menkh-voxel-history-v1", .grid = g.n, .block_grid = g.nb, .origin_mm = g.origin, .voxel_mm = g.h, .stock_min = j.bounds.lo, .stock_max = j.bounds.hi, .initial_occupied = initial, .final_occupied = occupied, .initial_pool_slots = initial_slots, .pool_slots = g.pool.items.len, .motion_tolerance_mm = j.motion_tolerance_mm, .frames = frames });
     try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .input_voxel_mm = parsed.value.voxel_mm, .voxel_override_mm = voxel_override, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .defects_ns = defects_ns, .provenance_ns = provenance_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
+    try progress.emit("complete", j.operations.len, null);
 }
 
 fn writeDefects(a: std.mem.Allocator, dir: std.fs.Dir, j: Job, g: c.Grid, target: c.Grid) !void {

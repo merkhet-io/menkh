@@ -36,6 +36,10 @@ jobs:
         run: |
           python3 scripts/test-provenance.py
           ./scripts/build-viewer.sh
+      - name: Viewer-owned calculation lifecycle (no GPU required)
+        run: |
+          ./scripts/build-viewer.sh
+          python3 scripts/test-viewer-jobs.py --viewer zig-out/bin/menkh-viewer --engine zig-out/bin/menkh --out out/macos-job-runner
       - name: Geometry proofs, axiom audit, and Zig differential tests
         run: ./scripts/verify-formal.sh
       - name: Imported finishing mesh oracles
@@ -94,6 +98,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Drill compatibility failed' }
           ./out/windows-viewer/menkh-viewer.exe out/windows-drill/animation.json --warp --debug --smoke out/windows-drill-render
           if ($LASTEXITCODE -ne 0) { throw 'Drill rendering failed' }
+      - name: Viewer-owned calculation, cancellation and automatic D3D12 result load
+        shell: pwsh
+        run: |
+          python scripts/test-viewer-jobs.py --viewer out/windows-viewer/menkh-viewer.exe --engine zig-out/bin/menkh.exe --out out/windows-job-runner
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer job lifecycle failed' }
+          ./out/windows-viewer/menkh-viewer.exe examples/general.json --engine zig-out/bin/menkh.exe --job-output out/windows-job-render --warp --debug --smoke out/windows-job-render-images
+          if ($LASTEXITCODE -ne 0) { throw 'Automatic job/result render failed' }
       - name: Reject malformed viewer histories
         shell: pwsh
         run: python scripts/test-viewer-history.py --exe out/windows-viewer/menkh-viewer.exe --history out/windows-pocket/voxel-animation.json --viewer
@@ -106,16 +117,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "D3D12 window smoke test failed: exit $LASTEXITCODE" }
       - name: Package ready-to-run viewer and pocket history
         shell: pwsh
-        run: python scripts/package-windows-viewer.py --binary-dir out/windows-viewer --history out/windows-pocket/voxel-animation.json --out out/menkh-windows-viewer-demo.zip
+        run: python scripts/package-windows-viewer.py --binary-dir out/windows-viewer --history out/windows-pocket/voxel-animation.json --out out/menkh-windows-viewer-demo.zip --engine zig-out/bin/menkh.exe --job examples/pocket-25um.json
       - name: Upload Windows viewer and rendered evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: windows-d3d12-viewer
           path: |
+            out/windows-viewer/menkh.exe
             out/windows-viewer/menkh-viewer.exe
             out/windows-viewer/Voxel.hlsl
             out/windows-viewer-smoke/
+            out/windows-job-render-images/
+            out/windows-job-runner/
             out/windows-viewer-*.log
             out/menkh-windows-viewer-demo.zip
           if-no-files-found: error
