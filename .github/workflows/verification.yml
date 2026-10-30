@@ -61,21 +61,21 @@ jobs:
           if ($result.boundary.surface_voxels -ne 2819284) { throw 'Unexpected surface count' }
 
       - name: Build native D3D12 viewer with MSVC
-        shell: cmd
+        shell: pwsh
         run: |
-          cmd /c viewer\windows\build.bat
-          if errorlevel 1 exit /b 1
-          cmd /c viewer\windows\build.bat --project
-          if errorlevel 1 exit /b 1
+          cmd /c viewer\windows\build.bat 2>&1 | Tee-Object out/windows-viewer-build.log
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer batch build failed' }
+          cmd /c "viewer\windows\build.bat --project" 2>&1 | Tee-Object out/windows-viewer-project.log
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer project build failed' }
       - name: Reject malformed viewer histories
         shell: pwsh
         run: python scripts/test-viewer-history.py --exe out/windows-viewer/menkh-viewer.exe --history out/windows-pocket/voxel-animation.json --viewer
       - name: Verify history and render initial middle final and rewind with WARP
         shell: pwsh
         run: |
-          ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --verify-history --warp --smoke out/windows-viewer-smoke
+          ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --verify-history --warp --smoke out/windows-viewer-smoke 2>&1 | Tee-Object out/windows-viewer-render.log
           if ($LASTEXITCODE -ne 0) { throw 'D3D12 viewer smoke test failed' }
-          ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --warp --window-smoke out/windows-viewer-smoke
+          ./out/windows-viewer/menkh-viewer.exe out/windows-pocket/voxel-animation.json --warp --window-smoke out/windows-viewer-smoke 2>&1 | Tee-Object out/windows-viewer-window.log
           if ($LASTEXITCODE -ne 0) { throw 'D3D12 window smoke test failed' }
       - name: Upload Windows viewer and rendered evidence
         if: always()
@@ -86,4 +86,5 @@ jobs:
             out/windows-viewer/menkh-viewer.exe
             out/windows-viewer/Voxel.hlsl
             out/windows-viewer-smoke/
+            out/windows-viewer-*.log
           if-no-files-found: error
