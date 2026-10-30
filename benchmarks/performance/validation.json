@@ -1,0 +1,37 @@
+{
+  "resume_voxel_exact": true,
+  "stl_target_cavity_comparison_validated": true,
+  "compacted_resume_voxel_exact": true,
+  "invalid_inputs_rejected": 6,
+  "noncutting_stock_and_fixture_contact_reported": true,
+  "oriented_mesh_boundary_closed": true,
+  "final_occupied": 90202,
+  "zig_tests_debug": 39,
+  "zig_tests_release_fast": 39,
+  "formal_named_results": 34,
+  "formal_bridge_records": 20480,
+  "matched_pocket_binary_files_per_resolution": 328,
+  "matched_pocket_resolutions_mm": [
+    0.1,
+    0.025
+  ],
+  "all_four_pocket_checkpoints_byte_exact": true,
+  "source_sha256": {
+    "src/inspect.zig": "5de30adeb9579eb0cbef2afb85e609ab3308274569e553c770aaae56ff01f79b",
+    "src/tests.zig": "640a22c03a722aa70b9cb92907910781460c31f2ae3bc18cffaa069daa020653",
+    "src/main.zig": "6a118f8943826f40ab2e405c461f417606d7c168f279a6cbe5aadce8b2f754f0",
+    "src/kernel_bench.zig": "c7bb96a12903a96369b7f0476598cf05a73cb9888f867e0bc38ca27bc4873b7b",
+    "src/formal_bridge.zig": "f2b10d26eaf661871b01081074a3fd4c2fd1833afaa8fd6d8edcd1fcd8d98ed8",
+    "src/engine_tests.zig": "8ee4f76c386dd6d66298c9c0ba5f1e6ef886cc5c02d80cc85bcc3f9a3b68745e",
+    "src/engine.zig": "6e06119591114af4ec7d1d843684f039964865c1ad0c9c387abca12a85fd20f1",
+    "src/surface.zig": "ab3721a614d17e4c1489fd824c8550a8b7196c7fac31c43bf73de901a921a6e3",
+    "src/core.zig": "b2194ad98966a6ce9d2fbdf9813e921dc982c1c19571d322508c7c1924116dcf",
+    "src/mesh_input.zig": "0c5bf478cfcc2a84eb535e159c87ece98516a6f22c314825f284769e366bad6c",
+    "src/job.zig": "e5d0749b15d790d5fe1f5cfa6d7fbdcc7f532152dec66e3e238df62075119fa4",
+    "src/tiles.zig": "286738058ee285ae1e11b6cb409c048475bc72aad042db902abb58000a3eb52a",
+    "src/motion.zig": "26ea5a2bc50a559b6a992165f2a509d9badcd5f179ca67e251d43de7540451b1",
+    "src/state.zig": "b2e8f10d755ee1097f940d21224cb9c30cacf03e135bb344e601a61dc0bef11a",
+    "src/fine.zig": "52c8d59cccac85473d4d684dc5ccd3ba593d14f9045c94a83e910b7a557bb1aa",
+    "src/drill.zig": "96c255c23b3c48b199a896e9dbbc7ea0bf4c5611cde5886402607b55b2b687da"
+  }
+}

@@ -63,11 +63,54 @@ pub fn ray(g: c.Grid, start: e.V, direction: e.V, max_distance: f64) !?Hit {
 pub const Contact = struct { occupied_centers: u64 = 0, region: ?e.Bounds = null, representation_clearance_uncertain: bool = true };
 pub fn collision(g: c.Grid, s: e.Shape) !Contact {
     try s.validate();
+    var result: Contact = .{};
+    const range = e.clippedRange(g, s.cuttingBounds());
+    for (range.lo[2]..range.hi[2]) |z| for (range.lo[1]..range.hi[1]) |y| for (range.lo[0]..range.hi[0]) |x| {
+        const b = [3]usize{ x, y, z };
+        const i = g.blockIndex(b);
+        if (g.blocks[i] == c.empty) continue;
+        const hit = e.mask(g, b, s, false, g.bits(i));
+        const hits = e.count(hit);
+        if (hits == 0) continue;
+        result.occupied_centers += hits;
+        // Exact occupied-center extrema from the 8 words, without visiting hits individually.
+        var xy: u64 = 0;
+        var minz: usize = 8;
+        var maxz: usize = 0;
+        for (hit, 0..) |word, zi| if (word != 0) {
+            xy |= word;
+            minz = @min(minz, zi);
+            maxz = zi;
+        };
+        const miny = @ctz(xy) / 8;
+        const maxy = (63 - @clz(xy)) / 8;
+        var columns = xy | (xy >> 32);
+        columns |= columns >> 16;
+        columns |= columns >> 8;
+        const xs: u8 = @truncate(columns);
+        const low = [3]usize{ @ctz(xs), miny, minz };
+        const high = [3]usize{ 7 - @clz(xs), maxy, maxz };
+        var bb: e.Bounds = undefined;
+        for (0..3) |j| {
+            bb.lo[j] = g.origin[j] + g.center(b[j] * 8 + low[j]);
+            bb.hi[j] = g.origin[j] + g.center(b[j] * 8 + high[j]);
+        }
+        if (result.region) |*current| {
+            for (0..3) |j| {
+                current.lo[j] = @min(current.lo[j], bb.lo[j]);
+                current.hi[j] = @max(current.hi[j], bb.hi[j]);
+            }
+        } else result.region = bb;
+    };
+    return result;
+}
+// Simple full-grid oracle retained independently of candidate bounds and masks.
+pub fn collisionReference(g: c.Grid, s: e.Shape) !Contact {
+    try s.validate();
     var r: Contact = .{};
     for (g.blocks, 0..) |d, i| {
         if (d == c.empty) continue;
         const b = g.blockCoords(i);
-        if (s.classify(e.blockBounds(g, b)) == .outside) continue;
         const extent = g.extent(b);
         for (0..extent[2]) |z| for (0..extent[1]) |y| for (0..extent[0]) |x| {
             const index = [3]usize{ b[0] * 8 + x, b[1] * 8 + y, b[2] * 8 + z };

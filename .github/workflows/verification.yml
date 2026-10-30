@@ -27,6 +27,7 @@ jobs:
           echo "MENKH_SDK=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
       - name: Existing simulator tests
         run: |
+          ./zig build -Doptimize=ReleaseFast
           ./zig build test --summary all
           ./zig build test -Doptimize=ReleaseFast --summary all
       - name: Geometry proofs, axiom audit, and Zig differential tests

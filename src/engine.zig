@@ -2,6 +2,7 @@
 const std = @import("std");
 pub const core = @import("core.zig");
 pub const V = [3]f64;
+pub const Coverage = enum(u8) { outside, inside, partial };
 pub fn add(a: V, b: V) V {
     return .{ a[0] + b[0], a[1] + b[1], a[2] + b[2] };
 }
@@ -301,6 +302,23 @@ pub const Shape = union(enum) {
             .sweep => |v| v.bounds(),
         };
     }
+    // Tight bound for the canonical +Z finite cylinder. Other orientations retain
+    // the conservative general bound. Scalar subtraction keeps the original bound.
+    pub fn cuttingBounds(s: Shape) Bounds {
+        if (s == .sweep and s.sweep.exact() and std.mem.eql(f64, &s.sweep.a.axis, &V{ 0, 0, 1 })) {
+            const v = s.sweep;
+            const eps = core.tolerance + v.dilation_mm;
+            var b = segmentBounds(v.a.position, v.b.position);
+            for (0..2) |j| {
+                b.lo[j] -= v.tool.radius + eps;
+                b.hi[j] += v.tool.radius + eps;
+            }
+            b.lo[2] -= eps;
+            b.hi[2] += v.tool.length + eps;
+            return b;
+        }
+        return s.bounds();
+    }
     pub fn contains(s: Shape, p: V) bool {
         return switch (s) {
             .path => |v| blk: {
@@ -314,7 +332,10 @@ pub const Shape = union(enum) {
             .sweep => |v| if (v.exact()) v.flatContains(p, 0) else v.distance(p) <= core.tolerance,
         };
     }
-    pub fn classify(s: Shape, b: Bounds) enum { outside, inside, partial } {
+    pub fn classify(s: Shape, b: Bounds) Coverage {
+        if (s == .sweep) {
+            if (FlatZ.init(s.sweep)) |flat| return flat.classify(b);
+        }
         if (s == .path) {
             var partial = false;
             for (s.path) |segment| switch ((Shape{ .sweep = segment }).classify(b)) {
@@ -413,16 +434,23 @@ pub const Shape = union(enum) {
         return .partial;
     }
 };
+pub const FlatColumn = struct { coverage: Coverage, bits: u64 = 0, ready: bool = false };
 pub const Changes = struct {
     bytes: std.ArrayList(u8) = .empty,
+    // One byte per candidate-range block, reused between operations. Geometry
+    // classification happens before mutation and is not repeated by the write pass.
+    coverage: std.ArrayList(Coverage) = .empty,
+    flat_columns: std.ArrayList(FlatColumn) = .empty,
     removed: u64 = 0,
     blocks: usize = 0,
     affected: ?Bounds = null,
     pub fn deinit(c: *Changes, a: std.mem.Allocator) void {
         c.bytes.deinit(a);
+        c.coverage.deinit(a);
+        c.flat_columns.deinit(a);
     }
 };
-const Range = struct { lo: [3]usize, hi: [3]usize };
+pub const Range = struct { lo: [3]usize, hi: [3]usize };
 fn range(g: core.Grid, b: Bounds) Range {
     var r: Range = undefined;
     for (0..3) |j| {
@@ -435,6 +463,147 @@ fn range(g: core.Grid, b: Bounds) Range {
     }
     return r;
 }
+pub fn clippedRange(g: core.Grid, input: Bounds) Range {
+    var b = input;
+    if (g.material_bounds) |mb| for (0..3) |j| {
+        b.lo[j] = @max(b.lo[j], mb[0][j]);
+        b.hi[j] = @min(b.hi[j], mb[1][j]);
+    };
+    for (0..3) |j| if (b.lo[j] > b.hi[j]) return .{ .lo = .{ 0, 0, 0 }, .hi = .{ 0, 0, 0 } };
+    return range(g, b);
+}
+
+// The capsule × axial-interval product is valid only for this exact motion.
+// Evaluate the same f64 expression order as flatContains, once per occupied XY
+// column instead of once per voxel. No stepped poses and no additional dilation.
+pub const FlatZ = struct {
+    pub const F = @Vector(8, f64);
+    sweep: Sweep,
+    dx: f64,
+    dy: f64,
+    vv: f64,
+    eps: f64,
+    pub fn init(s: Sweep) ?FlatZ {
+        if (!s.exact() or (s.a.position[2] != s.b.position[2] and
+            (s.a.position[0] != s.b.position[0] or s.a.position[1] != s.b.position[1])) or
+            !std.mem.eql(f64, &s.a.axis, &V{ 0, 0, 1 })) return null;
+        const d = sub(s.b.position, s.a.position);
+        return .{ .sweep = s, .dx = d[0], .dy = d[1], .vv = d[0] * d[0] + d[1] * d[1], .eps = core.tolerance + s.dilation_mm };
+    }
+    fn xyContains(f: FlatZ, x: f64, y: f64, margin: f64) bool {
+        const qx = x - f.sweep.a.position[0];
+        const qy = y - f.sweep.a.position[1];
+        const t = if (f.vv == 0) 0 else std.math.clamp((qx * f.dx + qy * f.dy) / f.vv, 0, 1);
+        const ex = qx - f.dx * t;
+        const ey = qy - f.dy * t;
+        const r = f.sweep.tool.radius + f.eps - margin;
+        return r >= 0 and ex * ex + ey * ey <= r * r;
+    }
+    fn classify(f: FlatZ, b: Bounds) Coverage {
+        return f.classifyWithXY(b, f.classifyXY(b));
+    }
+    fn classifyWithXY(f: FlatZ, b: Bounds, xy: Coverage) Coverage {
+        const low = b.lo[2] - @max(f.sweep.a.position[2], f.sweep.b.position[2]);
+        const high = b.hi[2] - @min(f.sweep.a.position[2], f.sweep.b.position[2]);
+        if (xy == .outside or high < -f.eps - 1e-8 or low > f.sweep.tool.length + f.eps + 1e-8) return .outside;
+        if (xy == .inside and
+            b.lo[2] - @min(f.sweep.a.position[2], f.sweep.b.position[2]) >= -f.eps + 1e-8 and
+            b.hi[2] - @max(f.sweep.a.position[2], f.sweep.b.position[2]) <= f.sweep.tool.length + f.eps - 1e-8) return .inside;
+        return .partial;
+    }
+    fn classifyXY(f: FlatZ, b: Bounds) Coverage {
+        if (f.xyContains(b.lo[0], b.lo[1], 1e-8) and f.xyContains(b.hi[0], b.lo[1], 1e-8) and
+            f.xyContains(b.lo[0], b.hi[1], 1e-8) and f.xyContains(b.hi[0], b.hi[1], 1e-8)) return .inside;
+        const mid = scale(add(b.lo, b.hi), 0.5);
+        const half = scale(sub(b.hi, b.lo), 0.5);
+        const radius = @sqrt(half[0] * half[0] + half[1] * half[1]) * (1 + 1e-8);
+        if (!f.xyContains(mid[0], mid[1], -radius - 1e-8)) return .outside;
+        return .partial;
+    }
+    pub fn radial8(f: FlatZ, qx: F, qy: F) @Vector(8, bool) {
+        const dx: F = @splat(f.dx);
+        const dy: F = @splat(f.dy);
+        const t = if (f.vv == 0) @as(F, @splat(0)) else @min(@as(F, @splat(1)), @max(@as(F, @splat(0)), (qx * dx + qy * dy) / @as(F, @splat(f.vv))));
+        const ex = qx - dx * t;
+        const ey = qy - dy * t;
+        const radius = f.sweep.tool.radius + f.eps;
+        return ex * ex + ey * ey <= @as(F, @splat(radius * radius));
+    }
+    // Preserve the scalar time-interval arithmetic for vertical translations,
+    // including its boundary rounding; do not replace it with shifted endpoints.
+    fn axialContains(f: FlatZ, z: f64) bool {
+        const vz = f.sweep.b.position[2] - f.sweep.a.position[2];
+        if (vz == 0) return z >= -f.eps and z <= f.sweep.tool.length + f.eps;
+        const t0 = (z - f.sweep.tool.length - f.eps) / vz;
+        const t1 = (z + f.eps) / vz;
+        return @max(@as(f64, 0), @min(t0, t1)) <= @min(@as(f64, 1), @max(t0, t1));
+    }
+    // Batch API used by the diagnostic benchmark; same radial kernel as masks.
+    pub fn contains8(f: FlatZ, p: [3]F) @Vector(8, bool) {
+        const z = p[2] - @as(F, @splat(f.sweep.a.position[2]));
+        var axial = (z >= @as(F, @splat(-f.eps))) & (z <= @as(F, @splat(f.sweep.tool.length + f.eps)));
+        if (f.sweep.a.position[2] != f.sweep.b.position[2]) {
+            inline for (0..8) |lane| axial[lane] = f.axialContains(z[lane]);
+        }
+        return f.radial8(p[0] - @as(F, @splat(f.sweep.a.position[0])), p[1] - @as(F, @splat(f.sweep.a.position[1]))) & axial;
+    }
+    fn mask(f: FlatZ, g: core.Grid, b: [3]usize, available: core.Bits) core.Bits {
+        const extent = g.extent(b);
+        var result: core.Bits = @splat(0);
+        var axial: [8]bool = @splat(false);
+        var columns: u64 = 0;
+        for (0..extent[2]) |z| {
+            const qz = (g.origin[2] + g.center(b[2] * 8 + z)) - f.sweep.a.position[2];
+            axial[z] = f.axialContains(qz);
+            if (axial[z]) columns |= available[z];
+        }
+        const xy = f.xyMask(g, b, columns);
+        for (0..extent[2]) |z| if (axial[z]) {
+            result[z] = available[z] & xy;
+        };
+        return result;
+    }
+    fn maskWithXY(f: FlatZ, g: core.Grid, b: [3]usize, available: core.Bits, xy: u64) core.Bits {
+        var result: core.Bits = @splat(0);
+        for (0..g.extent(b)[2]) |z| {
+            const qz = (g.origin[2] + g.center(b[2] * 8 + z)) - f.sweep.a.position[2];
+            if (f.axialContains(qz)) result[z] = available[z] & xy;
+        }
+        return result;
+    }
+    fn xyMask(f: FlatZ, g: core.Grid, b: [3]usize, input: u64) u64 {
+        const extent = g.extent(b);
+        var columns = input;
+        var xy: u64 = 0;
+        const radius = f.sweep.tool.radius + f.eps;
+        if (@popCount(columns) <= 4) {
+            while (columns != 0) {
+                const bit: u6 = @intCast(@ctz(columns));
+                columns &= columns - 1;
+                const x = @as(usize, bit) % 8;
+                const y = @as(usize, bit) / 8;
+                const qx = (g.origin[0] + g.center(b[0] * 8 + x)) - f.sweep.a.position[0];
+                const qy = (g.origin[1] + g.center(b[1] * 8 + y)) - f.sweep.a.position[1];
+                const t = if (f.vv == 0) 0 else std.math.clamp((qx * f.dx + qy * f.dy) / f.vv, 0, 1);
+                const ex = qx - f.dx * t;
+                const ey = qy - f.dy * t;
+                if (ex * ex + ey * ey <= radius * radius) xy |= @as(u64, 1) << bit;
+            }
+        } else {
+            var qx: F = undefined;
+            inline for (0..8) |x| qx[x] = (g.origin[0] + g.center(b[0] * 8 + x)) - f.sweep.a.position[0];
+            for (0..extent[1]) |y| {
+                const shift: u6 = @intCast(y * 8);
+                if ((columns >> shift) & 0xff == 0) continue;
+                const qy: F = @splat((g.origin[1] + g.center(b[1] * 8 + y)) - f.sweep.a.position[1]);
+                const hits: u8 = @bitCast(f.radial8(qx, qy));
+                xy |= @as(u64, hits) << shift;
+            }
+        }
+        return xy;
+    }
+};
+
 pub fn blockBounds(g: core.Grid, b: [3]usize) Bounds {
     const e = g.extent(b);
     var out: Bounds = undefined;
@@ -444,12 +613,18 @@ pub fn blockBounds(g: core.Grid, b: [3]usize) Bounds {
     }
     return out;
 }
-fn mask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, available: core.Bits) core.Bits {
-    if (!reference) switch (s.classify(blockBounds(g, b))) {
+pub fn mask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, available: core.Bits) core.Bits {
+    return classifiedMask(g, b, s, reference, available, if (reference) .partial else s.classify(blockBounds(g, b)));
+}
+fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, available: core.Bits, coverage: Coverage) core.Bits {
+    switch (coverage) {
         .outside => return @splat(0),
         .inside => return available,
         .partial => {},
-    };
+    }
+    if (!reference and s == .sweep) {
+        if (FlatZ.init(s.sweep)) |flat| return flat.mask(g, b, available);
+    }
     var bits: core.Bits = @splat(0);
     const e = g.extent(b);
     for (0..e[2]) |z| for (0..e[1]) |y| for (0..e[0]) |x| {
@@ -475,7 +650,7 @@ fn writeChange(c: *Changes, i: usize, old: u32, new: u32, before: core.Bits, aft
 }
 pub fn subtract(g: *core.Grid, s: Shape, c: *Changes, reference: bool) !void {
     try s.validate();
-    var bounds = s.bounds();
+    var bounds = if (reference) s.bounds() else s.cuttingBounds();
     if (g.material_bounds) |mb| for (0..3) |j| {
         bounds.lo[j] = @max(bounds.lo[j], mb[0][j]);
         bounds.hi[j] = @min(bounds.hi[j], mb[1][j]);
@@ -492,14 +667,30 @@ pub fn subtract(g: *core.Grid, s: Shape, c: *Changes, reference: bool) !void {
             if (plane.normal[j] > 0) bounds.lo[j] = @max(bounds.lo[j], v) else bounds.hi[j] = @min(bounds.hi[j], v);
         }
     }
-    const r = range(g.*, bounds);
+    const r = clippedRange(g.*, bounds);
+    const flat = if (!reference and s == .sweep) FlatZ.init(s.sweep) else null;
+    const row_count = r.hi[0] - r.lo[0];
+    if (!reference) {
+        const xy_count = try std.math.mul(usize, r.hi[0] - r.lo[0], r.hi[1] - r.lo[1]);
+        const block_count = try std.math.mul(usize, xy_count, r.hi[2] - r.lo[2]);
+        try c.coverage.ensureTotalCapacityPrecise(g.allocator, block_count);
+        c.coverage.clearRetainingCapacity();
+        if (flat) |f| {
+            try c.flat_columns.resize(g.allocator, xy_count);
+            for (r.lo[1]..r.hi[1]) |y| for (r.lo[0]..r.hi[0]) |x| {
+                c.flat_columns.items[(y - r.lo[1]) * row_count + x - r.lo[0]] = .{
+                    .coverage = f.classifyXY(blockBounds(g.*, .{ x, y, 0 })),
+                };
+            };
+        }
+    }
     var needed: usize = 0;
     var candidates: usize = 0;
     for (r.lo[2]..r.hi[2]) |z| for (r.lo[1]..r.hi[1]) |y| for (r.lo[0]..r.hi[0]) |x| {
         const b = [3]usize{ x, y, z };
         const d = g.blocks[g.blockIndex(b)];
-        if (d == core.empty) continue;
-        const coverage = if (reference) .partial else s.classify(blockBounds(g.*, b));
+        const coverage: Coverage = if (d == core.empty) .outside else if (reference) .partial else if (flat) |f| f.classifyWithXY(blockBounds(g.*, b), c.flat_columns.items[(y - r.lo[1]) * row_count + x - r.lo[0]].coverage) else s.classify(blockBounds(g.*, b));
+        if (!reference) c.coverage.appendAssumeCapacity(coverage);
         if (coverage == .outside) continue;
         candidates += 1;
         if (d == core.full and coverage == .partial) needed += 1;
@@ -512,14 +703,24 @@ pub fn subtract(g: *core.Grid, s: Shape, c: *Changes, reference: bool) !void {
     c.removed = 0;
     c.blocks = 0;
     c.affected = null;
+    var coverage_index: usize = 0;
     for (r.lo[2]..r.hi[2]) |z| for (r.lo[1]..r.hi[1]) |y| for (r.lo[0]..r.hi[0]) |x| {
         const b = [3]usize{ x, y, z };
         const i = g.blockIndex(b);
         const d = g.blocks[i];
-        if (d == core.empty) continue;
+        const coverage: Coverage = if (reference) .partial else c.coverage.items[coverage_index];
+        coverage_index += 1;
+        if (d == core.empty or coverage == .outside) continue;
         const before = g.bits(i);
         var after = before;
-        const m = mask(g.*, b, s, reference, before);
+        const m = if (coverage == .partial and flat != null) blk: {
+            const column = &c.flat_columns.items[(y - r.lo[1]) * row_count + x - r.lo[0]];
+            if (!column.ready) {
+                column.bits = flat.?.xyMask(g.*, b, g.validBits(b)[0]);
+                column.ready = true;
+            }
+            break :blk flat.?.maskWithXY(g.*, b, before, column.bits);
+        } else classifiedMask(g.*, b, s, reference, before, coverage);
         for (&after, m) |*w, v| w.* &= ~v;
         if (std.mem.eql(u64, &before, &after)) continue;
         const remaining = count(after);

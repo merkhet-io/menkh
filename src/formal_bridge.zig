@@ -64,6 +64,10 @@ test "Lean corpus agrees with Zig masks, addresses, subtraction and exact ration
             const s = engine.Sweep{ .tool = .{ .radius = 2, .length = 3 }, .a = .{ .position = .{ 0, 0, 0 } }, .b = .{ .position = .{ v[3], v[4], v[5] } } };
             try s.validate();
             try std.testing.expectEqual(hit, s.flatContains(.{ v[0], v[1], v[2] }, 0));
+            if (engine.FlatZ.init(s)) |kernel| {
+                const got = kernel.contains8(.{ @splat(v[0]), @splat(v[1]), @splat(v[2]) });
+                for (0..8) |lane| try std.testing.expectEqual(hit, got[lane]);
+            }
             counts[3] += 1;
         } else return error.InvalidCorpus;
         if (fields.next() != null) return error.InvalidCorpus;

@@ -367,3 +367,39 @@ test "fine grid errors and allocation failures" {
 test {
     _ = @import("engine_tests.zig");
 }
+
+test "block height export matches scalar scan for random partial blocks and cavities" {
+    var temp = std.testing.tmpDir(.{});
+    defer temp.cleanup();
+    var g = try c.Grid.init(a, .{ 4.25, 3.75, 5.25 }, 0.25);
+    defer g.deinit();
+    var rng = std.Random.DefaultPrng.init(92734);
+    for (0..4) |pass| {
+        for (0..g.blocks.len) |i| {
+            if (pass == 0) continue;
+            if (pass == 3 or i % 3 == 0) {
+                g.blocks[i] = c.empty;
+                continue;
+            }
+            if (i % 3 == 1) continue;
+            var bits = g.validBits(g.blockCoords(i));
+            for (&bits) |*w| w.* &= rng.random().int(u64);
+            g.blocks[i] = @intCast(g.pool.items.len);
+            try g.pool.append(a, bits);
+        }
+        try surf.ppm(a, g, temp.dir);
+        const image = try temp.dir.readFileAlloc(a, "height.ppm", 100000);
+        defer a.free(image);
+        const header = try std.fmt.allocPrint(a, "P6\n{d} {d}\n255\n", .{ g.n[0], g.n[1] });
+        defer a.free(header);
+        try std.testing.expectEqualStrings(header, image[0..header.len]);
+        try std.testing.expectEqual(header.len + g.n[0] * g.n[1] * 3, image.len);
+        for (0..g.n[1]) |y| for (0..g.n[0]) |x| {
+            var z = g.n[2];
+            while (z > 0 and !g.occupied(.{ x, y, z - 1 })) z -= 1;
+            const value: u8 = @intFromFloat(255 * @as(f64, @floatFromInt(z)) / @as(f64, @floatFromInt(g.n[2])));
+            const offset = header.len + ((g.n[1] - 1 - y) * g.n[0] + x) * 3;
+            for (image[offset..][0..3]) |v| try std.testing.expectEqual(value, v);
+        };
+    }
+}

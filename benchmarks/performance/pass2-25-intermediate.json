@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-30T16:35:54.089354+00:00",
+  "commit": "dbf1e6f06ea4e116c28f24f19f0ca3760982d31a",
+  "dirty": true,
+  "hardware": "Apple M5 Max",
+  "logical_cpus": "18",
+  "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "executable_sha256": "07308637de70783ca6aca666f5539dad0eeed5ff11b1584d03771e0004215cd8",
+  "job_sha256": "9ddee9baecf46c21705a2328f33d1a14d891754b49979a186bf8518573f016ed",
+  "voxel_mm": 0.025,
+  "segments": 325,
+  "initial": 221184000,
+  "remaining": 170711351,
+  "state_sha256": "d6b64adb6ea142aa6def4a816d290cb9dc1b2a4044abb5e4686ca919d8c6c3b8",
+  "stats": {
+    "occupied": 170711351,
+    "empty_blocks": 1105551,
+    "full_blocks": 332440,
+    "mixed_blocks": 2009,
+    "descriptor_bytes": 5760000,
+    "pool_bytes": 3233856,
+    "pool_used_bytes": 3216256
+  },
+  "history_bytes": 8549396,
+  "cut_scratch_capacity_bytes": 14850,
+  "warmups": 1,
+  "repeats": 5,
+  "raw": [
+    {
+      "warmup": true,
+      "wall_ns": 271698916,
+      "total_ns": 121671708,
+      "cut_ns": 70252043,
+      "collision_ns": 163747,
+      "surface_ns": 42,
+      "init_ns": 18137291,
+      "history_ns": 23720173,
+      "export_ns": 4450792,
+      "peak_rss_bytes": 27099136
+    },
+    {
+      "warmup": false,
+      "wall_ns": 122733125,
+      "total_ns": 116926083,
+      "cut_ns": 68888793,
+      "collision_ns": 148125,
+      "surface_ns": 125,
+      "init_ns": 18011000,
+      "history_ns": 20654627,
+      "export_ns": 4411583,
+      "peak_rss_bytes": 27099136
+    },
+    {
+      "warmup": false,
+      "wall_ns": 128035708,
+      "total_ns": 122423458,
+      "cut_ns": 70259585,
+      "collision_ns": 202664,
+      "surface_ns": 83,
+      "init_ns": 18050250,
+      "history_ns": 23707547,
+      "export_ns": 5254417,
+      "peak_rss_bytes": 27099136
+    },
+    {
+      "warmup": false,
+      "wall_ns": 128833583,
+      "total_ns": 121845625,
+      "cut_ns": 69761205,
+      "collision_ns": 155883,
+      "surface_ns": 42,
+      "init_ns": 18834708,
+      "history_ns": 23655086,
+      "export_ns": 4515208,
+      "peak_rss_bytes": 27099136
+    },
+    {
+      "warmup": false,
+      "wall_ns": 126137875,
+      "total_ns": 120096792,
+      "cut_ns": 69993466,
+      "collision_ns": 168045,
+      "surface_ns": 83,
+      "init_ns": 18221042,
+      "history_ns": 22409569,
+      "export_ns": 4447583,
+      "peak_rss_bytes": 27099136
+    },
+    {
+      "warmup": false,
+      "wall_ns": 133406625,
+      "total_ns": 127374084,
+      "cut_ns": 69976965,
+      "collision_ns": 169162,
+      "surface_ns": 42,
+      "init_ns": 18116334,
+      "history_ns": 26531206,
+      "export_ns": 4462125,
+      "peak_rss_bytes": 27099136
+    }
+  ],
+  "summary": {
+    "wall_ns": {
+      "median": 128035708,
+      "min": 122733125,
+      "max": 133406625
+    },
+    "total_ns": {
+      "median": 121845625,
+      "min": 116926083,
+      "max": 127374084
+    },
+    "cut_ns": {
+      "median": 69976965,
+      "min": 68888793,
+      "max": 70259585
+    },
+    "collision_ns": {
+      "median": 168045,
+      "min": 148125,
+      "max": 202664
+    },
+    "surface_ns": {
+      "median": 83,
+      "min": 42,
+      "max": 125
+    },
+    "init_ns": {
+      "median": 18116334,
+      "min": 18011000,
+      "max": 18834708
+    },
+    "history_ns": {
+      "median": 23655086,
+      "min": 20654627,
+      "max": 26531206
+    },
+    "export_ns": {
+      "median": 4462125,
+      "min": 4411583,
+      "max": 5254417
+    },
+    "peak_rss_bytes": {
+      "median": 27099136,
+      "min": 27099136,
+      "max": 27099136
+    }
+  }
+}

@@ -59,3 +59,25 @@ Milling and these envelopes can update the same state. Tests cover a translated,
 5. **Floating point:** `f64` predicates with absolute tolerance and conservative block clearance, `f32` display. No formal interval-arithmetic bound is claimed.
 
 The sphere experiment reports sampled vertex deviation at 250/100/50/25 µm. For this unclipped analytic fixture, the half-cell diagonal is also a one-sided voxel-boundary-to-analytic-boundary bound under exact center classification. It is not a general two-sided Hausdorff bound and says nothing about analytic features with no occupied samples. A 25 µm grid is not a universal 25 µm maximum-error guarantee.
+
+## CPU fast paths
+
+Canonical +Z flat sweeps use tight bounds. Constant-Z sweeps reuse XY masks across
+axial layers and use f64 SIMD for dense rows. A preflight classification array
+(one byte per candidate block) is reserved before mutation and reused by the
+write pass; it is recomputed for every operation. Collision inspection uses
+bounded block traversal, shared masks, popcounts and exact occupied-center
+extrema. A full-grid scalar collision oracle remains available for tests.
+
+The scalar subtraction path retains the broad bounds and per-voxel predicate.
+No new motion approximation, changed tolerance or history-slot reuse is involved.
+See [CPU-PERFORMANCE.md](CPU-PERFORMANCE.md) for measured gains, memory costs and
+restrictions. Parallel predicate benchmarking does not enable parallel cutting.
+
+Eligible +Z flat sweeps also include pure vertical translations. Axial membership
+retains the reference's time-interval arithmetic; XY masks and classification are
+cached per XY block column for each operation, never reused across operations.
+`Changes.flat_columns` capacity is reserved in preflight and released in deinit;
+its capacity is included with classification bytes in `cut_scratch_capacity_bytes`.
+No pool slots or history records are reordered. PPM height export resolves 64
+columns per block tile with word operations and preserves the prior pixel mapping.

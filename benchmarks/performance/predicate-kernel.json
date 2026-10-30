@@ -1,0 +1,307 @@
+{
+  "format": "menkh-predicate-bench-v1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "cpu": "apple_m1",
+  "definition": "Every point tested against one stationary finite cylinder or continuous XY finite-cylinder sweep. f64, closed expanded boundaries. Cache-resident SoA input; no occupancy updates, culling, history, surface generation or rendering. Thread spawn/join included. Not an end-to-end machining benchmark.",
+  "input_bytes": 1572864,
+  "tests_per_repetition": 268435456,
+  "results": [
+    {
+      "motion": "stationary_pose",
+      "implementation": "scalar_f64",
+      "workers": 1,
+      "warmup": {
+        "ns": 1168938875,
+        "tests_per_second": 229640284.65560272,
+        "checksum": 42872576
+      },
+      "samples": [
+        {
+          "ns": 1287775375,
+          "tests_per_second": 208448974.26307753,
+          "checksum": 42872576
+        },
+        {
+          "ns": 1161301000,
+          "tests_per_second": 231150628.47616595,
+          "checksum": 42872576
+        },
+        {
+          "ns": 1218349292,
+          "tests_per_second": 220327173.62961295,
+          "checksum": 42872576
+        },
+        {
+          "ns": 1187539625,
+          "tests_per_second": 226043367.60552305,
+          "checksum": 42872576
+        },
+        {
+          "ns": 1091306041,
+          "tests_per_second": 245976331.03361517,
+          "checksum": 42872576
+        }
+      ]
+    },
+    {
+      "motion": "stationary_pose",
+      "implementation": "scalar_f64",
+      "workers": 8,
+      "warmup": {
+        "ns": 102156292,
+        "tests_per_second": 2627693808.620227,
+        "checksum": 42872576
+      },
+      "samples": [
+        {
+          "ns": 101355333,
+          "tests_per_second": 2648459119.561079,
+          "checksum": 42872576
+        },
+        {
+          "ns": 102085208,
+          "tests_per_second": 2629523525.092881,
+          "checksum": 42872576
+        },
+        {
+          "ns": 102622333,
+          "tests_per_second": 2615760606.416929,
+          "checksum": 42872576
+        },
+        {
+          "ns": 101561500,
+          "tests_per_second": 2643082821.7385526,
+          "checksum": 42872576
+        },
+        {
+          "ns": 111620916,
+          "tests_per_second": 2404884905.2627378,
+          "checksum": 42872576
+        }
+      ]
+    },
+    {
+      "motion": "stationary_pose",
+      "implementation": "simd_f64",
+      "workers": 1,
+      "warmup": {
+        "ns": 222921625,
+        "tests_per_second": 1204169653.7964857,
+        "checksum": 42872576
+      },
+      "samples": [
+        {
+          "ns": 216329625,
+          "tests_per_second": 1240863131.8988326,
+          "checksum": 42872576
+        },
+        {
+          "ns": 216419875,
+          "tests_per_second": 1240345675.275896,
+          "checksum": 42872576
+        },
+        {
+          "ns": 216706667,
+          "tests_per_second": 1238704188.090346,
+          "checksum": 42872576
+        },
+        {
+          "ns": 216348917,
+          "tests_per_second": 1240752483.1751297,
+          "checksum": 42872576
+        },
+        {
+          "ns": 216161584,
+          "tests_per_second": 1241827761.5878315,
+          "checksum": 42872576
+        }
+      ]
+    },
+    {
+      "motion": "stationary_pose",
+      "implementation": "simd_f64",
+      "workers": 8,
+      "warmup": {
+        "ns": 26460000,
+        "tests_per_second": 10144952985.6387,
+        "checksum": 42872576
+      },
+      "samples": [
+        {
+          "ns": 26798584,
+          "tests_per_second": 10016777602.876331,
+          "checksum": 42872576
+        },
+        {
+          "ns": 27164709,
+          "tests_per_second": 9881771823.876339,
+          "checksum": 42872576
+        },
+        {
+          "ns": 29260208,
+          "tests_per_second": 9174078871.893187,
+          "checksum": 42872576
+        },
+        {
+          "ns": 30810250,
+          "tests_per_second": 8712537418.55389,
+          "checksum": 42872576
+        },
+        {
+          "ns": 33202333,
+          "tests_per_second": 8084837170.930127,
+          "checksum": 42872576
+        }
+      ]
+    },
+    {
+      "motion": "continuous_xy_segment",
+      "implementation": "scalar_f64",
+      "workers": 1,
+      "warmup": {
+        "ns": 1173660708,
+        "tests_per_second": 228716403.4463016,
+        "checksum": 52190208
+      },
+      "samples": [
+        {
+          "ns": 1177449250,
+          "tests_per_second": 227980489.18031925,
+          "checksum": 52190208
+        },
+        {
+          "ns": 1258549625,
+          "tests_per_second": 213289528.41251692,
+          "checksum": 52190208
+        },
+        {
+          "ns": 1176830000,
+          "tests_per_second": 228100452.9116355,
+          "checksum": 52190208
+        },
+        {
+          "ns": 1166676375,
+          "tests_per_second": 230085619.0732413,
+          "checksum": 52190208
+        },
+        {
+          "ns": 1314293916,
+          "tests_per_second": 204243094.12994346,
+          "checksum": 52190208
+        }
+      ]
+    },
+    {
+      "motion": "continuous_xy_segment",
+      "implementation": "scalar_f64",
+      "workers": 8,
+      "warmup": {
+        "ns": 118555458,
+        "tests_per_second": 2264218455.4674826,
+        "checksum": 52190208
+      },
+      "samples": [
+        {
+          "ns": 115863750,
+          "tests_per_second": 2316820023.519004,
+          "checksum": 52190208
+        },
+        {
+          "ns": 114958750,
+          "tests_per_second": 2335058932.00822,
+          "checksum": 52190208
+        },
+        {
+          "ns": 115476417,
+          "tests_per_second": 2324591141.4102845,
+          "checksum": 52190208
+        },
+        {
+          "ns": 115354833,
+          "tests_per_second": 2327041260.594604,
+          "checksum": 52190208
+        },
+        {
+          "ns": 115623333,
+          "tests_per_second": 2321637415.52062,
+          "checksum": 52190208
+        }
+      ]
+    },
+    {
+      "motion": "continuous_xy_segment",
+      "implementation": "simd_f64",
+      "workers": 1,
+      "warmup": {
+        "ns": 309119791,
+        "tests_per_second": 868386508.4523171,
+        "checksum": 52190208
+      },
+      "samples": [
+        {
+          "ns": 311131791,
+          "tests_per_second": 862770902.1223099,
+          "checksum": 52190208
+        },
+        {
+          "ns": 310805166,
+          "tests_per_second": 863677587.6498784,
+          "checksum": 52190208
+        },
+        {
+          "ns": 310517958,
+          "tests_per_second": 864476430.699702,
+          "checksum": 52190208
+        },
+        {
+          "ns": 310631500,
+          "tests_per_second": 864160447.3467759,
+          "checksum": 52190208
+        },
+        {
+          "ns": 310774667,
+          "tests_per_second": 863762347.7849306,
+          "checksum": 52190208
+        }
+      ]
+    },
+    {
+      "motion": "continuous_xy_segment",
+      "implementation": "simd_f64",
+      "workers": 8,
+      "warmup": {
+        "ns": 38514417,
+        "tests_per_second": 6969739565.316541,
+        "checksum": 52190208
+      },
+      "samples": [
+        {
+          "ns": 38626042,
+          "tests_per_second": 6949597786.902422,
+          "checksum": 52190208
+        },
+        {
+          "ns": 38615916,
+          "tests_per_second": 6951420134.640857,
+          "checksum": 52190208
+        },
+        {
+          "ns": 38351208,
+          "tests_per_second": 6999400279.646993,
+          "checksum": 52190208
+        },
+        {
+          "ns": 38487250,
+          "tests_per_second": 6974659296.26045,
+          "checksum": 52190208
+        },
+        {
+          "ns": 38549083,
+          "tests_per_second": 6963471893.741285,
+          "checksum": 52190208
+        }
+      ]
+    }
+  ]
+}

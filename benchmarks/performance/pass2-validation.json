@@ -1,0 +1,37 @@
+{
+  "resume_voxel_exact": true,
+  "stl_target_cavity_comparison_validated": true,
+  "compacted_resume_voxel_exact": true,
+  "invalid_inputs_rejected": 6,
+  "noncutting_stock_and_fixture_contact_reported": true,
+  "oriented_mesh_boundary_closed": true,
+  "final_occupied": 90202,
+  "tests_debug": 41,
+  "tests_release_fast": 41,
+  "formal_named_results": 34,
+  "formal_bridge_records": 20480,
+  "byte_exact_files_by_spacing_um": {
+    "250": 330,
+    "100": 330,
+    "50": 330,
+    "25": 329
+  },
+  "source_sha256": {
+    "src/inspect.zig": "5de30adeb9579eb0cbef2afb85e609ab3308274569e553c770aaae56ff01f79b",
+    "src/tests.zig": "6e9ccf7cd705e7eb2bcf9379d165dcb1961090ebb403d853156b2101bc372d43",
+    "src/main.zig": "6a118f8943826f40ab2e405c461f417606d7c168f279a6cbe5aadce8b2f754f0",
+    "src/kernel_bench.zig": "c7bb96a12903a96369b7f0476598cf05a73cb9888f867e0bc38ca27bc4873b7b",
+    "src/formal_bridge.zig": "f2b10d26eaf661871b01081074a3fd4c2fd1833afaa8fd6d8edcd1fcd8d98ed8",
+    "src/engine_tests.zig": "8939f94d949dcf47d657f8b3acb23c9dfbff7da5ebe63a1ae812fc408585cf54",
+    "src/engine.zig": "532700a1f7e0ecea388204503891ce8ef6c7186accd46c136cfa328424892c6e",
+    "src/surface.zig": "8070e7ad9502713fb8f75d86f15901fcf34e30ccc77e19a916fc12c2f217349f",
+    "src/core.zig": "b2194ad98966a6ce9d2fbdf9813e921dc982c1c19571d322508c7c1924116dcf",
+    "src/mesh_input.zig": "0c5bf478cfcc2a84eb535e159c87ece98516a6f22c314825f284769e366bad6c",
+    "src/job.zig": "9bcdc1f2307dbe0932a05efbf3d914395dc32b71efbaa317592b73a32109fb51",
+    "src/tiles.zig": "286738058ee285ae1e11b6cb409c048475bc72aad042db902abb58000a3eb52a",
+    "src/motion.zig": "26ea5a2bc50a559b6a992165f2a509d9badcd5f179ca67e251d43de7540451b1",
+    "src/state.zig": "b2e8f10d755ee1097f940d21224cb9c30cacf03e135bb344e601a61dc0bef11a",
+    "src/fine.zig": "52c8d59cccac85473d4d684dc5ccd3ba593d14f9045c94a83e910b7a557bb1aa",
+    "src/drill.zig": "96c255c23b3c48b199a896e9dbbc7ea0bf4c5611cde5886402607b55b2b687da"
+  }
+}

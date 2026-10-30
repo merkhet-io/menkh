@@ -77,7 +77,9 @@ def stl_fixture(path, cells, rotate=False):
     path.write_bytes(data)
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--out',default='out/engine-suite');parser.add_argument('--repeats',type=int,default=3);args=parser.parse_args()
+    global EXE
+    parser=argparse.ArgumentParser();parser.add_argument('--exe', default=str(EXE));parser.add_argument('--out',default='out/engine-suite');parser.add_argument('--repeats',type=int,default=3);args=parser.parse_args()
+    EXE = pathlib.Path(args.exe).resolve()
     if args.repeats<2:parser.error('at least two measured repetitions')
     out=ROOT/args.out;out.mkdir(parents=True,exist_ok=True)
     scenarios={}
@@ -124,5 +126,5 @@ def main():
         for mode,runs in modes.items():
             measured=runs[1:];cuts=[sum(op['cut_ns'] for op in r['operations'])/1e6 for r in measured];totals=[r['timing']['total_ns']/1e6 for r in measured]
             summary[name][mode]=dict(cut_ms=dict(min=min(cuts),median=statistics.median(cuts),max=max(cuts)),total_ms=dict(min=min(totals),median=statistics.median(totals),max=max(totals)),grid_bytes=measured[-1]['stats']['descriptor_bytes']+measured[-1]['stats']['pool_bytes'],peak_rss_bytes=max(r['process_peak_rss_bytes'] for r in measured),history_bytes=measured[-1]['history_bytes'])
-    write(out/'results.json',dict(warmups=1,repeats=args.repeats,workers=1,zig='0.15.2',mode='ReleaseFast',baseline_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),source_sha256={str(p.relative_to(ROOT)):__import__('hashlib').sha256(p.read_bytes()).hexdigest() for p in sorted((ROOT/'src').glob('*.zig'))},raw=results,summary=summary,accuracy=accuracy))
+    write(out/'results.json',dict(warmups=1,repeats=args.repeats,workers=1,zig='0.15.2',mode='ReleaseFast',baseline_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),executable_sha256=__import__('hashlib').sha256(EXE.read_bytes()).hexdigest(),source_fingerprint_scope='Current checkout, not necessarily the supplied --exe binary',source_sha256={str(p.relative_to(ROOT)):__import__('hashlib').sha256(p.read_bytes()).hexdigest() for p in sorted((ROOT/'src').glob('*.zig'))},raw=results,summary=summary,accuracy=accuracy))
 if __name__=='__main__':main()

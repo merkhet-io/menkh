@@ -28,6 +28,12 @@ See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contract
 
 The default demo now uses 325 real cutting increments at 100 µm, rather than the eight-operation diagnostic fixture. Target coloring stays opt-in. The original multi-capability/collision example remains at `examples/general.json`.
 
+## CPU performance
+
+On an M5 Max, the 325-segment, 100 µm pocket demo takes **2.43 ms for cutting** and **50.72 ms for the full CLI run**. At 25 µm, cutting takes **60.65 ms** for stock with 221 million occupied voxels; the full run takes **117.08 ms with mesh export disabled**. The second optimization pass improves 25 µm cutting by another **1.55×** and CLI wall time by **2.57×** over the first pass. These are repeated ReleaseFast medians with identical material/history and height-image output. Rendering is excluded.
+
+See [measured CPU performance, raw results and reproduction commands](docs/CPU-PERFORMANCE.md), including the separate scalar/SIMD predicate benchmark. Material updates still use one CPU worker; the eight-worker predicate benchmark does not measure whole-job throughput.
+
 ## Formal verification with Lean
 
 **34 named, machine-checked Lean results** cover the mathematical models behind material removal and storage. They establish that:
