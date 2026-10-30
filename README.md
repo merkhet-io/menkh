@@ -28,6 +28,13 @@ See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contract
 
 The default demo now uses 325 real cutting increments at 100 µm, rather than the eight-operation diagnostic fixture. Target coloring stays opt-in. The original multi-capability/collision example remains at `examples/general.json`.
 
+## Inspect defects and collisions
+
+The native viewer can now filter excess/missing regions and collision events,
+focus their world-space location and seek to a collision operation. Findings can
+be regenerated from saved material states. See the [inspector guide](docs/DEFECT-INSPECTOR.md)
+for the small demo, the 25 µm workflow and measured limitations.
+
 ## Imported ball-end finishing workflow
 
 ```sh

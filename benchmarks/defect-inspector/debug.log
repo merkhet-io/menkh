@@ -1,0 +1,6 @@
+
+Build Summary: 3/3 steps succeeded; 53/53 tests passed
+test success
++- run test 53 passed 755ms MaxRSS:3M
+   +- compile test Debug aarch64-macos success 1s MaxRSS:344M
+

@@ -185,6 +185,17 @@ final class VoxelMetalView:MTKView {
 final class VoxelController:NSViewController {
     let renderer:VoxelRenderer;let metal:VoxelMetalView
     let status=NSTextField(labelWithString:"");let slider=NSSlider(value:0,minValue:0,maxValue:224,target:nil,action:nil)
+    var findings=[Finding]()
+    var visibleFindings=[Finding]()
+    let findingSearch=NSSearchField()
+    let findingMenu=NSPopUpButton()
+    let findingDetail=NSTextField(wrappingLabelWithString:"")
+    let sectionControl=NSSlider(value:1,minValue:0.000001,maxValue:1,target:nil,action:nil)
+    let axesControl=NSPopUpButton()
+    let stockControl=NSButton(checkboxWithTitle:"Stock",target:nil,action:nil)
+    let fixtureControl=NSButton(checkboxWithTitle:"Fixtures",target:nil,action:nil)
+    let holderControl=NSButton(checkboxWithTitle:"Tool assembly",target:nil,action:nil)
+    let comparisonControl=NSButton(checkboxWithTitle:"Target: excess yellow / missing red",target:nil,action:nil)
     let play=NSButton(title:"Pause",target:nil,action:nil);var playing=true;var timer:Timer?
     init(_ r:VoxelRenderer) {renderer=r;metal=VoxelMetalView(frame:.zero,device:r.device);super.init(nibName:nil,bundle:nil)}
     required init?(coder:NSCoder) {fatalError("No storyboard")}
@@ -201,23 +212,41 @@ final class VoxelController:NSViewController {
         let restart=NSButton(title:"Restart",target:self,action:#selector(restart))
         play.target=self;play.action=#selector(toggle);slider.target=self;slider.action=#selector(scrub);slider.isContinuous=true;slider.maxValue=Double(renderer.history.frames.count)
         status.textColor = .white;status.font = .monospacedDigitSystemFont(ofSize:12,weight:.medium)
-        let stock=NSButton(checkboxWithTitle:"Stock",target:self,action:#selector(stock(_:)));stock.state = .on
-        let comparison=NSButton(checkboxWithTitle:"Target: excess yellow / missing red",target:self,action:#selector(compare(_:)))
+        let stock=stockControl;stock.target=self;stock.action=#selector(stock(_:));stock.state = .on
+        let comparison=comparisonControl;comparison.target=self;comparison.action=#selector(compare(_:))
         comparison.isEnabled=renderer.targetBlocks != nil
-        let section=NSSlider(value:1,minValue:0.01,maxValue:1,target:self,action:#selector(section(_:)));section.toolTip="Z cross-section";section.widthAnchor.constraint(equalToConstant:120).isActive=true
-        let fixtures=NSButton(checkboxWithTitle:"Fixtures",target:self,action:#selector(fixtures(_:)));fixtures.state = .on;fixtures.isEnabled=renderer.fixtureBlocks != nil
-        let holder=NSButton(checkboxWithTitle:"Tool assembly",target:self,action:#selector(holder(_:)));holder.state = .on
+        let section=sectionControl;section.target=self;section.action=#selector(section(_:));section.toolTip="Z cross-section";section.widthAnchor.constraint(equalToConstant:120).isActive=true
+        let fixtures=fixtureControl;fixtures.target=self;fixtures.action=#selector(fixtures(_:));fixtures.state = .on;fixtures.isEnabled=renderer.fixtureBlocks != nil
+        let holder=holderControl;holder.target=self;holder.action=#selector(holder(_:));holder.state = .on
         let buttons=NSStackView(views:[play,restart,reset,lighting,background]);buttons.spacing=12
-        let axes=NSPopUpButton();axes.addItems(withTitles:["Section X","Section Y","Section Z"]);axes.selectItem(at:renderer.sectionAxis);axes.target=self;axes.action=#selector(sectionAxis(_:))
+        let axes=axesControl;axes.addItems(withTitles:["Section X","Section Y","Section Z"]);axes.selectItem(at:renderer.sectionAxis);axes.target=self;axes.action=#selector(sectionAxis(_:))
         let inspection=NSStackView(views:[stock,comparison,fixtures,holder,axes,section]);inspection.spacing=12
+        do {findings=try renderer.loadFindings();filterFindings()}
+        catch {findingDetail.stringValue="Inspection unavailable: \(error)"}
+        findingSearch.placeholderString="Filter: missing, unresolved, holder, operation ID…";findingSearch.target=self;findingSearch.action=#selector(filterFindings);findingSearch.sendsSearchStringImmediately=true;findingSearch.widthAnchor.constraint(equalToConstant:460).isActive=true
+        findingMenu.target=self;findingMenu.action=#selector(selectFinding(_:));findingMenu.widthAnchor.constraint(equalToConstant:760).isActive=true
+        findingDetail.textColor = .white;findingDetail.maximumNumberOfLines=3
         let top=NSStackView(views:[title,help]);top.orientation = .vertical;top.alignment = .leading;top.spacing=8;top.translatesAutoresizingMaskIntoConstraints=false;view.addSubview(top)
-        let bottom=NSStackView(views:[status,slider,buttons,inspection]);bottom.orientation = .vertical;bottom.alignment = .leading;bottom.spacing=10;bottom.translatesAutoresizingMaskIntoConstraints=false;view.addSubview(bottom)
+        let bottom=NSStackView(views:[findingSearch,findingMenu,findingDetail,status,slider,buttons,inspection]);bottom.orientation = .vertical;bottom.alignment = .leading;bottom.spacing=10;bottom.translatesAutoresizingMaskIntoConstraints=false;view.addSubview(bottom)
         NSLayoutConstraint.activate([top.leadingAnchor.constraint(equalTo:view.leadingAnchor,constant:22),top.topAnchor.constraint(equalTo:view.topAnchor,constant:20),bottom.leadingAnchor.constraint(equalTo:view.leadingAnchor,constant:22),bottom.trailingAnchor.constraint(equalTo:view.trailingAnchor,constant:-22),bottom.bottomAnchor.constraint(equalTo:view.bottomAnchor,constant:-22),slider.widthAnchor.constraint(equalTo:bottom.widthAnchor)])
+        findingDetail.widthAnchor.constraint(equalTo:bottom.widthAnchor).isActive=true
+        status.maximumNumberOfLines=2;status.widthAnchor.constraint(equalTo:bottom.widthAnchor).isActive=true
         refresh();timer=Timer.scheduledTimer(withTimeInterval:1/12,repeats:true) { [weak self] _ in self?.tick() }
     }
     func refresh() {status.stringValue=renderer.label;slider.doubleValue=Double(renderer.frame);play.title=playing ? "Pause":"Play"}
     func seek(_ n:Int) {do {try renderer.seek(n);refresh()}catch{playing=false;status.stringValue="Error: \(error)"}}
     func tick() {if playing {if renderer.frame<renderer.history.frames.count {seek(renderer.frame+1)}else{playing=false}};refresh()}
+    @objc func filterFindings() {
+        let query=findingSearch.stringValue.lowercased()
+        visibleFindings=findings.filter {query.isEmpty || $0.title.lowercased().contains(query)}
+        findingMenu.removeAllItems();findingMenu.addItems(withTitles:["Select a finding (\(visibleFindings.count) / \(findings.count))"]+visibleFindings.map {$0.title})
+    }
+    @objc func selectFinding(_ sender:NSPopUpButton) {
+        let i=sender.indexOfSelectedItem-1;guard visibleFindings.indices.contains(i) else {return}
+        playing=false
+        do {try renderer.focusFinding(visibleFindings[i]);findingDetail.stringValue=renderer.picked;sectionControl.doubleValue=Double(renderer.sectionFraction);axesControl.selectItem(at:renderer.sectionAxis);comparisonControl.state=renderer.compareTarget ? .on:.off;stockControl.state=renderer.showStock ? .on:.off;fixtureControl.state=renderer.showFixtures ? .on:.off;holderControl.state=renderer.showHolder ? .on:.off;refresh()}
+        catch {findingDetail.stringValue="Cannot focus finding: \(error)"}
+    }
     @objc func toggle() {playing.toggle();refresh()}
     @objc func restart() {playing=true;seek(0)}
     @objc func scrub() {playing=false;seek(Int(slider.doubleValue.rounded()))}
@@ -246,6 +275,17 @@ extension Delegate {
         if let i=args.firstIndex(of:"--section"),i+1<args.count,let value=Float(args[i+1]),value>0,value<=1 {renderer.sectionFraction=value}
         if let i=args.firstIndex(of:"--distance"),i+1<args.count,let distance=Float(args[i+1]),distance.isFinite,distance>0 {renderer.distance=distance}
         if let i=args.firstIndex(of:"--target-z"),i+1<args.count,let z=Float(args[i+1]),z.isFinite {renderer.target.z=z}
+        if let i=args.firstIndex(of:"--finding"),i+1<args.count,let index=Int(args[i+1]) {
+            let findings=try renderer.loadFindings();guard findings.indices.contains(index) else {throw MeshError.invalidOBJ("Finding index out of range")};try renderer.focusFinding(findings[index]);print(renderer.picked)
+        }
+        if let i=args.firstIndex(of:"--list-findings"),i+1<args.count {
+            let findings=try renderer.loadFindings()
+            let rows=try findings.enumerated().map { i,f -> [String:Any] in
+                if args.contains("--validate-findings") {try renderer.focusFinding(f)}
+                return ["index":i,"title":f.title,"detail":f.detail,"frame":f.frame ?? renderer.history.frames.count,"bounds":["lo":f.bounds.lo,"hi":f.bounds.hi],"section_fraction":max(0.000001,min(1,((f.bounds.lo[2]+f.bounds.hi[2])/2-renderer.origin.z)/(Float(renderer.history.grid[2])*renderer.history.voxel_mm)))]
+            }
+            try JSONSerialization.data(withJSONObject:rows,options:[.prettyPrinted,.sortedKeys]).write(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return
+        }
         if args.contains("--pick-center") {renderer.focus(x:0.5,y:0.5,aspect:1280/900);guard !renderer.picked.isEmpty else {throw MeshError.invalidOBJ("Center pick missed material")}}
         if let i=args.firstIndex(of:"--movie"),i+1<args.count {try renderer.movie(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
         if let i=args.firstIndex(of:"--verify-history"),i+1<args.count {try renderer.verifyHistory(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}

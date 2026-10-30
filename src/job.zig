@@ -31,6 +31,7 @@ pub const Job = struct {
     points: []const Query = &.{},
     rays: []const Ray = &.{},
     export_mesh: bool = true,
+    export_defects: bool = false,
 };
 fn read(a: std.mem.Allocator, path: []const u8) ![]u8 {
     return std.fs.cwd().readFileAlloc(a, path, 1024 * 1024 * 1024);
@@ -79,6 +80,7 @@ pub fn validate(a: std.mem.Allocator, j: Job) !void {
     if (j.version != 1) return error.UnsupportedJobVersion;
     if (!std.mem.eql(u8, j.units, "mm")) return error.UnitsMustBeMillimeters;
     try j.bounds.validate();
+    if (j.export_defects and j.target == null) return error.DefectsRequireTarget;
     if (!std.math.isFinite(j.motion_tolerance_mm) or j.motion_tolerance_mm <= 0) return error.InvalidMotionTolerance;
     for (j.tools) |tool| {
         try tool.cutter.validate();
@@ -150,6 +152,11 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
     try std.fs.cwd().makePath(out);
     var dir = try std.fs.cwd().openDir(out, .{});
     defer dir.close();
+    // Reusing an output directory must not leave findings for an older run.
+    dir.deleteFile("defects.json") catch |err| switch (err) {
+        error.FileNotFound => {},
+        else => return err,
+    };
     if (target) |t| {
         try dir.writeFile(.{ .sub_path = "target.blocks", .data = std.mem.sliceAsBytes(t.blocks) });
         try dir.writeFile(.{ .sub_path = "target.pool", .data = std.mem.sliceAsBytes(t.pool.items) });
@@ -251,6 +258,11 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
     if (stats.occupied != occupied) return error.HistoryCountMismatch;
     const comparison = if (target) |t| try inspect.compare(g, t) else null;
     const stats_ns = timer.lap();
+    if (j.export_defects) {
+        const t = target orelse return error.DefectsRequireTarget;
+        try writeDefects(a, dir, j, g, t);
+    }
+    const defects_ns = timer.lap();
     const point_results = try a.alloc(bool, j.points.len);
     defer a.free(point_results);
     for (j.points, 0..) |p, i| {
@@ -308,5 +320,30 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
     const checkpoint_write_ns = timer.lap();
     const export_ns = image_export_ns + checkpoint_encode_ns + checkpoint_write_ns;
     try json(a, dir, "voxel-animation.json", .{ .format = "menkh-voxel-history-v1", .grid = g.n, .block_grid = g.nb, .origin_mm = g.origin, .voxel_mm = g.h, .stock_min = j.bounds.lo, .stock_max = j.bounds.hi, .initial_occupied = initial, .final_occupied = occupied, .initial_pool_slots = initial_slots, .pool_slots = g.pool.items.len, .motion_tolerance_mm = j.motion_tolerance_mm, .frames = frames });
-    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
+    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .defects_ns = defects_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
+}
+
+fn writeDefects(a: std.mem.Allocator, dir: std.fs.Dir, j: Job, g: c.Grid, target: c.Grid) !void {
+    const regions = try @import("defects.zig").regions(a, g, target);
+    defer a.free(regions);
+    try json(a, dir, "defects.json", .{ .format = "menkh-defects-v1", .voxel_mm = g.h, .origin_mm = g.origin, .grid = g.n, .remaining_occupied = g.stats().occupied, .motion_tolerance_mm = j.motion_tolerance_mm, .connectivity = 6, .regions = regions });
+}
+// Reinspect a saved material state without rerunning any cuts or rewriting history.
+pub fn inspectDefects(a: std.mem.Allocator, path: []const u8, input: []const u8, out: []const u8) !void {
+    const bytes = try read(a, path);
+    defer a.free(bytes);
+    const parsed = try std.json.parseFromSlice(Job, a, bytes, .{ .allocate = .alloc_always });
+    defer parsed.deinit();
+    const j = parsed.value;
+    try validate(a, j);
+    const source = j.target orelse return error.DefectsRequireTarget;
+    var timing: InputTiming = .{};
+    var g = try initialize(a, j, .{ .state_file = input }, &timing, false);
+    defer g.deinit();
+    var target = try initialize(a, j, source, &timing, false);
+    defer target.deinit();
+    try std.fs.cwd().makePath(out);
+    var dir = try std.fs.cwd().openDir(out, .{});
+    defer dir.close();
+    try writeDefects(a, dir, j, g, target);
 }

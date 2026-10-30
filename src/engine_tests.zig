@@ -602,3 +602,124 @@ test "collision reports distinguish voxel face contact from proven separation" {
     try std.testing.expectEqual(inspect.Clearance.occupied_center_contact, hit.clearance);
     try std.testing.expectEqual(@as(u64, 1), hit.occupied_centers);
 }
+
+test "defect regions exact face connectivity, block boundaries and deterministic reload" {
+    const defects = @import("defects.zig");
+    const b = e.Bounds{ .lo = .{ -2, -3, -4 }, .hi = .{ 8, 0, -2 } };
+    var stock = try e.stock(a, b, 1, &.{.{ .box = b }});
+    defer stock.deinit();
+    var target = try e.stock(a, b, 1, &.{.{ .box = b }});
+    defer target.deinit();
+    // Exhaustively test random small differences against a separate cell flood fill.
+    var rng = std.Random.DefaultPrng.init(91823);
+    for (0..30) |_| {
+        for (0..stock.blocks.len) |i| {
+            var sb = stock.validBits(stock.blockCoords(i));
+            var tb = target.validBits(target.blockCoords(i));
+            for (&sb, &tb) |*s, *t| {
+                s.* &= rng.random().int(u64);
+                t.* &= rng.random().int(u64);
+            }
+            try stock.pool.ensureUnusedCapacity(a, 1);
+            try target.pool.ensureUnusedCapacity(a, 1);
+            stock.blocks[i] = @intCast(stock.pool.items.len);
+            stock.pool.appendAssumeCapacity(sb);
+            target.blocks[i] = @intCast(target.pool.items.len);
+            target.pool.appendAssumeCapacity(tb);
+        }
+        const regions = try defects.regions(a, stock, target);
+        defer a.free(regions);
+        var counts: [2]u64 = .{ 0, 0 };
+        var visited = [_]bool{false} ** 60;
+        var components: usize = 0;
+        for (0..2) |kind| {
+            @memset(&visited, false);
+            for (0..60) |seed| {
+                var stack: [60]usize = undefined;
+                var top: usize = 0;
+                const p = [3]usize{ seed % 10, seed / 10 % 3, seed / 30 };
+                const match = if (kind == 0) stock.occupied(p) and !target.occupied(p) else target.occupied(p) and !stock.occupied(p);
+                if (visited[seed] or !match) continue;
+                components += 1;
+                stack[top] = seed;
+                top += 1;
+                visited[seed] = true;
+                var count: u64 = 0;
+                var low = p;
+                var high = p;
+                while (top > 0) {
+                    top -= 1;
+                    const at = stack[top];
+                    count += 1;
+                    const pos = [3]usize{ at % 10, at / 10 % 3, at / 30 };
+                    for (0..3) |j| {
+                        low[j] = @min(low[j], pos[j]);
+                        high[j] = @max(high[j], pos[j]);
+                    }
+                    for (0..3) |axis| for (0..2) |side| {
+                        var q = pos;
+                        if (side == 0) {
+                            if (q[axis] == 0) continue;
+                            q[axis] -= 1;
+                        } else {
+                            q[axis] += 1;
+                            if (q[axis] >= stock.n[axis]) continue;
+                        }
+                        const next = q[0] + 10 * q[1] + 30 * q[2];
+                        const hit = if (kind == 0) stock.occupied(q) and !target.occupied(q) else target.occupied(q) and !stock.occupied(q);
+                        if (!visited[next] and hit) {
+                            visited[next] = true;
+                            stack[top] = next;
+                            top += 1;
+                        }
+                    };
+                }
+                var found = false;
+                for (regions) |r| {
+                    if (@intFromEnum(r.kind) != kind or r.voxels != count) continue;
+                    var matches = true;
+                    for (0..3) |j| {
+                        matches = matches and r.bounds.lo[j] == b.lo[j] + @as(f64, @floatFromInt(low[j])) and r.bounds.hi[j] == b.lo[j] + @as(f64, @floatFromInt(high[j] + 1));
+                    }
+                    found = found or matches;
+                }
+                try std.testing.expect(found);
+                counts[kind] += count;
+            }
+        }
+        try std.testing.expectEqual(components, regions.len);
+        var actual: [2]u64 = .{ 0, 0 };
+        for (regions) |r| {
+            actual[@intFromEnum(r.kind)] += r.voxels;
+            try std.testing.expect(r.operation == null);
+        }
+        try std.testing.expectEqualSlices(u64, &counts, &actual);
+        const bytes = try state.encode(a, stock);
+        defer a.free(bytes);
+        var reloaded = try state.decode(a, bytes);
+        defer reloaded.deinit();
+        const again = try defects.regions(a, reloaded, target);
+        defer a.free(again);
+        try std.testing.expectEqualDeep(regions, again);
+    }
+}
+
+fn allocationDefects(allocator: std.mem.Allocator, stock: @import("core.zig").Grid, target: @import("core.zig").Grid) !void {
+    const r = try @import("defects.zig").regions(allocator, stock, target);
+    defer allocator.free(r);
+}
+test "defect extraction allocation failures preserve inputs" {
+    const b = e.Bounds{ .lo = .{ 0, 0, 0 }, .hi = .{ 10, 3, 2 } };
+    var stock = try e.stock(a, b, 1, &.{.{ .box = b }});
+    defer stock.deinit();
+    var target = try e.stock(a, b, 1, &.{.{ .sphere = .{ .center = .{ 2, 1, 1 }, .radius = 1 } }});
+    defer target.deinit();
+    const before = try state.encode(a, stock);
+    defer a.free(before);
+    try std.testing.checkAllAllocationFailures(a, allocationDefects, .{ stock, target });
+    const after = try state.encode(a, stock);
+    defer a.free(after);
+    try std.testing.expectEqualSlices(u8, before, after);
+    target.origin[0] = 1;
+    try std.testing.expectError(error.GridMismatch, @import("defects.zig").regions(a, stock, target));
+}
