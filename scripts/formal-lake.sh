@@ -13,7 +13,9 @@ VERSION=${TOOLCHAIN##*:}
 LOCAL="$ROOT/.tools/elan/toolchains/leanprover--lean4---$VERSION/bin/lake"
 if [ -x "$LOCAL" ]; then
   LAKE="$LOCAL"
-elif command -v elan >/dev/null 2>&1 && LAKE=$(ELAN_TOOLCHAIN="$TOOLCHAIN" elan which lake 2>/dev/null); then
+elif command -v elan >/dev/null 2>&1 &&
+    elan toolchain list | awk -v t="$TOOLCHAIN" '$1 == t { found=1 } END { exit !found }'; then
+  LAKE=$(ELAN_TOOLCHAIN="$TOOLCHAIN" elan which lake)
   :
 else
   echo "Missing $TOOLCHAIN. Run ./scripts/bootstrap-formal.sh to install repository-local toolchains." >&2

@@ -5,7 +5,7 @@ ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 ELAN=$(command -v elan) || { echo 'Install elan explicitly first; this script does not install a global tool manager.' >&2; exit 1; }
 for PROJECT in "$ROOT/formal" "$ROOT/formal/veil"; do
   TOOLCHAIN=$(cat "$PROJECT/lean-toolchain")
-  if ELAN_TOOLCHAIN="$TOOLCHAIN" "$ELAN" which lake >/dev/null 2>&1; then
+  if "$ELAN" toolchain list | awk -v t="$TOOLCHAIN" '$1 == t { found=1 } END { exit !found }'; then
     continue
   fi
   ELAN_HOME="$ROOT/.tools/elan" "$ELAN" toolchain install "$TOOLCHAIN"

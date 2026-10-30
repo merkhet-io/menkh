@@ -83,6 +83,17 @@ properties, with SMT automation and optional Lean proof reconstruction. It is a
 fit for lifecycle invariants, while mathlib handles continuous geometry.
 Its upstream version is a pre-release, pinned here to avoid unreviewed upgrades.
 
+Veil is primarily designed for distributed protocols. For Menkh its value is
+invariant automation and counterexamples for lifecycle models; it does not
+improve continuous geometry or floating-point proofs. The two small models here
+could also be proved in plain Lean. They are an isolated experiment, not a
+necessary foundation for the engine: Veil adds another Lean version, solver and
+framework build, and that maintenance cost needs to earn its place as the models
+grow. No claim that Veil is superior to plain Lean follows from these checks.
+The core proof/bridge command works without Veil, and neither is needed to build
+the simulator. Veil has its own CI job; no branch-protection requirement is set
+by this change.
+
 [`formal/veil/Cutting.lean`](../formal/veil/Cutting.lean) contains two models:
 
 1. **Cutting**: arbitrary voxel and operation types, immutable initial stock and
@@ -157,6 +168,8 @@ randomized and tilted-tool tests remain relevant independent evidence.
 Local validation passed all 23 named mathematical results, all 50 Veil conditions,
 the axiom audits, all 20,480 bridge records in both Zig modes, and the original
 35 test groups in both modes. Negative controls rejected all three injected bugs.
+The initial hosted run also passed both jobs:
+[Verification run 41073513654](https://github.com/merkhet-io/menkh/actions/runs/41073513654).
 This work introduces no runtime engine changes or performance claims.
 
 Still outside this proof boundary: IEEE-754 rounding and compiler semantics;
