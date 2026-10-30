@@ -32,3 +32,30 @@ jobs:
           ./zig build test -Doptimize=ReleaseFast --summary all
       - name: Geometry proofs, axiom audit, and Zig differential tests
         run: ./scripts/verify-formal.sh
+  windows-cli:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install pinned repository-local Zig
+        shell: pwsh
+        run: ./scripts/bootstrap-zig.ps1
+      - name: Build CLI and predicate benchmark
+        shell: pwsh
+        run: ./zig.ps1 build -Doptimize=ReleaseFast
+      - name: Debug tests
+        shell: pwsh
+        run: ./zig.ps1 build test --summary all
+      - name: ReleaseFast tests
+        shell: pwsh
+        run: ./zig.ps1 build test -Doptimize=ReleaseFast --summary all
+      - name: Execute pocket demo and inspect its surface
+        shell: pwsh
+        run: |
+          ./zig-out/bin/menkh.exe job examples/pocket-25um.json --out out/windows-pocket
+          if ($LASTEXITCODE -ne 0) { throw 'Simulation failed' }
+          ./zig-out/bin/menkh.exe inspect-state out/windows-pocket/final.menkh | Out-File -Encoding utf8 out/windows-surface.json
+          if ($LASTEXITCODE -ne 0) { throw 'Inspection failed' }
+          $result = Get-Content out/windows-surface.json -Raw | ConvertFrom-Json
+          if ($result.occupied_voxels -ne 170711351) { throw 'Unexpected final material count' }
+          if ($result.boundary.surface_voxels -ne 2819284) { throw 'Unexpected surface count' }

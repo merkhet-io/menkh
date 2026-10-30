@@ -44,3 +44,9 @@ The three largest gaps toward an industrial cutting SDK are robust simultaneous 
 ## Formal verification
 
 Implemented and locally validated: 34 named Lean results including history/pool contracts, axiom audits, and 20,480 Lean/Zig differential records. Restricted to the explicit models and hypotheses in [FORMAL-VERIFICATION.md](FORMAL-VERIFICATION.md). Full Zig refinement, floating-point correctness and certified geometric clearance remain unsupported.
+
+Windows x86-64 CLI/benchmark: experimental, cross-compiled locally; native runtime
+checks are in the Windows CI job. Zig 0.15.2 builds it; MSVC integration and a
+Windows viewer are unsupported. See [Windows instructions](WINDOWS.md).
+Checkpoint surface inspection counts six-neighbor boundary voxels and exposed
+faces independently of mesh generation; see [count semantics](INSPECTION-COUNTS.md).

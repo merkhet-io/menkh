@@ -175,3 +175,11 @@ python3 scripts/validate-exports.py out/fine
 The independent export check uses only the Python standard library. It validates the fixed example's PPM pixel values, removed volume, and oriented OBJ volume. Python is not a runtime dependency of the CLI.
 
 Measured results for all four voxel sizes, including warm-up and seven repetitions, are in [BENCHMARKS.md](docs/BENCHMARKS.md). Unmodified JSON measurements are in [benchmarks/](benchmarks/). Explicit SIMD, multiple workers, GPU material removal, an octree, and a PS3 port are not implemented. The measured implementation uses one worker.
+
+## Windows comparison build and surface counts
+
+The CLI and CPU benchmark now have an experimental [Windows x86-64 build](docs/WINDOWS.md),
+using repository-local Zig 0.15.2, not MSVC. The viewer remains macOS-only.
+`menkh inspect-state FILE` reports boundary voxels separately from material volume.
+The 25 µm pocket video ends with **2,819,284 surface voxels**, versus 170,711,351
+occupied volume voxels. See [definitions, raw counts and comparison limits](docs/INSPECTION-COUNTS.md).

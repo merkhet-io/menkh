@@ -1,6 +1,7 @@
 const std = @import("std");
+const builtin = @import("builtin");
 pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{ .default_target = .{ .cpu_arch = .aarch64, .os_tag = .macos, .cpu_model = .native } });
+    const target = b.standardTargetOptions(.{ .default_target = if (builtin.os.tag == .windows) .{} else .{ .cpu_arch = .aarch64, .os_tag = .macos, .cpu_model = .native } });
     const optimize = b.standardOptimizeOption(.{});
     const exe = b.addExecutable(.{ .name = "menkh", .root_module = b.createModule(.{ .root_source_file = b.path("src/main.zig"), .target = target, .optimize = optimize }) });
     b.installArtifact(exe);

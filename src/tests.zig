@@ -403,3 +403,41 @@ test "block height export matches scalar scan for random partial blocks and cavi
         };
     }
 }
+
+test "boundary voxel and face counts match independent six-neighbor oracle" {
+    var g = try c.Grid.init(a, .{ 4.25, 3.75, 5.25 }, 0.25);
+    defer g.deinit();
+    const box = surf.boundaryCounts(g);
+    try std.testing.expectEqual(@as(u64, 17 * 15 * 21 - 15 * 13 * 19), box.surface_voxels);
+    try std.testing.expectEqual(@as(u64, 2 * (17 * 15 + 17 * 21 + 15 * 21)), box.exposed_faces);
+    var rng = std.Random.DefaultPrng.init(52918);
+    for (0..g.blocks.len) |i| {
+        var bits = g.bits(i);
+        for (&bits) |*w| w.* &= rng.random().int(u64);
+        g.blocks[i] = @intCast(g.pool.items.len);
+        try g.pool.append(a, bits);
+    }
+    var expected: surf.BoundaryCounts = .{};
+    for (0..g.n[2]) |z| for (0..g.n[1]) |y| for (0..g.n[0]) |x| {
+        const p = [3]usize{ x, y, z };
+        if (!g.occupied(p)) continue;
+        var faces: u64 = 0;
+        for (0..3) |axis| {
+            var q = p;
+            if (p[axis] == 0) {
+                faces += 1;
+            } else {
+                q[axis] -= 1;
+                faces += @intFromBool(!g.occupied(q));
+            }
+            q = p;
+            q[axis] += 1;
+            faces += @intFromBool(!g.occupied(q));
+        }
+        expected.exposed_faces += faces;
+        expected.surface_voxels += @intFromBool(faces > 0);
+    };
+    try std.testing.expectEqualDeep(expected, surf.boundaryCounts(g));
+    @memset(g.blocks, c.empty);
+    try std.testing.expectEqualDeep(surf.BoundaryCounts{}, surf.boundaryCounts(g));
+}
