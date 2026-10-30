@@ -6,6 +6,7 @@ cbuffer Uniforms : register(b0) {
 };
 StructuredBuffer<uint> blocks : register(t0);
 StructuredBuffer<uint> pool : register(t1);
+StructuredBuffer<uint> provenance : register(t2);
 RWTexture2D<float4> image : register(u0);
 struct Hit { bool found; float t; float3 normal; int3 cell; };
 Hit miss() { Hit h;h.found=false;h.t=1e30;h.normal=float3(0,0,1);h.cell=0;return h; }
@@ -43,6 +44,21 @@ Hit cylinderHit(float3 ray,float4 part,float4 axial) {
     if(a<1e-12){if(c>0)return hit;}else{float disc=b*b-a*c;if(disc<0)return hit;float root=sqrt(disc);lower=max(lower,(-b-root)/a);upper=min(upper,(-b+root)/a);}
     if(lower>upper)return hit;hit.found=true;hit.t=lower;float3 p=q+lower*ray;float h=dot(p,axial.xyz);hit.normal=h<.002?-axial.xyz:(h>axial.w-.002?axial.xyz:normalize(p-h*axial.xyz));return hit;
 }
+// Cell keys require 36 bits at 4096^3. SM5 uses two uint words, never float keys.
+uint exposure(int3 cell) {
+    if(any(cell<0)||any(cell>=int3(dimensions.xyz))||filled(cell))return 0;
+    uint lo,hi;umulExtended(uint(cell.z)*dimensions.y+uint(cell.y),dimensions.x,lo,hi);
+    uint old=lo;lo+=uint(cell.x);hi+=uint(lo<old);
+    uint left=0,right=flags.w;
+    [loop] while(left<right){uint mid=left+(right-left)/2;uint l=provenance[mid*4],h=provenance[mid*4+1];if(h<hi||(h==hi&&l<lo))left=mid+1;else right=mid;}
+    if(left<flags.w&&provenance[left*4]==lo&&provenance[left*4+1]==hi)return provenance[left*4+(flags.z==2?3:2)];
+    return 0;
+}
+float3 category(uint id) {
+    if(id==0)return float3(.58,.6,.63);
+    uint h=id*2654435761u;h^=h>>16;
+    return .25+.7*float3(h&255,(h>>8)&255,(h>>16)&255)/255;
+}
 float3 shade(float2 pixel) {
     float2 uv=pixel/settings.yz*2-1;uv.y=-uv.y;uv.x*=settings.y/settings.z;
     float3 ray=normalize(forward.xyz+settings.w*(uv.x*right.xyz+uv.y*up.xyz));Hit hit=trace(ray);
@@ -55,7 +71,15 @@ float3 shade(float2 pixel) {
     float3 normal=hit.normal;
     float light=.46+.32*max(0,dot(normal,key))+.22*max(0,dot(normal,-forward.xyz));
     float spec=pow(max(0,dot(normal,normalize(key-ray))),48)*.10;
-    return float3(.32,.50,.82)*light+spec;
+    float3 material=float3(.32,.50,.82);
+    if(flags.z!=0) {
+        float3 point=eye.xyz+ray*hit.t;
+        uint axis=abs(normal.x)>.5?0:(abs(normal.y)>.5?1:2);
+        // Clip-plane interiors have no exposure attribution.
+        uint id=0;if(abs(point[axis]-round(point[axis]))<.01)id=exposure(hit.cell+int3(round(normal)));
+        material=category(id);
+    }
+    return material*light+spec;
 }
 [numthreads(8,8,1)] void main(uint3 pixel:SV_DispatchThreadID) {
     if(pixel.x>=uint(settings.y)||pixel.y>=uint(settings.z))return;

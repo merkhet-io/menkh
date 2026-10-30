@@ -33,6 +33,7 @@ struct App {
              << L" occupied   |   motion budget " << history.tolerance << L" mm";
         if (history.frame && history.steps[history.frame - 1].unsupportedCutter)
             text << L"   |   non-flat cutter display unavailable";
+        if(camera.colorMode) text << (history.frame==history.steps.size() ? L"   | final-surface attribution" : L"   | attribution inactive (final only)");
         SetWindowTextW(status, text.str().c_str());
     }
     void layout() {
@@ -62,6 +63,7 @@ struct App {
             seek(history.steps.size());
         else if (key == 'R')
             camera.reset(history);
+        else if (key == 'C' && history.hasProvenance) { camera.colorMode=(camera.colorMode+1)%3; if(camera.colorMode) seek(history.steps.size()); }
         else if (key == 'B')
             camera.dark = !camera.dark;
         else if (key == 'T')
@@ -194,6 +196,7 @@ int wmain(int argc, wchar_t **argv) {
         bool runOnly=false, frameExplicit=false;
         int cancelAfter=-1;
         bool warp = false, debug = false, verify = false;
+        uint32_t colorMode=0;
         fs::path smoke, snapshot, windowSmoke;
         size_t frame = 0;
         for (int i = 2; i < argc; i++) {
@@ -204,6 +207,8 @@ int wmain(int argc, wchar_t **argv) {
                 if(a==L"--engine")engine=value;else if(a==L"--job-output")jobOutput=value;else if(a==L"--working-dir")workingDirectory=value;
                 else {size_t used=0;cancelAfter=std::stoi(value,&used);require(used==value.size() && cancelAfter>=0,"Invalid cancellation delay");}
             }
+            else if (a == L"--color-operation") colorMode=1;
+            else if (a == L"--color-tool") colorMode=2;
             else if (a == L"--warp")
                 warp = true;
             else if (a == L"--debug")
@@ -234,6 +239,7 @@ int wmain(int argc, wchar_t **argv) {
         if(calculated) {const auto result=calculateJob(input,engine,jobOutput,workingDirectory,cancelAfter);if(!result)return 2;input=*result;}
         else require(!runOnly && engine.empty() && jobOutput.empty() && workingDirectory.empty() && cancelAfter<0,"Calculation options require a job JSON");
         App app{input};
+        if(colorMode) {require(app.history.hasProvenance,"Enable export_provenance in the job first");app.camera.colorMode=colorMode;if(!frameExplicit)frame=app.history.steps.size();}
         if(calculated && !frameExplicit)frame=app.history.steps.size();
         if(runOnly){app.history.verify();std::cout << "Calculation and complete history verification passed\n";return 0;}
         if (verify) {
