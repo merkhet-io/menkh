@@ -74,3 +74,13 @@ Input must have an 80-byte header, u32 triangle count, and exactly count × 50-b
 A median-split triangle BVH accelerates intersection checks and parity rays. Point membership uses odd/even shell parity; nested closed shells can represent cavities regardless of shell orientation. Boundary points within the absolute predicate tolerance are occupied. Rays hitting edges/vertices are retried with deterministic alternative directions. Conflicting valid parity results or exhausted retries report `AmbiguousMesh`. Voxelization aborts and frees unpublished stock on any classification error.
 
 The validator is a floating-point triangle/edge validator, not a certified exact-predicate solid kernel. Degenerate contacts, nearly coincident shells and extremely small features can be rejected or remain numerically unresolved. There is no general CAD topology repair, STEP import, or guarantee for adversarial triangle soups. A closed mesh's tessellation error remains separate from voxel error. Tests and benchmarks include a box, rotated concave fixture, enclosed cavity, open mesh, intersecting shells and allocation failures.
+
+## Contact report classification
+
+Contact objects retain `occupied_centers` and the center-extrema `region`, and add
+`clearance`: `not_checked`, `occupied_center_contact`, `unresolved_voxel_contact`,
+or `separated_voxel_geometry`. `first_unresolved_cell_bounds` identifies one
+conservative candidate voxel cube when center tests cannot resolve face/corner
+contact. `representation_clearance_uncertain` is true only for not-checked and
+unresolved cases. These are additive report fields; the state/history binary
+formats are unchanged. See [semantics and limits](MILLING-ROBUSTNESS.md).

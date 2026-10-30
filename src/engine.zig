@@ -268,6 +268,9 @@ pub const Sweep = struct {
         const n = s.samples();
         var lo: usize = 0;
         var hi = n;
+        var cached_index: ?usize = null;
+        var cached_left: f64 = undefined;
+        var cached_right: f64 = undefined;
         // The complete ball tool is convex; its signed distance restricted to
         // a translation line is convex. Minimize on the SAME discrete pose lattice.
         // Keep the original pose arithmetic and a final exhaustive small bracket.
@@ -276,11 +279,23 @@ pub const Sweep = struct {
             const left = s.poseDistance(p, mid, n);
             const right = s.poseDistance(p, mid + 1, n);
             if (evaluations) |v| v.* += 2;
+            cached_index = mid;
+            cached_left = left;
+            cached_right = right;
             if (left < right) hi = mid + 1 else lo = mid;
         };
         var best: f64 = std.math.inf(f64);
-        for (lo..hi + 1) |i| best = @min(best, s.poseDistance(p, i, n));
-        if (evaluations) |v| v.* += hi + 1 - lo;
+        if (cached_index) |mid| {
+            // The last adjacent pair remains inside the final bracket. Reuse
+            // those exact values; do not change poses, arithmetic or tolerance.
+            best = @min(cached_left, cached_right);
+            for (lo..mid) |i| best = @min(best, s.poseDistance(p, i, n));
+            for (mid + 2..hi + 1) |i| best = @min(best, s.poseDistance(p, i, n));
+            if (evaluations) |v| v.* += hi - lo - 1;
+        } else {
+            for (lo..hi + 1) |i| best = @min(best, s.poseDistance(p, i, n));
+            if (evaluations) |v| v.* += hi + 1 - lo;
+        }
         return best - s.errorBound();
     }
 };

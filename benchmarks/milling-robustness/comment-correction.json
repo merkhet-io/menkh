@@ -1,0 +1,22 @@
+{
+  "note": "After measurement, corrected a regression-test comment from 4 nm to 4e-9 mm. No executable source expressions changed. Binary identity changed; recorded section hashes distinguish measured and final builds.",
+  "measured_sections": {
+    "__text": "5a2d4b2e6f009467a0363705aa9919fb186a0c8e09e0d7b18117edc6d939cefd",
+    "__stubs": "ece27b4fde38c077d7cc4630ac7e329614efda6d25f048fa35e2f3d11ac8d3ef",
+    "__stub_helper": "4a9d92c99fe750f3ff819307aea6eb9c5d286596697737f97d26c9d9c7df5931",
+    "__const": "3fbbbb79b4482cee1cb99a40b0790ff12c65970dc354b57d719afbda2565d386",
+    "__cstring": "3e11ecc17334b7fcea258a712b0a7a92c12d91bd2a851619ecb95a7198eca5be",
+    "__unwind_info": "c900076ef30b39e214c3a633212d94e4055e38617cdef381e7eb61cc2f83b7d0",
+    "__eh_frame": "bef06517c81f71dd8613234a62fe13cc6d4973b8e5d0be2af2da5514b70e7275"
+  },
+  "final_sections": {
+    "__text": "5a2d4b2e6f009467a0363705aa9919fb186a0c8e09e0d7b18117edc6d939cefd",
+    "__stubs": "ece27b4fde38c077d7cc4630ac7e329614efda6d25f048fa35e2f3d11ac8d3ef",
+    "__stub_helper": "4a9d92c99fe750f3ff819307aea6eb9c5d286596697737f97d26c9d9c7df5931",
+    "__const": "3fbbbb79b4482cee1cb99a40b0790ff12c65970dc354b57d719afbda2565d386",
+    "__cstring": "3e11ecc17334b7fcea258a712b0a7a92c12d91bd2a851619ecb95a7198eca5be",
+    "__unwind_info": "c900076ef30b39e214c3a633212d94e4055e38617cdef381e7eb61cc2f83b7d0",
+    "__eh_frame": "bef06517c81f71dd8613234a62fe13cc6d4973b8e5d0be2af2da5514b70e7275"
+  },
+  "instruction_section_equal": true
+}

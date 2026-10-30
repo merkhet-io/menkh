@@ -91,6 +91,10 @@ in the complete optimized/scalar occupancy comparison.
 
 ### Existing importer restriction exposed by the expanded tests
 
+Update: these three rejections are resolved by the
+[shared-topology validation fix](MILLING-ROBUSTNESS.md). The following records the
+original scanline milestone's findings.
+
 Three generated, fully rotated cell meshes (`cavity-2`, `concave-2`, `thin-2`) are
 rejected as `SelfIntersectingSTL` by both the retained old executable and the new
 one, before voxelization. Removing the large translation does not change the

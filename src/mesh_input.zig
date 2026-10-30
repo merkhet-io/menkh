@@ -248,12 +248,12 @@ pub const Mesh = struct {
                 var bmin = amin;
                 var bmax = amax;
                 for (a.v) |v| {
-                    const d = e.dot(axis, v);
+                    const d = e.dot(axis, e.sub(v, a.v[0]));
                     amin = @min(amin, d);
                     amax = @max(amax, d);
                 }
                 for (b.v) |v| {
-                    const d = e.dot(axis, v);
+                    const d = e.dot(axis, e.sub(v, a.v[0]));
                     bmin = @min(bmin, d);
                     bmax = @max(bmax, d);
                 }
@@ -261,6 +261,13 @@ pub const Mesh = struct {
             };
             return true;
         }
+        // Distinct planes sharing an edge intersect only on that edge. The
+        // coplanar branch above still rejects positive-area overlap/foldovers.
+        var shared_vertices: usize = 0;
+        for (a.v) |av| for (b.v) |bv| {
+            if (sameV(av, bv)) shared_vertices += 1;
+        };
+        if (shared_vertices >= 2) return false;
         for (0..2) |side| {
             const t = if (side == 0) a else b;
             const target = if (side == 0) b else a;
@@ -273,18 +280,22 @@ pub const Mesh = struct {
                 const h = e.cross(d, ac);
                 const det = e.dot(ab, h);
                 if (@abs(det) < 1e-14 * e.norm(ab) * e.norm(ac) * e.norm(d)) continue;
+                // A nonparallel segment with an exact shared endpoint meets
+                // the target plane at that endpoint only. Do not reconstruct
+                // the known contact through a near-parallel division and then
+                // compare its rounded world-space position with the vertex.
+                var shared_endpoint = false;
+                for (target.v) |vtx| {
+                    if (sameV(start, vtx) or sameV(end, vtx)) shared_endpoint = true;
+                }
+                if (shared_endpoint) continue;
                 const q = e.sub(start, target.v[0]);
                 const u = e.dot(q, h) / det;
                 const cr = e.cross(q, ab);
                 const v = e.dot(d, cr) / det;
                 const tval = e.dot(ac, cr) / det;
                 if (u < -1e-10 or v < -1e-10 or u + v > 1 + 1e-10 or tval < -1e-10 or tval > 1 + 1e-10) continue;
-                const point = e.add(start, e.scale(d, tval));
-                var shared = false;
-                for (t.v) |tv| for (target.v) |bv| {
-                    if (sameV(tv, bv) and e.norm(e.sub(point, tv)) < 1e-9) shared = true;
-                };
-                if (!shared) return true;
+                return true;
             }
         }
         return false;
@@ -511,4 +522,28 @@ test "scanline event capacity exhaustion falls back instead of truncating inters
     cache = .{ .events = &room };
     try std.testing.expect(!try cache.contains(&m, .{ 0.8, 0.8, 2 }, 1));
     try std.testing.expectEqual(@as(usize, 0), cache.lines[1].len);
+}
+
+test "triangle topology accepts shared contact but rejects folds and crossings" {
+    const Helper = struct {
+        fn tri(v: [3]e.V) Tri {
+            return .{ .v = v, .bounds = undefined };
+        }
+    };
+    const tri = Helper.tri;
+    const a = tri(.{ .{ 0, 0, 0 }, .{ 2, 0, 0 }, .{ 0, 2, 0 } });
+    // Shared edge, different planes: intersection is exactly the shared edge.
+    try std.testing.expect(!Mesh.trianglesIntersect(a, tri(.{ .{ 0, 0, 0 }, .{ 2, 0, 0 }, .{ 1, 1, 1e-7 } })));
+    // Shared edge on the same plane: folded/overlapping faces remain invalid.
+    try std.testing.expect(Mesh.trianglesIntersect(a, tri(.{ .{ 0, 0, 0 }, .{ 2, 0, 0 }, .{ 1, 0.5, 0 } })));
+    try std.testing.expect(!Mesh.trianglesIntersect(a, tri(.{ .{ 0, 0, 0 }, .{ 2, 0, 0 }, .{ 1, -1, 0 } })));
+    // Shared vertex does NOT exempt a pair with a genuine interior intersection.
+    try std.testing.expect(Mesh.trianglesIntersect(a, tri(.{ .{ 0, 0, 0 }, .{ 1, 1, 1 }, .{ 1, 1, -1 } })));
+    try std.testing.expect(!Mesh.trianglesIntersect(a, tri(.{ .{ 0, 0, 0 }, .{ 1, 1, 1 }, .{ 2, 1, 1 } })));
+    try std.testing.expect(Mesh.trianglesIntersect(a, a));
+    // Recorded false-positive pair: reconstructing its known shared endpoint
+    // through a near-parallel division displaced the contact by about 4e-9 mm.
+    const first = tri(.{ .{ 10001.063508379937, -9999.458431084633, 0.7161083784103394 }, .{ 10000.509984213591, -9998.61556931305, 1.7076702680587768 }, .{ 10000.41167463708, -9998.700069268227, 0.7161083784103394 } });
+    const second = tri(.{ first.v[0], .{ 10001.161818016053, -9999.37393118906, 1.7076702680587768 }, first.v[1] });
+    try std.testing.expect(!Mesh.trianglesIntersect(first, second));
 }

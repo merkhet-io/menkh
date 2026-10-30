@@ -1,0 +1,6 @@
+
+Build Summary: 3/3 steps succeeded; 51/51 tests passed
+test success
++- run test 51 passed 65ms MaxRSS:2M
+   +- compile test ReleaseFast aarch64-macos cached 36ms MaxRSS:31M
+

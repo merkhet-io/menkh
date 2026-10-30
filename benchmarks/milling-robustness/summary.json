@@ -1,0 +1,59 @@
+{
+  "occupancy_sha256": "6971519449ef91e2fc0ca7dbbade173feeaa6393a2f2daa3f6914d869517eab7",
+  "warmups_per_binary": 1,
+  "repeats_per_binary": 2,
+  "before": {
+    "wall_s": {
+      "min": 25.434581584006082,
+      "median": 25.493166646003374,
+      "max": 25.551751708000666
+    },
+    "voxelization_s": {
+      "min": 5.311526542,
+      "median": 5.314227688,
+      "max": 5.316928834
+    },
+    "cut_s": {
+      "min": 19.246860583,
+      "median": 19.286879560000003,
+      "max": 19.326898537
+    },
+    "peak_rss_bytes": 119816192,
+    "stock_ray_cache_bytes": 8580096,
+    "stock_scanlines": 768613,
+    "stock_scanline_fallbacks": 11,
+    "stock_scanline_scratch_bytes": 1223752,
+    "cache_build_s": {
+      "min": 0.001779584,
+      "median": 0.0018492715000000002,
+      "max": 0.001918959
+    }
+  },
+  "after": {
+    "wall_s": {
+      "min": 21.719041000003926,
+      "median": 21.74885691649979,
+      "max": 21.778672832995653
+    },
+    "voxelization_s": {
+      "min": 5.297909958,
+      "median": 5.315832729,
+      "max": 5.3337555
+    },
+    "cut_s": {
+      "min": 15.558251393,
+      "median": 15.565984362,
+      "max": 15.573717331
+    },
+    "peak_rss_bytes": 121274368,
+    "stock_ray_cache_bytes": 8580096,
+    "stock_scanlines": 768613,
+    "stock_scanline_fallbacks": 11,
+    "stock_scanline_scratch_bytes": 1223752,
+    "cache_build_s": {
+      "min": 0.001801708,
+      "median": 0.0018223954999999998,
+      "max": 0.001843083
+    }
+  }
+}

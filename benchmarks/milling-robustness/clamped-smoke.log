@@ -1,0 +1,3 @@
+/Users/zin/sophia/menkh/out/milling-robustness/clamped-smoke/fixture/job.json: 5199 segments, voxel 0.25 mm
+safe {'cutter_fixture': {'separated_voxel_geometry': 5199}, 'shank_fixture': {'separated_voxel_geometry': 5199}, 'holder_fixture': {'separated_voxel_geometry': 5199}}
+unsafe {'cutter_fixture': {'separated_voxel_geometry': 5027, 'unresolved_voxel_contact': 18, 'occupied_center_contact': 154}, 'shank_fixture': {'separated_voxel_geometry': 5045, 'unresolved_voxel_contact': 52, 'occupied_center_contact': 102}, 'holder_fixture': {'separated_voxel_geometry': 4921, 'unresolved_voxel_contact': 89, 'occupied_center_contact': 189}}

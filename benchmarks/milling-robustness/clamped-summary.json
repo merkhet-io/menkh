@@ -1,0 +1,119 @@
+{
+  "runs": {
+    "safe": {
+      "wall_s": 21.862348333001137,
+      "peak_rss_bytes": 134021120,
+      "fixture_status_counts": {
+        "cutter_fixture": {
+          "separated_voxel_geometry": 5199
+        },
+        "shank_fixture": {
+          "separated_voxel_geometry": 5199
+        },
+        "holder_fixture": {
+          "separated_voxel_geometry": 5199
+        }
+      },
+      "occupancy_sha256": "74a97914804617c56d25925dd265946967d1e476986d878ce51aff240cb76e24",
+      "remaining_voxels": 146096939,
+      "voxel_mm": 0.025
+    },
+    "unsafe": {
+      "wall_s": 24.51182337498176,
+      "peak_rss_bytes": 134234112,
+      "fixture_status_counts": {
+        "cutter_fixture": {
+          "separated_voxel_geometry": 5035,
+          "occupied_center_contact": 164
+        },
+        "shank_fixture": {
+          "separated_voxel_geometry": 5087,
+          "occupied_center_contact": 112
+        },
+        "holder_fixture": {
+          "separated_voxel_geometry": 4930,
+          "unresolved_voxel_contact": 7,
+          "occupied_center_contact": 262
+        }
+      },
+      "occupancy_sha256": "74a97914804617c56d25925dd265946967d1e476986d878ce51aff240cb76e24",
+      "remaining_voxels": 146096939,
+      "voxel_mm": 0.025
+    }
+  },
+  "independent_flat_assembly_checks": [
+    {
+      "operation": "finish-00000",
+      "part": "shank",
+      "independent_center_count": 0,
+      "reported_center_count": 0
+    },
+    {
+      "operation": "finish-01039",
+      "part": "shank",
+      "independent_center_count": 1755,
+      "reported_center_count": 1755
+    },
+    {
+      "operation": "finish-02599",
+      "part": "shank",
+      "independent_center_count": 0,
+      "reported_center_count": 0
+    },
+    {
+      "operation": "finish-02664",
+      "part": "shank",
+      "independent_center_count": 2133,
+      "reported_center_count": 2133
+    },
+    {
+      "operation": "finish-04095",
+      "part": "shank",
+      "independent_center_count": 2160,
+      "reported_center_count": 2160
+    },
+    {
+      "operation": "finish-05198",
+      "part": "shank",
+      "independent_center_count": 0,
+      "reported_center_count": 0
+    },
+    {
+      "operation": "finish-00000",
+      "part": "holder",
+      "independent_center_count": 0,
+      "reported_center_count": 0
+    },
+    {
+      "operation": "finish-01683",
+      "part": "holder",
+      "independent_center_count": 36,
+      "reported_center_count": 36
+    },
+    {
+      "operation": "finish-02599",
+      "part": "holder",
+      "independent_center_count": 0,
+      "reported_center_count": 0
+    },
+    {
+      "operation": "finish-03055",
+      "part": "holder",
+      "independent_center_count": 161486,
+      "reported_center_count": 161486
+    },
+    {
+      "operation": "finish-04484",
+      "part": "holder",
+      "independent_center_count": 590,
+      "reported_center_count": 590
+    },
+    {
+      "operation": "finish-05198",
+      "part": "holder",
+      "independent_center_count": 0,
+      "reported_center_count": 0
+    }
+  ],
+  "note": "Procedural representative clamping setup, not customer-qualified CAM. Unsafe tall clamps deliberately intersect the tool assembly. Collisions are reported; they do not abort or alter material subtraction. Separation applies to represented voxel cubes against the conservative sweep, not real-world clearance."
+}

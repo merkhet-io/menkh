@@ -584,3 +584,21 @@ test "scanline voxelization preserves faces edges partial blocks and canonical p
         };
     }
 }
+
+test "collision reports distinguish voxel face contact from proven separation" {
+    var g = try e.stock(a, .{ .lo = .{ 0, 0, 0 }, .hi = .{ 1, 1, 1 } }, 1, &.{.{ .box = .{ .lo = .{ 0, 0, 0 }, .hi = .{ 1, 1, 1 } } }});
+    defer g.deinit();
+    for ([_]f64{ -0.2, -0.1, -0.05, 0.5 }, [_]inspect.Clearance{ .separated_voxel_geometry, .unresolved_voxel_contact, .unresolved_voxel_contact, .occupied_center_contact }) |x, status| {
+        const pose = e.Pose{ .position = .{ x, 0.5, 0 } };
+        const shape = e.Shape{ .sweep = .{ .tool = .{ .radius = 0.1, .length = 1 }, .a = pose, .b = pose } };
+        const contact = try inspect.collision(g, shape);
+        try std.testing.expectEqual(status, contact.clearance);
+        try std.testing.expectEqual(status == .unresolved_voxel_contact, contact.representation_clearance_uncertain);
+        try std.testing.expectEqual(status == .unresolved_voxel_contact, contact.first_unresolved_cell_bounds != null);
+    }
+    // Both endpoint tools are outside; the continuous sweep intersects the voxel.
+    const crossing = e.Shape{ .sweep = .{ .tool = .{ .radius = 0.1, .length = 1 }, .a = .{ .position = .{ -2, 0.5, 0 } }, .b = .{ .position = .{ 2, 0.5, 0 } } } };
+    const hit = try inspect.collision(g, crossing);
+    try std.testing.expectEqual(inspect.Clearance.occupied_center_contact, hit.clearance);
+    try std.testing.expectEqual(@as(u64, 1), hit.occupied_centers);
+}

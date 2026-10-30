@@ -36,6 +36,10 @@ jobs:
         run: |
           python3 scripts/test-finishing-import.py
           python3 scripts/test-scanline-import.py
+      - name: Continuous ball and fixture-clearance oracles
+        run: |
+          python3 scripts/validate-ball-sweep.py --smoke
+          python3 scripts/clamped-finishing.py --voxel 0.25 --skip-build --out out/clamped-ci
   windows-cli:
     runs-on: windows-2025
     timeout-minutes: 20

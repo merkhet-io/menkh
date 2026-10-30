@@ -40,11 +40,19 @@ segments at 25 µm, compares remaining material with the target, checks checkpoi
 and compacted-checkpoint resumption, and saves native Metal inspection images.
 The smoke run keeps the same geometry/path at 250 µm. See the [frozen protocol](docs/FINISHING-PROTOCOL.md),
 [implementation and reproduction](docs/FINISHING-ARCHITECTURE.md), and
-[measured results and accuracy limits](docs/FINISHING-RESULTS.md). A
-[follow-up import optimization](docs/IMPORT-CACHE-RESULTS.md) completes the same
-25 µm job in 48.05 s median with 119.77 MB peak RSS on the M5 Max.
-[Shared scanline classification](docs/SCANLINE-IMPORT.md) subsequently reduces it
-to **25.58 s**, with **119.82 MB** peak RSS and byte-identical material/history.
+[measured results and accuracy limits](docs/FINISHING-RESULTS.md). The
+[current robustness milestone](docs/MILLING-ROBUSTNESS.md) completes the frozen
+25 µm job in **21.75 s**, with **15.57 s cutting** and **121.27 MB peak RSS** on the
+M5 Max. See the [product roadmap](docs/PRODUCT-ROADMAP.md) for the next release gates.
+
+To exercise imported fixture geometry and contact reporting:
+
+```sh
+python3 scripts/clamped-finishing.py
+```
+
+This generates both a low-clamp setup and a deliberately colliding tall-clamp setup;
+contacts are reported, not used to stop or reroute the path.
 
 ## CPU performance
 

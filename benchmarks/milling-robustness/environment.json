@@ -1,0 +1,37 @@
+{
+  "hardware": "Apple M5 Max, 18 CPU cores, 128 GB RAM; macOS 27.0.1 (26A434)",
+  "final_source_sha256": {
+    "src/core.zig": "b2194ad98966a6ce9d2fbdf9813e921dc982c1c19571d322508c7c1924116dcf",
+    "src/drill.zig": "96c255c23b3c48b199a896e9dbbc7ea0bf4c5611cde5886402607b55b2b687da",
+    "src/engine.zig": "f49fc305c7abc5a998ca484a2b3023deff06437bd8fbfb4e917418524a186531",
+    "src/engine_tests.zig": "1fc91cd50ebaca0d85ac312b679aeb742a91c52e273cf6582a36ba3d513164e2",
+    "src/fine.zig": "d1c2953a9244e05e7745edaf493f63a674275c0996b92293d803940eeac379fe",
+    "src/formal_bridge.zig": "f2b10d26eaf661871b01081074a3fd4c2fd1833afaa8fd6d8edcd1fcd8d98ed8",
+    "src/inspect.zig": "5e8c7409947d55051d826be92083a3c79bbb8bc10ba836e4e9fde5c7686017d4",
+    "src/job.zig": "8bb7eba79bc5f98e186d1676c08dcb979ae599630d8e8e691bdf16f3a6e47e31",
+    "src/kernel_bench.zig": "c7bb96a12903a96369b7f0476598cf05a73cb9888f867e0bc38ca27bc4873b7b",
+    "src/main.zig": "c0a52389d7112ce1480c7b2df2ccbfcea7747f290a96f44133fa2d0b0f282971",
+    "src/mesh_input.zig": "9e9aabf7856bd2e8f4e190cb09050744870118508a48f311e85877edb318138a",
+    "src/motion.zig": "26ea5a2bc50a559b6a992165f2a509d9badcd5f179ca67e251d43de7540451b1",
+    "src/platform.zig": "d465d9d917c5d48c192e5f4981feefdae9c77816f13d6add1eb6ef802bc0a9d7",
+    "src/state.zig": "b2e8f10d755ee1097f940d21224cb9c30cacf03e135bb344e601a61dc0bef11a",
+    "src/surface.zig": "65344ed7a03fc28323fca3c7442caa87d78a514690b57b53fca83f85143a1cff",
+    "src/tests.zig": "4be901857a7d6b469680c2c7dfa0e3554c638c11806fdf7153e4beef19270268",
+    "src/tiles.zig": "0386c3fc9248f26d3a59a3b9d1516aac0edb602148d3da4e769d2f2009df5050"
+  },
+  "final_binary_sha256": "0c2b7bf9b57447a57b01b2b87b2fce10194f261534d871f66d24bdc31aa9a3cd",
+  "source_change_since_measurement": "Only corrected a regression-test comment: 4 nm -> 4e-9 mm. Executable instruction section remains byte-identical; see comment-correction.json.",
+  "script_sha256": {
+    "scripts/clamped-finishing.py": "5e0a68a3faa830915f751bc405c2734da199a3cd484b0bfeb7525d758ba69c07",
+    "scripts/validate-ball-sweep.py": "27bdb708b032d957d38f8912e6512577ec3e76b1b6d2a3e7464c5499cafee2e9",
+    "scripts/test-scanline-import.py": "bd6e853d82770132cdd3db645f839af4c8ab1bbf63223f3173a441137936ec54"
+  },
+  "fixture_sha256": {
+    "safe-clamps.stl": "361e0b4d6f78119ffb77cfa9486bd3ce41a0b0817fc54c92df743991e1658be3",
+    "stock.stl": "2a6d2bd1d6a37e6acda8c074e37ef0602a6f1a44c8efc104517f2eda72afc857",
+    "target.stl": "408b4632bf4bbcf4c8c8bf65fad2938d97f811b29ff69ecd152c3e02865042b1",
+    "unsafe-clamps.stl": "67ebeec85c92f4745e05e01fa48784c647e5ea9d4d899307c5b6452e24be1228"
+  },
+  "viewer_binary_sha256": "5c618487a4298db388399699088d6843a4557d8f4a75efbd7490a61b88875491",
+  "note": "The clamped setups are single validation runs, not repeated benchmarks. Fixtures are original procedural geometry, not customer data."
+}
