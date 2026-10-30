@@ -358,6 +358,8 @@ class Renderer {
                                           heap->GetCPUDescriptorHandleForHeapStart());
     }
     void render(History &h, const Camera &camera) {
+        // Keep the acquired swapchain resource alive until command execution completes.
+        ComPtr<ID3D12Resource> back;
         const auto u = camera.uniforms(h, width, height);
         std::memcpy(constantData, &u, sizeof(u));
         begin();
@@ -372,7 +374,6 @@ class Renderer {
         commands->SetComputeRootDescriptorTable(2, heap->GetGPUDescriptorHandleForHeapStart());
         commands->Dispatch((width + 7) / 8, (height + 7) / 8, 1);
         if (swap) {
-            ComPtr<ID3D12Resource> back;
             hr(swap->GetBuffer(swap->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&back)),
                "Get swap image");
             transition(output.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
