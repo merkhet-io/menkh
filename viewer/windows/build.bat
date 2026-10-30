@@ -15,7 +15,7 @@ if "%~1"=="--project" (
   exit /b 0
 )
 if not exist "..\..\out\windows-viewer" mkdir "..\..\out\windows-viewer"
-cl /nologo /std:c++17 /EHsc /O2 /W4 /DUNICODE /D_UNICODE /DNOMINMAX /DWIN32_LEAN_AND_MEAN main.cpp /Fo"..\..\out\windows-viewer\main.obj" /Fe"..\..\out\windows-viewer\menkh-viewer.exe" /link d3d12.lib dxgi.lib d3dcompiler.lib user32.lib gdi32.lib comctl32.lib
+cl /nologo /std:c++17 /EHsc /MT /O2 /W4 /DUNICODE /D_UNICODE /DNOMINMAX /DWIN32_LEAN_AND_MEAN main.cpp /Fo"..\..\out\windows-viewer\main.obj" /Fe"..\..\out\windows-viewer\menkh-viewer.exe" /link d3d12.lib dxgi.lib d3dcompiler.lib user32.lib gdi32.lib comctl32.lib
 if errorlevel 1 exit /b 1
 copy /y Voxel.hlsl "..\..\out\windows-viewer\Voxel.hlsl" >nul
 if errorlevel 1 exit /b 1
