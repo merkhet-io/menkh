@@ -1,0 +1,25 @@
+{
+  "averaged_normals" : false,
+  "fixtures_visible" : true,
+  "frame" : 5199,
+  "gpu_ms_max" : 4.7629166801925749,
+  "gpu_ms_median" : 4.6630833385279402,
+  "gpu_ms_min" : 4.5261249761097133,
+  "grid" : [
+    960,
+    640,
+    400
+  ],
+  "height" : 900,
+  "holder_visible" : true,
+  "load_upload_seconds" : 0.051488995552062988,
+  "note" : "GPU command duration only, offscreen static view; not interactive FPS",
+  "samples" : 10,
+  "samples_per_pixel" : 4,
+  "section_axis" : 2,
+  "section_fraction" : 1,
+  "seek_seconds" : 0.27769196033477783,
+  "target_comparison" : true,
+  "warmups" : 3,
+  "width" : 1280
+}

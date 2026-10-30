@@ -10,7 +10,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Explicit origin and finite domain | Implemented, validated | Negative/translated coordinates, non-cubic grids, edge blocks; common workpiece coordinates |
 | Cuboid, cylinder, sphere stock and primitive unions | Implemented, validated | Independent exhaustive center oracles; cylinders accept a fixed unit axis |
 | Flat end mill | Implemented, validated | Finite cylinder, stationary and arbitrary straight translation at fixed orientation; analytic axial/radial time-interval intersection |
-| Ball end mill | Implemented, validated | Lower hemisphere plus cylindrical cutting length, not a sphere alone; independent profile oracle |
+| Ball end mill | Implemented, validated | Lower hemisphere plus cylindrical cutting length, not a sphere alone; independent profile oracle; discrete convex pose search, continuous-coverage and randomized scalar comparisons |
 | Bull-nose end mill | Implemented, validated | Bottom corner radius, flat central face, cylindrical flute; independent profile oracle |
 | Taper and idealized drill | Implemented, restricted | Truncated cone and full conical cutter; no flutes, chisel edge, relief, or production drill definition |
 | Fixed tilted orientation / 3+2 | Implemented, validated | Unit tool axis fixed within each operation; arbitrary straight translation |
@@ -22,15 +22,15 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Resumable state | Implemented, validated | Little-endian checked format, checksums, slot/index/padding validation; same-grid resumption |
 | Reversible history | Implemented, validated | Transactional Zig replay tests; native general-job and full 4096³ forward/backward/forward replay |
 | Pool compaction | Implemented, restricted | Explicit checkpoint boundary; old slot-index histories must not be applied afterward |
-| Binary STL stock and target | Implemented, restricted | BVH ray parity, edge manifold/winding and intersection checks; rotated concave and cavity fixtures; no repair, ASCII STL, STEP, or general CAD kernel |
+| Binary STL stock and target | Implemented, restricted | BVH ray parity with conservative surface-excluded region filling; edge manifold/winding and intersection checks; rotated concave and cavity fixtures; no repair, ASCII STL, STEP, or general CAD kernel |
 | Removed/remaining volume and engagement | Implemented, validated | Count × voxel volume; engagement is newly removed volume per operation |
 | Feed-derived quantities | Implemented, restricted | Straight-line length/feed only when supplied; no acceleration, dwell, spindle, or machine-cycle model |
-| Point, ray and arbitrary-plane sections | Implemented, validated | CPU occupancy, voxel-face ray hit, orthonormal plane PPM sampling; viewer Z clipping |
+| Point, ray and arbitrary-plane sections | Implemented, validated | CPU occupancy, voxel-face ray hit, orthonormal plane PPM sampling; viewer X/Y/Z clipping |
 | Target excess and missing material | Implemented, validated | Exact bitwise comparison on the same grid; sampled surface distances separately reported for one analytic target primitive |
 | Turning | Implemented, restricted | Complete-revolution rectangular-insert envelopes for longitudinal/facing cuts, explicit spindle origin/axis; independently validated radial profiles |
 | Combined milling and turning | Experimental geometric composition | Same stock and tilted/translated spindle transforms tested; no spindle-angle evolution, turret, synchronization, or production mill-turn claim |
-| Direct Metal inspection | Implemented, validated | Rectangular grids/origins, history scrubbing, Z section, target colors, fixture and shank/holder visibility, occupied-point picking |
-| General tool rendering | Restricted | Flat cutter, shank and holder shown at recorded poses; other general cutter shapes are not yet rendered. Legacy mesh drill animation retains its tool illustration |
+| Direct Metal inspection | Implemented, validated | Rectangular grids/origins, history scrubbing, X/Y/Z sections, target colors, fixture and shank/holder visibility, occupied-point picking |
+| General tool rendering | Restricted | Flat and complete ball cutter, shank and holder shown at recorded poses; other general cutter shapes are not yet rendered. Legacy mesh drill animation retains its tool illustration |
 | Incremental GPU updates | Implemented | Changed descriptors/bits uploaded in shared buffers; CPU waits for prior GPU command; no whole-state upload each frame |
 | Surface export | Implemented, validated | Greedy voxel-boundary OBJ quads, outward orientation, independently checked oriented volume and unit-edge closure; nonmanifold contacts reported |
 | Surface reconstruction / subvoxel truth | Unsupported | No Hermite samples, SDF material grid, resampling, or geometric smoothing. Normal averaging affects lighting only |
@@ -53,3 +53,7 @@ are visualized; targets, fixtures and non-flat cutter display are restricted as
 documented. Windows CI renders via WARP; hardware interaction/FPS are unmeasured.
 Checkpoint surface inspection counts six-neighbor boundary voxels and exposed
 faces independently of mesh generation; see [count semantics](INSPECTION-COUNTS.md).
+
+The [imported finishing milestone](FINISHING-RESULTS.md) records a frozen long-job
+experiment, independent sampled contour evidence and checkpoint/replay results.
+Its input triangulation and toolpath allowance/scallops are separate from simulation error.

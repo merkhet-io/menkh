@@ -17,7 +17,7 @@ python3 scripts/finishing-workflow.py --smoke --out out/finishing-smoke
 ReleaseFast executable. Both modes run warm-up plus two measured repetitions,
 midpoint checkpoint/resume, compaction/resume, canonical occupancy comparison,
 and geometric inspection. Full mode additionally runs the resolution matrix and
-analytic accuracy fixture. The native viewer saves final, comparison, X/Y section
+analytic accuracy fixture and a tighter 1 µm motion-tolerance diagnostic. The native viewer saves final, comparison, X/Y section
 and tool-assembly images, verifies complete history replay and measures loading,
 seeking and offscreen GPU durations. No global dependencies are installed.
 
