@@ -3,6 +3,8 @@
 The original milestone measurements below are retained. A subsequent
 [triangle-cache optimization](IMPORT-CACHE-RESULTS.md) reduces the same job to
 48.05 s median, with identical occupancy and unchanged peak RSS.
+[Shared scanlines](SCANLINE-IMPORT.md) subsequently reduce it to 25.58 s, retaining
+byte-identical material and history.
 
 The complete 25 µm workflow succeeded on the Apple M5 Max: imported stock and
 target, 5,199 ball-end segments, target comparison, checkpoint/resume,

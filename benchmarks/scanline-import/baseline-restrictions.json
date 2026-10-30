@@ -1,0 +1,17 @@
+[
+  {
+    "case": "cavity-2",
+    "baseline_returncode": 1,
+    "stderr": "menkh: SelfIntersectingSTL\n"
+  },
+  {
+    "case": "concave-2",
+    "baseline_returncode": 1,
+    "stderr": "menkh: SelfIntersectingSTL\n"
+  },
+  {
+    "case": "thin-2",
+    "baseline_returncode": 1,
+    "stderr": "menkh: SelfIntersectingSTL\n"
+  }
+]

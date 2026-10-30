@@ -22,7 +22,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Resumable state | Implemented, validated | Little-endian checked format, checksums, slot/index/padding validation; same-grid resumption |
 | Reversible history | Implemented, validated | Transactional Zig replay tests; native general-job and full 4096³ forward/backward/forward replay |
 | Pool compaction | Implemented, restricted | Explicit checkpoint boundary; old slot-index histories must not be applied afterward |
-| Binary STL stock and target | Implemented, restricted | BVH ray parity with conservative surface-excluded region filling; edge manifold/winding and intersection checks; rotated concave and cavity fixtures; no repair, ASCII STL, STEP, or general CAD kernel |
+| Binary STL stock and target | Implemented, restricted | Shared vertical scanlines with three-direction parity fallback and conservative surface-excluded region filling; edge manifold/winding and intersection checks; rotated concave and cavity fixtures; no repair, ASCII STL, STEP, or general CAD kernel |
 | Removed/remaining volume and engagement | Implemented, validated | Count × voxel volume; engagement is newly removed volume per operation |
 | Feed-derived quantities | Implemented, restricted | Straight-line length/feed only when supplied; no acceleration, dwell, spindle, or machine-cycle model |
 | Point, ray and arbitrary-plane sections | Implemented, validated | CPU occupancy, voxel-face ray hit, orthonormal plane PPM sampling; viewer X/Y/Z clipping |
@@ -57,3 +57,7 @@ faces independently of mesh generation; see [count semantics](INSPECTION-COUNTS.
 The [imported finishing milestone](FINISHING-RESULTS.md) records a frozen long-job
 experiment, independent sampled contour evidence and checkpoint/replay results.
 Its input triangulation and toolpath allowance/scallops are separate from simulation error.
+
+[Scanline import validation](SCANLINE-IMPORT.md) adds 13 accepted 3D-transformed
+fixtures and records three pre-existing `SelfIntersectingSTL` rejections explicitly;
+those rejected fixtures are not claimed as supported.

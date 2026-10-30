@@ -1,5 +1,8 @@
 # Follow-up: cached STL ray calculations
 
+These measurements are retained as historical evidence. A subsequent
+[shared-scanline optimization](SCANLINE-IMPORT.md) reduces the same job to 25.58 s.
+
 The unchanged 25 µm imported finishing job now takes **48.05 s median**, compared
 with **52.23 s** for the pre-cache executable in an alternating before/after run.
 This is an **8.0% reduction in whole-process time**. Combined stock and target

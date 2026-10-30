@@ -561,3 +561,26 @@ test "cached STL rays match uncached parity at translated faces edges and random
         }
     }
 }
+
+test "scanline voxelization preserves faces edges partial blocks and canonical pool order" {
+    const bytes = try cubeSTL(a);
+    defer a.free(bytes);
+    for ([_]e.V{ .{ 0, 0, 0 }, .{ 0.013, -0.017, 0.009 }, .{ 10000.013, -9999.983, 0.009 } }) |origin| {
+        var m = try mesh.Mesh.parse(a, bytes, 1, origin);
+        defer m.deinit();
+        const bounds = e.Bounds{ .lo = e.add(origin, .{ -0.125, -0.125, -0.125 }), .hi = e.add(origin, .{ 2.4, 2.4, 2.4 }) };
+        var fast = try m.voxelize(a, bounds, 0.25);
+        defer fast.deinit();
+        try std.testing.expect(m.scanlines > 0);
+        try std.testing.expect(m.scanline_fallbacks > 0);
+        var scalar = try m.voxelizeMode(a, bounds, 0.25, true);
+        defer scalar.deinit();
+        for (0..fast.blocks.len) |i| try std.testing.expectEqualSlices(u64, &scalar.bits(i), &fast.bits(i));
+        // Imported partial-block slots follow increasing descriptor index.
+        var slot: u32 = 0;
+        for (fast.blocks) |d| if (d < @import("core.zig").full) {
+            try std.testing.expectEqual(slot, d);
+            slot += 1;
+        };
+    }
+}
