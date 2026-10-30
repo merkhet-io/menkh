@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "units": "mm",
+  "bounds": {
+    "lo": [
+      0,
+      0,
+      0
+    ],
+    "hi": [
+      8,
+      8,
+      8
+    ]
+  },
+  "voxel_mm": 0.25,
+  "stock": {
+    "primitives": [
+      {
+        "box": {
+          "lo": [
+            0,
+            0,
+            0
+          ],
+          "hi": [
+            8,
+            8,
+            8
+          ]
+        }
+      }
+    ]
+  },
+  "tools": [
+    {
+      "cutter": {
+        "kind": "bull",
+        "radius": 0.6,
+        "length": 4,
+        "corner": 0.2
+      }
+    }
+  ],
+  "operations": [
+    {
+      "id": "helix",
+      "tool": 0,
+      "arc": {
+        "center": [
+          4,
+          4,
+          3
+        ],
+        "radius": 2,
+        "start_angle": 0.17,
+        "sweep_angle": 6.283185307179586,
+        "rise": 1
+      }
+    }
+  ],
+  "export_mesh": true,
+  "motion_tolerance_mm": 0.1
+}

@@ -1,0 +1,106 @@
+{
+  "warmups_per_scene": 1,
+  "measured_repetitions": 4,
+  "samples_including_warmup": [
+    {
+      "case": "sparse-cylinder-4096",
+      "dense_bytes": 550143104,
+      "tiled_bytes": 33423360,
+      "convert_ns": 198652250,
+      "dense_query_ns": 12414375,
+      "tiled_query_ns": 6732667,
+      "hits": 31246,
+      "peak_rss_bytes": 584204288
+    },
+    {
+      "case": "sparse-cylinder-4096",
+      "dense_bytes": 550143104,
+      "tiled_bytes": 33423360,
+      "convert_ns": 198881292,
+      "dense_query_ns": 12494375,
+      "tiled_query_ns": 6684750,
+      "hits": 31246,
+      "peak_rss_bytes": 584204288
+    },
+    {
+      "case": "sparse-cylinder-4096",
+      "dense_bytes": 550143104,
+      "tiled_bytes": 33423360,
+      "convert_ns": 199075750,
+      "dense_query_ns": 12546916,
+      "tiled_query_ns": 6769334,
+      "hits": 31246,
+      "peak_rss_bytes": 584204288
+    },
+    {
+      "case": "sparse-cylinder-4096",
+      "dense_bytes": 550143104,
+      "tiled_bytes": 33423360,
+      "convert_ns": 205320750,
+      "dense_query_ns": 12495250,
+      "tiled_query_ns": 6838417,
+      "hits": 31246,
+      "peak_rss_bytes": 584204288
+    },
+    {
+      "case": "sparse-cylinder-4096",
+      "dense_bytes": 550143104,
+      "tiled_bytes": 33423360,
+      "convert_ns": 199391583,
+      "dense_query_ns": 12456834,
+      "tiled_query_ns": 6791708,
+      "hits": 31246,
+      "peak_rss_bytes": 584204288
+    },
+    {
+      "case": "full-cube-4096",
+      "dense_bytes": 536870912,
+      "tiled_bytes": 537919488,
+      "convert_ns": 917864041,
+      "dense_query_ns": 11918584,
+      "tiled_query_ns": 21448791,
+      "hits": 1000000,
+      "peak_rss_bytes": 1076772864
+    },
+    {
+      "case": "full-cube-4096",
+      "dense_bytes": 536870912,
+      "tiled_bytes": 537919488,
+      "convert_ns": 924248625,
+      "dense_query_ns": 11825584,
+      "tiled_query_ns": 21046708,
+      "hits": 1000000,
+      "peak_rss_bytes": 1076772864
+    },
+    {
+      "case": "full-cube-4096",
+      "dense_bytes": 536870912,
+      "tiled_bytes": 537919488,
+      "convert_ns": 920420000,
+      "dense_query_ns": 11659584,
+      "tiled_query_ns": 21008083,
+      "hits": 1000000,
+      "peak_rss_bytes": 1076772864
+    },
+    {
+      "case": "full-cube-4096",
+      "dense_bytes": 536870912,
+      "tiled_bytes": 537919488,
+      "convert_ns": 924822458,
+      "dense_query_ns": 12057542,
+      "tiled_query_ns": 21508708,
+      "hits": 1000000,
+      "peak_rss_bytes": 1076772864
+    },
+    {
+      "case": "full-cube-4096",
+      "dense_bytes": 536870912,
+      "tiled_bytes": 537919488,
+      "convert_ns": 936521875,
+      "dense_query_ns": 11702500,
+      "tiled_query_ns": 21678333,
+      "hits": 1000000,
+      "peak_rss_bytes": 1076772864
+    }
+  ]
+}

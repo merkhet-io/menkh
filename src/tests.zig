@@ -363,3 +363,7 @@ test "fine grid errors and allocation failures" {
     defer changes.deinit(a);
     try std.testing.expectError(error.InvalidCoordinate, fine.cut(&g, .{ .tip = std.math.nan(f64) }, &changes));
 }
+
+test {
+    _ = @import("engine_tests.zig");
+}

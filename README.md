@@ -1,6 +1,28 @@
 # menkh — voxel-based material removal on Apple Silicon
 
-For the current saved feature set and known limitations, see the [project status](docs/STATUS.md).
+Menkh now runs general geometric machining jobs, beyond the original groove and drill demos: primitive or binary-STL stock, fixed-orientation flat/ball/bull/taper cutters, bounded helical motion, resumable checkpoints, fixture/holder checks, target comparison, sections, and limited turning envelopes.
+
+Start the native demonstration:
+
+```sh
+./scripts/general-demo.sh
+```
+
+Run without the viewer:
+
+```sh
+./zig build job -Doptimize=ReleaseFast -- examples/general.json --out out/general
+./zig build test --summary all
+./zig build test -Doptimize=ReleaseFast --summary all
+python3 scripts/validate-engine.py
+python3 scripts/benchmark-engine.py
+```
+
+See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contracts](docs/ENGINE.md), [job/state/STL formats](docs/FORMATS.md), and [measured validation report](docs/ENGINE-VALIDATION.md). The matrix distinguishes tested behavior from restrictions; this is not a claim of ModuleWorks compatibility or feature parity. All material removal stays on the CPU. General jobs reject simultaneous orientation changes.
+
+![General job with target comparison and noncutting tool components](docs/general-job.png)
+
+The sections below retain the original reproducible demos. Historical benchmark numbers describe their original checkpoint; current engine measurements are in the validation report.
 
 This first working version includes a simulation core and CLI in **Zig 0.15.2**, a scalar reference implementation, optimized block-based CPU cutting, PPM height maps, voxel-surface OBJ meshes, JSON reports, and a separate native macOS viewer. The core has no external packages. The 25 µm configuration has been run and checked against the reference voxel by voxel.
 

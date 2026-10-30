@@ -1,0 +1,345 @@
+const std = @import("std");
+const e = @import("engine.zig");
+const a = std.testing.allocator;
+test "general origin stock union and tilted flat sweep independent time interval oracle" {
+    const b = e.Bounds{ .lo = .{ -3, -2, -1 }, .hi = .{ 5, 6, 7 } };
+    var g = try e.stock(a, b, 0.5, &.{.{ .box = b }});
+    defer g.deinit();
+    var r = try e.stock(a, b, 0.5, &.{.{ .box = b }});
+    defer r.deinit();
+    const s = e.Shape{ .sweep = .{ .tool = .{ .radius = 1.2, .length = 3 }, .a = .{ .position = .{ 0, 0, 0 }, .axis = .{ 0.6, 0, 0.8 } }, .b = .{ .position = .{ 3, 2, 1 }, .axis = .{ 0.6, 0, 0.8 } } } };
+    var c: e.Changes = .{};
+    defer c.deinit(a);
+    var d: e.Changes = .{};
+    defer d.deinit(a);
+    try e.subtract(&g, s, &c, false);
+    try e.subtract(&r, s, &d, true);
+    for (0..g.blocks.len) |i| try std.testing.expectEqualSlices(u64, &g.bits(i), &r.bits(i));
+    try std.testing.expect(c.removed > 0);
+    try e.subtract(&g, s, &c, false);
+    try std.testing.expectEqual(@as(u64, 0), c.removed);
+    try std.testing.expect(g.query(.{ -2.75, -1.75, -0.75 }));
+}
+test "tool profiles include flutes and reject orientation change" {
+    const ball = e.Tool{ .kind = .ball, .radius = 2, .length = 6 };
+    try ball.validate();
+    try std.testing.expect(ball.distance(1, 5) < 0);
+    try std.testing.expect(ball.distance(1, 0) > 0);
+    try std.testing.expectApproxEqAbs(@as(f64, 0), ball.distance(0, 0), 1e-12);
+    const bull = e.Tool{ .kind = .bull, .radius = 2, .length = 6, .corner = 0.5 };
+    try bull.validate();
+    try std.testing.expect(bull.distance(1, 0) == 0);
+    try std.testing.expect(bull.distance(2, 0) > 0);
+    const s = e.Sweep{ .tool = ball, .a = .{ .position = .{ 0, 0, 0 } }, .b = .{ .position = .{ 1, 0, 0 }, .axis = .{ 1, 0, 0 } } };
+    try std.testing.expectError(error.OrientationChangeUnsupported, s.validate());
+}
+const state = @import("state.zig");
+const inspect = @import("inspect.zig");
+const mesh = @import("mesh_input.zig");
+test "state roundtrip, checksum rejection, reversible history, compaction and cavities" {
+    const b = e.Bounds{ .lo = .{ -4, -4, -4 }, .hi = .{ 4, 4, 4 } };
+    var g = try e.stock(a, b, 0.5, &.{.{ .box = b }});
+    defer g.deinit();
+    const before = try state.encode(a, g);
+    defer a.free(before);
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    try e.subtract(&g, .{ .primitive = .{ .sphere = .{ .center = .{ 0, 0, 0 }, .radius = 2 } } }, &changes, false);
+    try std.testing.expect(!g.query(.{ 0, 0, 0 }));
+    try std.testing.expect(g.query(.{ 3, 0, 0 }));
+    const final = g.stats().occupied;
+    const file = try state.encode(a, g);
+    defer a.free(file);
+    var loaded = try state.decode(a, file);
+    defer loaded.deinit();
+    for (0..g.blocks.len) |i| try std.testing.expectEqualSlices(u64, &g.bits(i), &loaded.bits(i));
+    try state.replay(&g, changes.bytes.items, false);
+    try std.testing.expectEqual(@as(u64, 4096), g.stats().occupied);
+    try state.replay(&g, changes.bytes.items, true);
+    try std.testing.expectEqual(final, g.stats().occupied);
+    try std.testing.expectError(error.HistoryStateMismatch, state.replay(&g, changes.bytes.items, true));
+    try std.testing.expectError(error.CorruptHistory, state.replay(&g, changes.bytes.items[0..5], false));
+    try e.compact(&g);
+    try std.testing.expectEqual(final, g.stats().occupied);
+    try std.testing.expectEqual(g.stats().mixed_blocks, g.pool.items.len);
+    file[file.len - 1] ^= 1;
+    try std.testing.expectError(error.ChecksumMismatch, state.decode(a, file));
+    var initial = try state.decode(a, before);
+    defer initial.deinit();
+    const diff = try inspect.compare(g, initial);
+    try std.testing.expectEqual(@as(u64, 4096) - final, diff.missing);
+    try std.testing.expectEqual(@as(u64, 0), diff.excess);
+    const hit = (try inspect.ray(g, .{ 10, 0, 0 }, .{ -1, 0, 0 }, 20)).?;
+    try std.testing.expectApproxEqAbs(@as(f64, 4), hit.position[0], 1e-8);
+    const pixels = try inspect.section(a, g, .{ .origin = .{ -4, -4, 0 }, .u = .{ 1, 0, 0 }, .v = .{ 0, 1, 0 }, .pixel_mm = 0.5, .width = 16, .height = 16 });
+    defer a.free(pixels);
+    try std.testing.expectEqual(@as(u8, 24), pixels[(8 * 16 + 8) * 3]);
+}
+fn allocScenario(alloc: std.mem.Allocator) !void {
+    const b = e.Bounds{ .lo = .{ 0, 0, 0 }, .hi = .{ 8, 8, 8 } };
+    var g = try e.stock(alloc, b, 1, &.{.{ .box = b }});
+    defer g.deinit();
+    var changes: e.Changes = .{};
+    defer changes.deinit(alloc);
+    e.subtract(&g, .{ .primitive = .{ .sphere = .{ .center = .{ 4, 4, 4 }, .radius = 2 } } }, &changes, false) catch |err| {
+        try std.testing.expectEqual(@as(u64, 512), g.stats().occupied);
+        return err;
+    };
+    const bytes = try state.encode(alloc, g);
+    defer alloc.free(bytes);
+    var loaded = try state.decode(alloc, bytes);
+    defer loaded.deinit();
+    try e.compact(&loaded);
+}
+test "general operations allocation failures preserve occupancy and do not leak" {
+    try std.testing.checkAllAllocationFailures(a, allocScenario, .{});
+}
+test "flat 3D cylinder sweeps independent dense time oracle, reversal and split" {
+    var rng = std.Random.DefaultPrng.init(9127);
+    const random = rng.random();
+    for (0..12) |_| {
+        const axis = e.scale(e.V{ random.float(f64), random.float(f64), random.float(f64) }, 1);
+        const u = e.scale(axis, 1 / e.norm(axis));
+        const s = e.Sweep{ .tool = .{ .radius = 0.7, .length = 1.4 }, .a = .{ .position = .{ -0.3, 0.1, 0.2 }, .axis = u }, .b = .{ .position = .{ 1.2, 1.4, 1.3 }, .axis = u } };
+        try s.validate();
+        var reverse = s;
+        reverse.a = s.b;
+        reverse.b = s.a;
+        var first = s;
+        first.b.position = e.scale(e.add(s.a.position, s.b.position), 0.5);
+        var second = s;
+        second.a = first.b;
+        for (0..100) |_| {
+            const p = e.V{ random.float(f64) * 3 - 1, random.float(f64) * 3 - 1, random.float(f64) * 3 - 1 };
+            const exact = s.flatContains(p, 0);
+            try std.testing.expectEqual(exact, reverse.flatContains(p, 0));
+            try std.testing.expectEqual(exact, first.flatContains(p, 0) or second.flatContains(p, 0));
+            // Independent exhaustive moving-cylinder predicate; skip its known temporal uncertainty band.
+            var sampled = false;
+            var expanded = false;
+            const dilation = e.norm(e.sub(s.b.position, s.a.position)) / 2000;
+            for (0..1001) |i| {
+                const t = @as(f64, @floatFromInt(i)) / 1000;
+                const q = e.sub(p, e.add(s.a.position, e.scale(e.sub(s.b.position, s.a.position), t)));
+                const z = e.dot(q, u);
+                const radial = e.norm(e.cross(q, u));
+                if (z >= 0 and z <= 1.4 and radial <= 0.7) sampled = true;
+                if (z >= -dilation and z <= 1.4 + dilation and radial <= 0.7 + dilation) expanded = true;
+            }
+            if (sampled) try std.testing.expect(exact);
+            if (!expanded) try std.testing.expect(!exact);
+        }
+    }
+}
+test "ball and bull conservative sweeps cover continuous poses within declared bound" {
+    for ([_]e.Tool{ .{ .kind = .ball, .radius = 1, .length = 3 }, .{ .kind = .bull, .radius = 1, .length = 3, .corner = 0.3 } }) |tool| {
+        const s = e.Sweep{ .tool = tool, .a = .{ .position = .{ 0, 0, 0 } }, .b = .{ .position = .{ 2, 1, 1 } }, .tolerance_mm = 0.05 };
+        try s.validate();
+        try std.testing.expect(s.errorBound() <= 0.05);
+        // Independent points on flute, bottom arc, and top at unsampled times.
+        for (0..117) |i| {
+            const t = (@as(f64, @floatFromInt(i)) + 0.37) / 117;
+            const base = e.scale(s.b.position, t);
+            for ([_]e.V{ .{ 0.999, 0, 2 }, .{ 0, 0, 0.001 }, .{ 0, 0, 2.999 } }) |offset| try std.testing.expect((e.Shape{ .sweep = s }).contains(e.add(base, offset)));
+        }
+    }
+}
+test "noncutting geometry collision is separate from cutter engagement" {
+    const b = e.Bounds{ .lo = .{ 0, 0, 0 }, .hi = .{ 4, 4, 4 } };
+    var g = try e.stock(a, b, 0.5, &.{.{ .box = b }});
+    defer g.deinit();
+    const hit = try inspect.collision(g, .{ .sweep = .{ .tool = .{ .radius = 1, .length = 2 }, .a = .{ .position = .{ -2, 2, 3 } }, .b = .{ .position = .{ 6, 2, 3 } } } });
+    try std.testing.expect(hit.occupied_centers > 0);
+    try std.testing.expectEqual(@as(u64, 512), g.stats().occupied);
+}
+fn cubeSTL(alloc: std.mem.Allocator) ![]u8 {
+    const vertices = [_]e.V{ .{ 0, 0, 0 }, .{ 2, 0, 0 }, .{ 2, 2, 0 }, .{ 0, 2, 0 }, .{ 0, 0, 2 }, .{ 2, 0, 2 }, .{ 2, 2, 2 }, .{ 0, 2, 2 } };
+    const faces = [_][3]usize{ .{ 0, 2, 1 }, .{ 0, 3, 2 }, .{ 4, 5, 6 }, .{ 4, 6, 7 }, .{ 0, 1, 5 }, .{ 0, 5, 4 }, .{ 1, 2, 6 }, .{ 1, 6, 5 }, .{ 2, 3, 7 }, .{ 2, 7, 6 }, .{ 3, 0, 4 }, .{ 3, 4, 7 } };
+    const bytes = try alloc.alloc(u8, 84 + 12 * 50);
+    @memset(bytes, 0);
+    std.mem.writeInt(u32, bytes[80..84], 12, .little);
+    for (faces, 0..) |face, i| for (face, 0..) |v, j| for (vertices[v], 0..) |value, k| {
+        const f: f32 = @floatCast(value);
+        const off = 84 + i * 50 + 12 + j * 12 + k * 4;
+        std.mem.writeInt(u32, bytes[off..][0..4], @bitCast(f), .little);
+    };
+    return bytes;
+}
+test "binary STL BVH parity, boundary, voxelization, malformed and open meshes" {
+    const bytes = try cubeSTL(a);
+    defer a.free(bytes);
+    var m = try mesh.Mesh.parse(a, bytes, 1, .{ -1, -1, -1 });
+    defer m.deinit();
+    try std.testing.expect(try m.contains(.{ 0, 0, 0 }));
+    try std.testing.expect(try m.contains(.{ 1, 0, 0 }));
+    try std.testing.expect(!try m.contains(.{ 2, 0, 0 }));
+    var g = try m.voxelize(a, .{ .lo = .{ -2, -2, -2 }, .hi = .{ 2, 2, 2 } }, 0.25);
+    defer g.deinit();
+    try std.testing.expectEqual(@as(u64, 512), g.stats().occupied);
+    try std.testing.expectError(error.InvalidSTL, mesh.Mesh.parse(a, bytes[0 .. bytes.len - 1], 1, .{ 0, 0, 0 }));
+    std.mem.writeInt(u32, bytes[80..84], 11, .little);
+    try std.testing.expectError(error.NonWatertightOrInconsistentSTL, mesh.Mesh.parse(a, bytes[0 .. 84 + 11 * 50], 1, .{ 0, 0, 0 }));
+}
+const motion = @import("motion.zig");
+test "helical centerline conservative coverage and orientation change rejection" {
+    const arc = motion.Arc{ .center = .{ 0, 0, 0 }, .radius = 3, .start_angle = 0.17, .sweep_angle = 4.2, .rise = 2 };
+    const tool = e.Tool{ .radius = 0.4, .length = 1.3 };
+    const plan = try motion.arc(a, tool, arc, 0.04);
+    defer plan.deinit(a);
+    try std.testing.expect(plan.over_removal_bound_mm <= 0.04);
+    const s = e.Shape{ .path = plan.segments };
+    try s.validate();
+    for (0..337) |i| {
+        const t = (@as(f64, @floatFromInt(i)) + 0.37) / 337;
+        const p = motion.point(arc, t);
+        for ([_]e.V{ .{ 0.399, 0, 0 }, .{ 0, 0, 1.299 }, .{ 0, 0, 0.001 } }) |offset| try std.testing.expect(s.contains(e.add(p, offset)));
+    }
+}
+test "longitudinal and facing rotational envelopes match independent radial oracle" {
+    const b = e.Bounds{ .lo = .{ -4, -4, 0 }, .hi = .{ 4, 4, 8 } };
+    var g = try e.stock(a, b, 0.25, &.{.{ .cylinder = .{ .base = .{ 0, 0, 0 }, .radius = 3, .length = 8 } }});
+    defer g.deinit();
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    const turn = motion.Turning{ .spindle_origin = .{ 0, 0, 0 }, .mode = .longitudinal, .radial_start = 2, .radial_end = 2, .axial_start = 2, .axial_end = 6, .insert_radial_width = 2, .insert_axial_width = 1 };
+    try e.subtract(&g, try turn.shape(), &changes, false);
+    const face = motion.Turning{ .spindle_origin = .{ 0, 0, 0 }, .mode = .facing, .radial_start = 0, .radial_end = 3, .axial_start = 7, .axial_end = 7, .insert_radial_width = 0.2, .insert_axial_width = 1 };
+    try e.subtract(&g, try face.shape(), &changes, false);
+    for (0..g.n[2]) |z| for (0..g.n[1]) |y| for (0..g.n[0]) |x| {
+        const px = g.origin[0] + g.center(x);
+        const py = g.origin[1] + g.center(y);
+        const pz = g.center(z);
+        const r2 = px * px + py * py;
+        const expected = r2 <= 9 and !(r2 >= 4 and pz >= 2 and pz <= 7) and pz < 7;
+        try std.testing.expectEqual(expected, g.occupied(.{ x, y, z }));
+    };
+}
+test "random primitive stocks, union and conservative classifiers against independent scalar geometry" {
+    var random_state = std.Random.DefaultPrng.init(72831);
+    const random = random_state.random();
+    for (0..16) |_| {
+        const center = e.V{ random.float(f64) * 2 - 1, random.float(f64) * 2 - 1, random.float(f64) * 2 - 1 };
+        const radius = 0.3 + random.float(f64) * 1.5;
+        const b = e.Bounds{ .lo = .{ -2, -2, -2 }, .hi = .{ 2, 2, 2 } };
+        var g = try e.stock(a, b, 0.25, &.{ .{ .sphere = .{ .center = center, .radius = radius } }, .{ .box = .{ .lo = .{ -2, -2, -2 }, .hi = .{ -1, 1, 1 } } } });
+        defer g.deinit();
+        for (0..g.n[2]) |z| for (0..g.n[1]) |y| for (0..g.n[0]) |x| {
+            const p = e.add(g.origin, .{ g.center(x), g.center(y), g.center(z) });
+            const q = e.sub(p, center);
+            const sphere = e.dot(q, q) <= (radius + 1e-10) * (radius + 1e-10);
+            const box = p[0] <= -1 and p[1] <= 1 and p[2] <= 1;
+            try std.testing.expectEqual(sphere or box, g.occupied(.{ x, y, z }));
+        };
+        var sparse = try @import("tiles.zig").Snapshot.init(a, g);
+        defer sparse.deinit();
+        for (0..g.n[2]) |z| for (0..g.n[1]) |y| for (0..g.n[0]) |x| try std.testing.expectEqual(g.occupied(.{ x, y, z }), sparse.occupied(.{ x, y, z }));
+    }
+}
+test "independent ball bull taper and conical drill stationary profiles" {
+    var rng = std.Random.DefaultPrng.init(1981);
+    const random = rng.random();
+    for (0..2000) |_| {
+        const r = random.float(f64) * 3;
+        const z = random.float(f64) * 6 - 1;
+        const ball = e.Tool{ .kind = .ball, .radius = 2, .length = 4 };
+        const ball_expected = z >= 0 and z <= 4 and r <= 2 and (z >= 2 or r * r + (z - 2) * (z - 2) <= 4);
+        try std.testing.expectEqual(ball_expected, ball.distance(r, z) <= 0);
+        const bull = e.Tool{ .kind = .bull, .radius = 2, .length = 4, .corner = 0.5 };
+        const bull_expected = z >= 0 and z <= 4 and r <= 2 and (z >= 0.5 or r <= 1.5 or (r - 1.5) * (r - 1.5) + (z - 0.5) * (z - 0.5) <= 0.25);
+        try std.testing.expectEqual(bull_expected, bull.distance(r, z) <= 0);
+        const taper = e.Tool{ .kind = .taper, .radius = 2, .length = 4, .tip_radius = 0.5 };
+        try std.testing.expectEqual(z >= 0 and z <= 4 and r <= 0.5 + 1.5 * z / 4, taper.distance(r, z) <= 0);
+        const drill = e.Tool{ .kind = .drill, .radius = 2, .length = 4 };
+        try std.testing.expectEqual(z >= 0 and z <= 4 and r <= z / 2, drill.distance(r, z) <= 0);
+    }
+}
+test "STL intersecting shells rejected and allocation failure cleanup" {
+    const cube = try cubeSTL(a);
+    defer a.free(cube);
+    const data = try a.alloc(u8, 84 + 24 * 50);
+    defer a.free(data);
+    @memcpy(data[0..84], cube[0..84]);
+    std.mem.writeInt(u32, data[80..84], 24, .little);
+    @memcpy(data[84..][0..600], cube[84..]);
+    @memcpy(data[684..], cube[84..]);
+    for (0..12) |i| for (0..3) |v| for (0..3) |axis| {
+        const off = 684 + i * 50 + 12 + v * 12 + axis * 4;
+        var f: f32 = @bitCast(std.mem.readInt(u32, data[off..][0..4], .little));
+        f += 0.7;
+        std.mem.writeInt(u32, data[off..][0..4], @bitCast(f), .little);
+    };
+    try std.testing.expectError(error.SelfIntersectingSTL, mesh.Mesh.parse(a, data, 1, .{ 0, 0, 0 }));
+    const Helper = struct {
+        fn run(alloc: std.mem.Allocator, bytes: []const u8) !void {
+            var m = try mesh.Mesh.parse(alloc, bytes, 1, .{ 0, 0, 0 });
+            defer m.deinit();
+            var g = try m.voxelize(alloc, .{ .lo = .{ 0, 0, 0 }, .hi = .{ 3, 3, 3 } }, 0.5);
+            defer g.deinit();
+        }
+    };
+    try std.testing.checkAllAllocationFailures(a, Helper.run, .{cube});
+}
+test "disconnected pieces, thin wall, tiny bore, tangency, short moves and large local origin" {
+    const b = e.Bounds{ .lo = .{ 10000, -10000, 0 }, .hi = .{ 10004, -9996, 4 } };
+    var g = try e.stock(a, b, 0.25, &.{.{ .box = b }});
+    defer g.deinit();
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    try e.subtract(&g, .{ .primitive = .{ .box = .{ .lo = .{ 10001.5, -10000, 0 }, .hi = .{ 10002.5, -9996, 4 } } } }, &changes, false);
+    try std.testing.expect(g.query(.{ 10001, -9998, 2 }));
+    try std.testing.expect(!g.query(.{ 10002, -9998, 2 }));
+    try std.testing.expect(g.query(.{ 10003, -9998, 2 }));
+    const s = e.Sweep{ .tool = .{ .radius = 0.125, .length = 4 }, .a = .{ .position = .{ 10000.625, -9999.375, 0 } }, .b = .{ .position = .{ 10000.625 + 1e-12, -9999.375, 0 } } };
+    try e.subtract(&g, .{ .sweep = s }, &changes, false);
+    try std.testing.expect(!g.query(s.a.position));
+    try std.testing.expect(s.flatContains(.{ 10000.75, -9999.375, 0 }, 0));
+    try std.testing.expect(!s.flatContains(.{ 10000.76, -9999.375, 0 }, 0));
+}
+test "mill and turning envelope share translated tilted spindle coordinates" {
+    const axis = e.V{ 0.6, 0, 0.8 };
+    const origin = e.V{ -3, 1, -2 };
+    const bounds = e.Bounds{ .lo = .{ -8, -4, -7 }, .hi = .{ 8, 8, 10 } };
+    var g = try e.stock(a, bounds, 0.5, &.{.{ .cylinder = .{ .base = origin, .axis = axis, .radius = 3, .length = 8 } }});
+    defer g.deinit();
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    const t = motion.Turning{ .spindle_origin = origin, .spindle_axis = axis, .mode = .longitudinal, .radial_start = 2, .radial_end = 2, .axial_start = 2, .axial_end = 6, .insert_radial_width = 2, .insert_axial_width = 1 };
+    try e.subtract(&g, try t.shape(), &changes, false);
+    const mill = e.Sweep{ .tool = .{ .radius = 0.7, .length = 4 }, .a = .{ .position = origin, .axis = axis }, .b = .{ .position = e.add(origin, e.scale(axis, 8)), .axis = axis } };
+    try e.subtract(&g, .{ .sweep = mill }, &changes, false);
+    for (0..g.n[2]) |z| for (0..g.n[1]) |y| for (0..g.n[0]) |x| {
+        const p = e.add(g.origin, .{ g.center(x), g.center(y), g.center(z) });
+        const q = e.sub(p, origin);
+        const axial = e.dot(q, axis);
+        const radial = e.norm(e.cross(q, axis));
+        const expected = axial >= 0 and axial <= 8 and radial <= 3 and radial > 0.7 and !(axial >= 2 and axial <= 7 and radial >= 2);
+        try std.testing.expectEqual(expected, g.occupied(.{ x, y, z }));
+    };
+}
+test "invalid JSON contracts and tiny geometry remain explicit" {
+    const job = @import("job.zig");
+    const base = job.Job{ .version = 1, .units = "mm", .bounds = .{ .lo = .{ 0, 0, 0 }, .hi = .{ 2, 2, 2 } }, .voxel_mm = 0.25, .stock = .{ .primitives = &.{.{ .box = .{ .lo = .{ 0, 0, 0 }, .hi = .{ 2, 2, 2 } } }} }, .operations = &.{} };
+    var bad = base;
+    bad.version = 2;
+    try std.testing.expectError(error.UnsupportedJobVersion, job.validate(a, bad));
+    bad = base;
+    bad.units = "inch";
+    try std.testing.expectError(error.UnitsMustBeMillimeters, job.validate(a, bad));
+    try std.testing.expectError(error.AxisMustBeUnit, (e.Sweep{ .tool = .{ .radius = 1, .length = 2 }, .a = .{ .position = .{ 0, 0, 0 }, .axis = .{ 0, 0, 2 } }, .b = .{ .position = .{ 1, 0, 0 } } }).validate());
+    try std.testing.expectError(error.InvalidTool, (e.Tool{ .kind = .bull, .radius = 1, .length = 2, .corner = 2 }).validate());
+    const bounds = e.Bounds{ .lo = .{ 0, 0, 0 }, .hi = .{ 1e-7, 1e-7, 1e-7 } };
+    const cyl = e.Primitive{ .cylinder = .{ .base = .{ 5e-8, 5e-8, 0 }, .radius = 1e-9, .length = 1e-7 } };
+    var g = try e.stock(a, bounds, 1e-8, &.{cyl});
+    defer g.deinit();
+    for (0..g.n[2]) |z| for (0..g.n[1]) |y| for (0..g.n[0]) |x| try std.testing.expectEqual(cyl.distance(.{ g.center(x), g.center(y), g.center(z) }) <= e.core.tolerance, g.occupied(.{ x, y, z }));
+}
+test "candidate ranges include absolute predicate tolerance even below tolerance voxel spacing" {
+    const bounds = e.Bounds{ .lo = .{ -2e-10, -2e-10, -2e-10 }, .hi = .{ 2e-10, 2e-10, 2e-10 } };
+    const sphere = e.Primitive{ .sphere = .{ .center = .{ 0, 0, 0 }, .radius = 1e-11 } };
+    var g = try e.stock(a, bounds, 2e-11, &.{sphere});
+    defer g.deinit();
+    for (0..g.n[2]) |z| for (0..g.n[1]) |y| for (0..g.n[0]) |x| {
+        const p = e.add(g.origin, .{ g.center(x), g.center(y), g.center(z) });
+        try std.testing.expectEqual(e.norm(p) <= 1.1e-10, g.occupied(.{ x, y, z }));
+    };
+}

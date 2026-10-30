@@ -1,0 +1,12 @@
+{
+  "final_occupied" : 1333399870,
+  "forward_replay_validated" : true,
+  "grid" : [
+    4096,
+    4096,
+    4096
+  ],
+  "initial_occupied" : 2159116288,
+  "reverse_descriptors_byte_exact" : true,
+  "reverse_initial_pool_byte_exact" : true
+}

@@ -3,11 +3,13 @@ using namespace metal;
 struct Uniforms {
     float4 eye, forward, right, up, low, high, settings;
     uint4 grid;
+    uint4 dimensions,blockDimensions;
+    float4 shank,shankAxis,holder,holderAxis;
 };
 struct Hit { bool found; float t; float3 normal; int3 cell; };
-bool filled(int3 p,device const uint *blocks,device const uint *pool,uint n,uint nb) {
-    if(any(p<0)||any(p>=int(n)))return false;
-    uint3 b=uint3(p)>>3;uint d=blocks[(b.z*nb+b.y)*nb+b.x];
+bool filled(int3 p,device const uint *blocks,device const uint *pool,uint3 n,uint3 nb) {
+    if(any(p<0)||any(p>=int3(n)))return false;
+    uint3 b=uint3(p)>>3;uint d=blocks[(b.z*nb.y+b.y)*nb.x+b.x];
     if(d==0xffffffffu)return false;if(d==0xfffffffeu)return true;
     uint bit=uint(p.y&7)*8+uint(p.x&7);return (pool[d*16+uint(p.z&7)*2+(bit>>5)]&(1u<<(bit&31)))!=0;
 }
@@ -22,11 +24,11 @@ Hit trace(float3 eye,float3 ray,constant Uniforms &u,device const uint *blocks,d
     float3 normal=float3(0);normal[axis]=ray[axis]>0?-1:1;
     float t=max(enter,0.0f);const float epsilon=0.001f;
     // Bound: <= 3*n voxel transitions plus block skips on a finite grid ray.
-    for(uint iter=0;iter<3*u.grid.y+8 && t<=leave;iter++) {
+    for(uint iter=0;iter<u.dimensions.x+u.dimensions.y+u.dimensions.z+8 && t<=leave;iter++) {
         float3 pos=eye+ray*(t+epsilon);int3 cell=int3(floor(pos));
-        if(any(cell<0)||any(cell>=int(u.grid.y)))break;
-        uint3 block=uint3(cell)>>3;uint d=blocks[(block.z*u.grid.x+block.y)*u.grid.x+block.x];
-        if(d!=0xffffffffu && (d==0xfffffffeu || filled(cell,blocks,pool,u.grid.y,u.grid.x))) {
+        if(any(cell<0)||any(cell>=int3(u.dimensions.xyz)))break;
+        uint3 block=uint3(cell)>>3;uint d=blocks[(block.z*u.blockDimensions.y+block.y)*u.blockDimensions.x+block.x];
+        if(d!=0xffffffffu && (d==0xfffffffeu || filled(cell,blocks,pool,u.dimensions.xyz,u.blockDimensions.xyz))) {
             hit.found=true;hit.t=t;hit.normal=normal;hit.cell=cell;return hit;
         }
         int step=d==0xffffffffu?8:1;
@@ -40,30 +42,49 @@ Hit trace(float3 eye,float3 ray,constant Uniforms &u,device const uint *blocks,d
     }
     return hit;
 }
-float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device const uint *pool) {
+Hit cylinderHit(float3 eye,float3 ray,float4 part,float4 axial) {
+    Hit hit;hit.found=false;hit.t=INFINITY;hit.normal=float3(0,0,1);hit.cell=int3(0);if(part.w<=0 || axial.w<=0)return hit;
+    float3 q=eye-part.xyz;float z=dot(q,axial.xyz),vz=dot(ray,axial.xyz);float3 qr=q-axial.xyz*z,vr=ray-axial.xyz*vz;
+    float low=0,high=INFINITY;
+    if(abs(vz)<1e-10f){if(z<0 || z>axial.w)return hit;}else {float a=-z/vz,b=(axial.w-z)/vz;low=max(low,min(a,b));high=min(high,max(a,b));}
+    float a=dot(vr,vr),b=dot(qr,vr),c=dot(qr,qr)-part.w*part.w;
+    if(a<1e-12f){if(c>0)return hit;}else {float disc=b*b-a*c;if(disc<0)return hit;float root=sqrt(disc);low=max(low,(-b-root)/a);high=min(high,(-b+root)/a);}
+    if(low>high)return hit;hit.found=true;hit.t=low;float3 p=q+low*ray;float h=dot(p,axial.xyz);hit.normal=h<0.002f?-axial.xyz:(h>axial.w-0.002f?axial.xyz:normalize(p-h*axial.xyz));return hit;
+}
+float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device const uint *pool,device const uint *targetBlocks,device const uint *targetPool,device const uint *fixtureBlocks,device const uint *fixturePool) {
     float2 uv=(pixel/u.settings.yz)*2-1;uv.y=-uv.y;uv.x*=u.settings.y/u.settings.z;
     float3 ray=normalize(u.forward.xyz+u.settings.w*(uv.x*u.right.xyz+uv.y*u.up.xyz));
     Hit hit=trace(u.eye.xyz,ray,u,blocks,pool);
     float3 background=u.grid.z==0?float3(0.83,0.47,0.25):float3(0.055,0.07,0.095);
+    if(u.grid.x==0)hit.found=false;
+    bool missing=false;
+    if(u.dimensions.w!=0) {Hit th=trace(u.eye.xyz,ray,u,targetBlocks,targetPool);if(th.found && (!hit.found || th.t<hit.t-0.01f)){hit=th;missing=true;}}
+    bool fixture=false;
+    if(u.blockDimensions.w!=0){Hit fh=trace(u.eye.xyz,ray,u,fixtureBlocks,fixturePool);if(fh.found && (!hit.found || fh.t<hit.t)){hit=fh;fixture=true;}}
+    Hit sh=cylinderHit(u.eye.xyz,ray,u.shank,u.shankAxis),ho=cylinderHit(u.eye.xyz,ray,u.holder,u.holderAxis);
+    Hit part=(sh.found && (!ho.found || sh.t<ho.t))?sh:ho;
+    if(part.found && (!hit.found || part.t<hit.t))return float3(0.65,0.68,0.72)*(0.45+0.55*max(0.0f,dot(part.normal,normalize(float3(-0.4,-0.55,0.8)))));
     if(!hit.found)return background;
     float3 normal=hit.normal;
     // Optional shading-only occupancy gradient; hit position/visibility ALWAYS remain voxel-exact.
-    if(u.grid.w!=0) {
+    if(u.grid.w!=0 && !missing && !fixture) {
         float3 gradient=float3(0);
         for(int z=-2;z<=2;z++)for(int y=-2;y<=2;y++)for(int x=-2;x<=2;x++) {
-            int3 d=int3(x,y,z);if(filled(hit.cell+d,blocks,pool,u.grid.y,u.grid.x))gradient-=float3(d);
+            int3 d=int3(x,y,z);if(filled(hit.cell+d,blocks,pool,u.dimensions.xyz,u.blockDimensions.xyz))gradient-=float3(d);
         }
         if(dot(gradient,gradient)>0.01)normal=normalize(gradient);
     }
     float3 key=normalize(float3(-0.4,-0.55,0.8));
     float diffuse=max(0.0f,dot(normal,key));float fill=max(0.0f,dot(normal,-u.forward.xyz));
     float3 blue=float3(0.32,0.50,0.82);
+    if(u.dimensions.w!=0) {if(missing)blue=float3(0.95,0.18,0.15);else if(!filled(hit.cell,targetBlocks,targetPool,u.dimensions.xyz,u.blockDimensions.xyz))blue=float3(0.98,0.8,0.12);}
+    if(fixture)blue=float3(0.25,0.7,0.4);
     float light=0.46+0.32*diffuse+0.22*fill;
     float spec=pow(max(0.0f,dot(normal,normalize(key-ray))),48.0f)*0.10f;
     return blue*light+spec;
 }
-kernel void voxelImage(texture2d<float,access::write> image [[texture(0)]],device const uint *blocks [[buffer(0)]],device const uint *pool [[buffer(1)]],constant Uniforms &u [[buffer(2)]],uint2 pixel [[thread_position_in_grid]]) {
+kernel void voxelImage(texture2d<float,access::write> image [[texture(0)]],device const uint *blocks [[buffer(0)]],device const uint *pool [[buffer(1)]],constant Uniforms &u [[buffer(2)]],device const uint *targetBlocks [[buffer(3)]],device const uint *targetPool [[buffer(4)]],device const uint *fixtureBlocks [[buffer(5)]],device const uint *fixturePool [[buffer(6)]],uint2 pixel [[thread_position_in_grid]]) {
     if(pixel.x>=image.get_width()||pixel.y>=image.get_height())return;
-    float3 color=(shade(float2(pixel)+float2(0.25,0.25),u,blocks,pool)+shade(float2(pixel)+float2(0.75,0.25),u,blocks,pool)+shade(float2(pixel)+float2(0.25,0.75),u,blocks,pool)+shade(float2(pixel)+float2(0.75,0.75),u,blocks,pool))*0.25f;
+    float3 color=(shade(float2(pixel)+float2(0.25,0.25),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool)+shade(float2(pixel)+float2(0.75,0.25),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool)+shade(float2(pixel)+float2(0.25,0.75),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool)+shade(float2(pixel)+float2(0.75,0.75),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool))*0.25f;
     image.write(float4(color,1),pixel);
 }

@@ -36,51 +36,30 @@ pub const Operation = union(enum) {
         }
     }
 };
-fn candidate(g: core.Grid, b: [3]usize, op: Operation) bool {
-    if (op == .capsule) {
-        const c = op.capsule;
-        const e = g.extent(b);
-        for (0..3) |i| if (g.center(b[i] * 8) > @max(c.a[i], c.b[i]) + c.radius + core.tolerance or g.center(b[i] * 8 + e[i] - 1) < @min(c.a[i], c.b[i]) - c.radius - core.tolerance) return false;
-    } else if (op == .tip and g.center(b[2] * 8 + g.extent(b)[2] - 1) < 54) return false;
-    return true;
+const engine = @import("engine.zig");
+pub fn shape(op: Operation, offset: [3]f64) !engine.Shape {
+    if (op == .capsule and (!std.math.isFinite(op.capsule.radius) or op.capsule.radius <= 0 or op.capsule.radius > 1e6)) return error.InvalidTool;
+    return switch (op) {
+        .cylinder => error.InitializationOnly,
+        .capsule => |c| .{ .primitive = .{ .capsule = .{ .a = engine.add(c.a, offset), .b = engine.add(c.b, offset), .radius = c.radius } } },
+        .tip => |angle| blk: {
+            if (!std.math.isFinite(angle)) return error.InvalidCoordinate;
+            const n = [3]f64{ @cos(angle), @sin(angle), 1 };
+            const length = engine.norm(n);
+            break :blk .{ .primitive = .{ .halfspace = .{ .normal = engine.scale(n, 1 / length), .offset = (60 + 6 * (n[0] + n[1]) + engine.dot(n, offset) + 4 * core.tolerance) / length } } };
+        },
+    };
 }
 pub fn apply(g: *core.Grid, op: Operation) !void {
-    if (op == .capsule) {
-        const c = op.capsule;
-        if (!std.math.isFinite(c.radius) or c.radius <= 0 or c.radius > 1e6) return error.InvalidTool;
-        for (c.a ++ c.b) |v| if (!std.math.isFinite(v) or @abs(v) > 1e6) return error.InvalidCoordinate;
-    } else if (op == .tip and !std.math.isFinite(op.tip)) return error.InvalidCoordinate;
-    // Upper bound prepared outside all voxel loops. An allocation failure is transactional.
-    var needed: usize = 0;
-    for (g.blocks, 0..) |d, i| if (d == core.full and candidate(g.*, g.blockCoords(i), op)) {
-        needed += 1;
-    };
-    const capacity = try std.math.add(usize, g.pool.items.len, needed);
-    if (capacity >= core.full) return error.PoolTooLarge;
-    try g.pool.ensureTotalCapacityPrecise(g.allocator, capacity);
-    for (g.blocks, 0..) |d, i| {
-        if (d == core.empty) continue;
-        const b = g.blockCoords(i);
-        if (!candidate(g.*, b, op)) continue;
-        const before = g.bits(i);
-        var after = before;
-        const e = g.extent(b);
-        for (0..e[2]) |z| for (0..e[1]) |y| for (0..e[0]) |x| {
-            const bit = @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
-            if (after[z] & bit != 0 and op.removes(.{ g.center(b[0] * 8 + x), g.center(b[1] * 8 + y), g.center(b[2] * 8 + z) })) after[z] &= ~bit;
-        };
-        if (std.mem.eql(u64, &before, &after)) continue;
-        var any: u64 = 0;
-        for (after) |w| any |= w;
-        if (any == 0) {
-            g.blocks[i] = core.empty;
-        } else if (d == core.full) {
-            g.blocks[i] = @intCast(g.pool.items.len);
-            g.pool.appendAssumeCapacity(after);
-        } else {
-            g.pool.items[d] = after;
-        }
+    if (op == .cylinder) {
+        var replacement = try engine.stock(g.allocator, .{ .lo = g.origin, .hi = engine.add(g.origin, g.size) }, g.h, &.{.{ .cylinder = .{ .base = .{ 6, 6, 0 }, .radius = 6, .length = 60 } }});
+        std.mem.swap(core.Grid, g, &replacement);
+        replacement.deinit();
+        return;
     }
+    var changes: engine.Changes = .{};
+    defer changes.deinit(g.allocator);
+    try engine.subtract(g, try shape(op, .{ 0, 0, 0 }), &changes, false);
 }
 pub fn point(flute: usize, t: f64) [3]f64 {
     const z = 16 + 46 * t;

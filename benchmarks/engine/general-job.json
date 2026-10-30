@@ -1,0 +1,522 @@
+{
+  "format": "menkh-job-report-v1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "reference": false,
+  "voxel_mm": 0.25,
+  "origin_mm": [
+    -8,
+    -8,
+    0
+  ],
+  "bounds": {
+    "lo": [
+      -8,
+      -8,
+      0
+    ],
+    "hi": [
+      8,
+      8,
+      12
+    ]
+  },
+  "raster_approximation": true,
+  "initial_occupied": 125440,
+  "remaining_occupied": 90202,
+  "remaining_volume_mm3": 1409.40625,
+  "stats": {
+    "occupied": 90202,
+    "empty_blocks": 94,
+    "full_blocks": 63,
+    "mixed_blocks": 227,
+    "descriptor_bytes": 1536,
+    "pool_bytes": 15488,
+    "pool_used_bytes": 15488
+  },
+  "history_bytes": 19992,
+  "process_peak_rss_bytes": 2850816,
+  "timing": {
+    "init_ns": 466958,
+    "stock_input": {
+      "read_ns": 0,
+      "parse_bvh_ns": 0,
+      "voxelization_ns": 466875,
+      "state_decode_ns": 0
+    },
+    "auxiliary_input": {
+      "read_ns": 0,
+      "parse_bvh_ns": 0,
+      "voxelization_ns": 407083,
+      "state_decode_ns": 0
+    },
+    "auxiliary_voxelization_ns": 407208,
+    "initial_history_write_ns": 519250,
+    "statistics_ns": 7958,
+    "inspection_ns": 213125,
+    "surface_ns": 2745084,
+    "surface_analysis_ns": 48708,
+    "export_ns": 3100667,
+    "total_ns": 56164542
+  },
+  "operations": [
+    {
+      "id": "flat-pocket",
+      "removed_voxels": 9920,
+      "engagement_volume_mm3": 155,
+      "remaining_voxels": 115520,
+      "affected_region": {
+        "lo": [
+          -6,
+          -2,
+          4
+        ],
+        "hi": [
+          6,
+          2,
+          10
+        ]
+      },
+      "motion_over_removal_bound_mm": 0,
+      "cut_ns": 227875,
+      "collision_ns": 46125,
+      "history_write_ns": 54584,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "id": "ball-ramp",
+      "removed_voxels": 8572,
+      "engagement_volume_mm3": 133.9375,
+      "remaining_voxels": 106948,
+      "affected_region": {
+        "lo": [
+          -6,
+          -6,
+          4
+        ],
+        "hi": [
+          6,
+          0,
+          10
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.09934888075950617,
+      "cut_ns": 5282500,
+      "collision_ns": 2792,
+      "history_write_ns": 190208,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "id": "bull-finish",
+      "removed_voxels": 8124,
+      "engagement_volume_mm3": 126.9375,
+      "remaining_voxels": 98824,
+      "affected_region": {
+        "lo": [
+          -6,
+          0,
+          6
+        ],
+        "hi": [
+          6,
+          6,
+          10
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.1,
+      "cut_ns": 5254292,
+      "collision_ns": 2667,
+      "history_write_ns": 94916,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "id": "tilted-flat",
+      "removed_voxels": 1071,
+      "engagement_volume_mm3": 16.734375,
+      "remaining_voxels": 97753,
+      "affected_region": {
+        "lo": [
+          -6,
+          -6,
+          6
+        ],
+        "hi": [
+          0,
+          6,
+          10
+        ]
+      },
+      "motion_over_removal_bound_mm": 0,
+      "cut_ns": 95167,
+      "collision_ns": 13958,
+      "history_write_ns": 68541,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "id": "taper-placement",
+      "removed_voxels": 1055,
+      "engagement_volume_mm3": 16.484375,
+      "remaining_voxels": 96698,
+      "affected_region": {
+        "lo": [
+          2,
+          -6,
+          4
+        ],
+        "hi": [
+          6,
+          -2,
+          10
+        ]
+      },
+      "motion_over_removal_bound_mm": 0,
+      "cut_ns": 249958,
+      "collision_ns": 1625,
+      "history_write_ns": 55958,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "id": "ideal-conical-drill",
+      "removed_voxels": 328,
+      "engagement_volume_mm3": 5.125,
+      "remaining_voxels": 96370,
+      "affected_region": {
+        "lo": [
+          -2,
+          -2,
+          2
+        ],
+        "hi": [
+          2,
+          2,
+          6
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.1,
+      "cut_ns": 646875,
+      "collision_ns": 2083,
+      "history_write_ns": 53583,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "id": "intentional-holder-contact",
+      "removed_voxels": 2240,
+      "engagement_volume_mm3": 35,
+      "remaining_voxels": 94130,
+      "affected_region": {
+        "lo": [
+          2,
+          2,
+          0
+        ],
+        "hi": [
+          8,
+          8,
+          6
+        ]
+      },
+      "motion_over_removal_bound_mm": 0,
+      "cut_ns": 79166,
+      "collision_ns": 87042,
+      "history_write_ns": 59125,
+      "shank_stock": {
+        "occupied_centers": 565,
+        "region": {
+          "lo": [
+            4.125,
+            4.125,
+            6.125
+          ],
+          "hi": [
+            5.875,
+            5.875,
+            8.875
+          ]
+        },
+        "representation_clearance_uncertain": true
+      },
+      "holder_stock": {
+        "occupied_centers": 1000,
+        "region": {
+          "lo": [
+            2.125,
+            2.125,
+            9.125
+          ],
+          "hi": [
+            6.875,
+            6.875,
+            9.875
+          ]
+        },
+        "representation_clearance_uncertain": true
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_fixture": {
+        "occupied_centers": 384,
+        "region": {
+          "lo": [
+            6.125,
+            5.125,
+            9.125
+          ],
+          "hi": [
+            6.875,
+            6.875,
+            11.875
+          ]
+        },
+        "representation_clearance_uncertain": true
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "id": "helical-groove",
+      "removed_voxels": 3928,
+      "engagement_volume_mm3": 61.375,
+      "remaining_voxels": 90202,
+      "affected_region": {
+        "lo": [
+          -6,
+          -6,
+          4
+        ],
+        "hi": [
+          6,
+          6,
+          10
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.07203083812225451,
+      "cut_ns": 35627083,
+      "collision_ns": 12500,
+      "history_write_ns": 292542,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    }
+  ],
+  "target_comparison": {
+    "excess": 30066,
+    "missing": 2584,
+    "common": 60136,
+    "excess_mm3": 469.78125,
+    "missing_mm3": 40.375
+  },
+  "target_surface_deviation": {
+    "samples": 13615,
+    "max_abs_distance_mm": 5,
+    "mean_abs_distance_mm": 1.682656995960338,
+    "sampled_estimate": true
+  },
+  "point_occupancy": [
+    true,
+    false
+  ],
+  "ray_hits": [
+    {
+      "position": [
+        0,
+        0,
+        2.25
+      ],
+      "index": [
+        32,
+        32,
+        8
+      ],
+      "distance_mm": 12.75
+    }
+  ]
+}

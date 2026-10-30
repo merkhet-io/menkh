@@ -1,6 +1,10 @@
-# Saved project state
+# Project state
 
-This first project checkpoint includes the Zig simulation core, reproducible measurements, and two animated drill demos, including a 4096³ configuration that has actually been run. Source code, build and launch scripts, documentation, small demo videos, and measurement reports are versioned together. Existing local files are preserved.
+The current general-engine milestone is documented in the [capability matrix](CAPABILITIES.md), [architecture and numerical contracts](ENGINE.md), [formats](FORMATS.md), and [validation report](ENGINE-VALIDATION.md). Start it with `./scripts/general-demo.sh` or run `./zig build job -Doptimize=ReleaseFast -- examples/general.json --out out/general`.
+
+General jobs now support explicit origins, analytic stock unions, binary STL stock/targets, fixed-orientation tools and motion, bounded arcs/helices, geometric collision reports, target comparison, sections, checkpoints, and reversible native playback. Limited full-revolution turning envelopes operate on the same material state. Simultaneous 5-axis orientation changes are explicitly unsupported. No industrial parity, certified clearance, or production mill-turn claim is made.
+
+The rest of this page records the original saved checkpoint. Its test counts and measurements are historical; current evidence is in the validation report. Existing demo media and the original CLI remain available.
 
 ## Included features
 

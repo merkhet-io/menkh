@@ -1,0 +1,39 @@
+{
+  "baseline_commit": "5c9e77a0351ae85c697318b2e942a9a00988c913",
+  "date": "2026-10-30",
+  "hardware": "Apple M5 Max",
+  "cpu_cores": 18,
+  "memory_bytes": 137438953472,
+  "macos": "27.0.1 (26A434)",
+  "zig": "0.15.2",
+  "build": "ReleaseFast",
+  "workers": 1,
+  "source_sha256": {
+    "src/core.zig": "b2194ad98966a6ce9d2fbdf9813e921dc982c1c19571d322508c7c1924116dcf",
+    "src/drill.zig": "96c255c23b3c48b199a896e9dbbc7ea0bf4c5611cde5886402607b55b2b687da",
+    "src/engine.zig": "e1cbc7b943edd5134d63102a39687195a8f255d598c6e8efcdf93e41e3a86647",
+    "src/engine_tests.zig": "528da9c1db739d4a23ebac8f34d73aa6968f72bdfa65778a98c8107d40b6d9aa",
+    "src/fine.zig": "52c8d59cccac85473d4d684dc5ccd3ba593d14f9045c94a83e910b7a557bb1aa",
+    "src/inspect.zig": "4d678f45bf8a63ae6d9d1f447b209ba1340207124d806b5080d9f9dc752bb3b6",
+    "src/job.zig": "112fbee7a5fcc1af0be288add59fd3710c6add14ab691862a0dc1a0045c538eb",
+    "src/main.zig": "6a118f8943826f40ab2e405c461f417606d7c168f279a6cbe5aadce8b2f754f0",
+    "src/mesh_input.zig": "0c5bf478cfcc2a84eb535e159c87ece98516a6f22c314825f284769e366bad6c",
+    "src/motion.zig": "26ea5a2bc50a559b6a992165f2a509d9badcd5f179ca67e251d43de7540451b1",
+    "src/state.zig": "b2e8f10d755ee1097f940d21224cb9c30cacf03e135bb344e601a61dc0bef11a",
+    "src/surface.zig": "ab3721a614d17e4c1489fd824c8550a8b7196c7fac31c43bf73de901a921a6e3",
+    "src/tests.zig": "640a22c03a722aa70b9cb92907910781460c31f2ae3bc18cffaa069daa020653",
+    "src/tiles.zig": "286738058ee285ae1e11b6cb409c048475bc72aad042db902abb58000a3eb52a"
+  },
+  "notes": [
+    "Unisolated desktop, no affinity or thermal control.",
+    "Fresh processes and stock, one warm-up then three measured repetitions unless stated.",
+    "No fsync; timings include cached file writes.",
+    "Original baseline reproduced before edits: 17 tests Debug/ReleaseFast, full 4096 cube and 25um groove."
+  ],
+  "viewer_sha256": {
+    "viewer/DrillDemo.swift": "a4173b2ff64d2fd6217b7bff513f996e7657aea0c7e8f8aeae9ca853f595fb59",
+    "viewer/Voxel.metal": "2ec04abfe5c7d341c808defc4cc1a4b8858be10dc41b43ac77c5a995fa6e251c",
+    "viewer/VoxelView.swift": "e5a51a33e9ba181db696784131fb66168270bac75c3702d288b9974b3ceb59d8",
+    "viewer/main.swift": "9f1170be77becf344e0d2a1b87f5699885b89a81ec66a3fdb33bf6b551a859df"
+  }
+}

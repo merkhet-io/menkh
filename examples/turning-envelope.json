@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "units": "mm",
+  "bounds": {
+    "lo": [
+      0,
+      0,
+      0
+    ],
+    "hi": [
+      8,
+      8,
+      8
+    ]
+  },
+  "voxel_mm": 0.25,
+  "stock": {
+    "primitives": [
+      {
+        "cylinder": {
+          "base": [
+            4,
+            4,
+            0
+          ],
+          "radius": 3,
+          "length": 8
+        }
+      }
+    ]
+  },
+  "tools": [],
+  "operations": [
+    {
+      "id": "longitudinal",
+      "turning": {
+        "spindle_origin": [
+          4,
+          4,
+          0
+        ],
+        "mode": "longitudinal",
+        "radial_start": 2,
+        "radial_end": 2,
+        "axial_start": 2,
+        "axial_end": 6,
+        "insert_radial_width": 2,
+        "insert_axial_width": 1
+      }
+    },
+    {
+      "id": "facing",
+      "turning": {
+        "spindle_origin": [
+          4,
+          4,
+          0
+        ],
+        "mode": "facing",
+        "radial_start": 0,
+        "radial_end": 3,
+        "axial_start": 7,
+        "axial_end": 7,
+        "insert_radial_width": 0.2,
+        "insert_axial_width": 1
+      }
+    }
+  ],
+  "export_mesh": true
+}

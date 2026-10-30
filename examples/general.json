@@ -1,0 +1,391 @@
+{
+  "version": 1,
+  "units": "mm",
+  "bounds": {
+    "lo": [
+      -8,
+      -8,
+      0
+    ],
+    "hi": [
+      8,
+      8,
+      12
+    ]
+  },
+  "voxel_mm": 0.25,
+  "stock": {
+    "primitives": [
+      {
+        "box": {
+          "lo": [
+            -7,
+            -7,
+            0
+          ],
+          "hi": [
+            7,
+            7,
+            10
+          ]
+        }
+      }
+    ]
+  },
+  "tools": [
+    {
+      "cutter": {
+        "kind": "flat",
+        "radius": 1.5,
+        "length": 5
+      },
+      "shank": {
+        "radius": 1,
+        "length": 3,
+        "offset": 5
+      },
+      "holder": {
+        "radius": 3,
+        "length": 3,
+        "offset": 8
+      }
+    },
+    {
+      "cutter": {
+        "kind": "ball",
+        "radius": 1.5,
+        "length": 5
+      }
+    },
+    {
+      "cutter": {
+        "kind": "bull",
+        "radius": 1.5,
+        "length": 5,
+        "corner": 0.4
+      }
+    },
+    {
+      "cutter": {
+        "kind": "taper",
+        "radius": 2,
+        "tip_radius": 0.5,
+        "length": 5
+      }
+    },
+    {
+      "cutter": {
+        "kind": "drill",
+        "radius": 1.5,
+        "length": 4
+      }
+    }
+  ],
+  "operations": [
+    {
+      "id": "flat-pocket",
+      "tool": 0,
+      "line": {
+        "a": {
+          "position": [
+            -4,
+            0,
+            5
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        },
+        "b": {
+          "position": [
+            4,
+            0,
+            5
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "id": "ball-ramp",
+      "tool": 1,
+      "line": {
+        "a": {
+          "position": [
+            -4,
+            -3,
+            4
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        },
+        "b": {
+          "position": [
+            4,
+            -3,
+            7
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "id": "bull-finish",
+      "tool": 2,
+      "line": {
+        "a": {
+          "position": [
+            -4,
+            3,
+            6
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        },
+        "b": {
+          "position": [
+            4,
+            3,
+            6
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "id": "tilted-flat",
+      "tool": 0,
+      "line": {
+        "a": {
+          "position": [
+            -4,
+            -4,
+            7
+          ],
+          "axis": [
+            0.6,
+            0,
+            0.8
+          ]
+        },
+        "b": {
+          "position": [
+            -4,
+            4,
+            7
+          ],
+          "axis": [
+            0.6,
+            0,
+            0.8
+          ]
+        }
+      }
+    },
+    {
+      "id": "taper-placement",
+      "tool": 3,
+      "line": {
+        "a": {
+          "position": [
+            4,
+            -4,
+            4
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        },
+        "b": {
+          "position": [
+            4,
+            -4,
+            4
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "id": "ideal-conical-drill",
+      "tool": 4,
+      "line": {
+        "a": {
+          "position": [
+            0,
+            0,
+            2
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        },
+        "b": {
+          "position": [
+            0,
+            0,
+            6
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "id": "intentional-holder-contact",
+      "tool": 0,
+      "line": {
+        "a": {
+          "position": [
+            5,
+            5,
+            1
+          ]
+        },
+        "b": {
+          "position": [
+            5,
+            5,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "id": "helical-groove",
+      "tool": 1,
+      "arc": {
+        "center": [
+          0,
+          0,
+          5
+        ],
+        "radius": 4.5,
+        "start_angle": 0.3,
+        "sweep_angle": 3.5,
+        "rise": 1
+      }
+    }
+  ],
+  "motion_tolerance_mm": 0.1,
+  "sections": [
+    {
+      "origin": [
+        -8,
+        0,
+        0
+      ],
+      "u": [
+        1,
+        0,
+        0
+      ],
+      "v": [
+        0,
+        0,
+        1
+      ],
+      "pixel_mm": 0.125,
+      "width": 128,
+      "height": 96
+    }
+  ],
+  "points": [
+    {
+      "point": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "point": [
+        0,
+        0,
+        9
+      ]
+    }
+  ],
+  "rays": [
+    {
+      "origin": [
+        0,
+        0,
+        15
+      ],
+      "direction": [
+        0,
+        0,
+        -1
+      ],
+      "max_distance_mm": 20
+    }
+  ],
+  "target": {
+    "primitives": [
+      {
+        "box": {
+          "lo": [
+            -7,
+            -7,
+            0
+          ],
+          "hi": [
+            7,
+            7,
+            5
+          ]
+        }
+      }
+    ]
+  },
+  "fixtures": {
+    "primitives": [
+      {
+        "box": {
+          "lo": [
+            6,
+            5,
+            9
+          ],
+          "hi": [
+            7,
+            7,
+            12
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -114,10 +114,46 @@ fn execute() !void {
     const args = try std.process.argsAlloc(a);
     defer std.process.argsFree(a, args);
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help")) {
-        std.debug.print("menkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
+        std.debug.print("menkh job FILE [--out DIR] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
         return;
     }
     const command = args[1];
+    if (std.mem.eql(u8, command, "compact-state")) {
+        if (args.len != 4) return error.ExpectedInputAndOutputState;
+        const data = try std.fs.cwd().readFileAlloc(a, args[2], 1024 * 1024 * 1024);
+        defer a.free(data);
+        var g = try @import("state.zig").decode(a, data);
+        defer g.deinit();
+        const before = g.stats();
+        try @import("engine.zig").compact(&g);
+        const encoded = try @import("state.zig").encode(a, g);
+        defer a.free(encoded);
+        try std.fs.cwd().writeFile(.{ .sub_path = args[3], .data = encoded });
+        std.debug.print("Checkpoint compacted: {d} -> {d} pool bytes; {d} occupied voxels. Start new history from this checkpoint.\n", .{ before.pool_used_bytes, g.stats().pool_used_bytes, g.stats().occupied });
+        return;
+    }
+    if (std.mem.eql(u8, command, "tiles-bench")) {
+        if (args.len != 3) return error.ExpectedOutputDirectory;
+        try @import("tiles.zig").benchmark(a, args[2]);
+        return;
+    }
+    if (std.mem.eql(u8, command, "job")) {
+        if (args.len < 3) return error.MissingJobFile;
+        var output: []const u8 = "out/job";
+        var ref = false;
+        var j: usize = 3;
+        while (j < args.len) : (j += 1) {
+            if (std.mem.eql(u8, args[j], "--reference")) {
+                ref = true;
+                continue;
+            }
+            if (!std.mem.eql(u8, args[j], "--out") or j + 1 >= args.len) return error.UnknownOption;
+            j += 1;
+            output = args[j];
+        }
+        try @import("job.zig").run(a, args[2], output, ref);
+        return;
+    }
     if (!std.mem.eql(u8, command, "demo") and !std.mem.eql(u8, command, "export") and !std.mem.eql(u8, command, "bench") and !std.mem.eql(u8, command, "drill")) return error.InvalidCommand;
     var h: f64 = 0.25;
     var out: []const u8 = if (std.mem.eql(u8, command, "drill")) "out/drill" else "out/demo";
