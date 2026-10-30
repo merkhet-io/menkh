@@ -229,7 +229,8 @@ int wmain(int argc, wchar_t **argv) {
         require(len > 0 && len < 32768, "Cannot locate viewer executable");
         app.renderer = std::make_unique<Renderer>(
             app.history, fs::path(exe).parent_path() / "Voxel.hlsl", warp, debug);
-        std::wcout << L"D3D12 adapter: " << app.renderer->adapterName() << L'\n';
+        // Do not mix wide and narrow streams on stdout (also redirected by CI).
+        std::cout << "D3D12 adapter: " << fs::path(app.renderer->adapterName()).u8string() << '\n';
         if (!smoke.empty()) {
             fs::create_directories(smoke);
             app.renderer->resize(640, 480);
@@ -316,6 +317,8 @@ int wmain(int argc, wchar_t **argv) {
             DestroyWindow(app.window);
             std::cerr << "Window smoke: window destroyed\n";
             std::cout << "Window, swapchain, resize, slider and Home/End controls passed\n";
+            app.renderer.reset();
+            std::cerr << "Window smoke: renderer released\n";
             return 0;
         }
         MSG msg{};
