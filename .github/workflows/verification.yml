@@ -1,0 +1,33 @@
+name: Verification
+on:
+  pull_request:
+  push:
+    branches: [main, 'codex/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verification-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  geometry-and-zig:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: leanprover/lean-action@fe408643ea7367d8c0404a8be3975bb145f5fb64 # v1
+        with:
+          lake-package-directory: formal
+          build: 'true'
+          test: 'false'
+          use-mathlib-cache: 'true'
+      - name: Install pinned Zig locally and select the runner SDK
+        run: |
+          ./scripts/bootstrap-zig.sh
+          echo "MENKH_SDK=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
+      - name: Existing simulator tests
+        run: |
+          ./zig build test --summary all
+          ./zig build test -Doptimize=ReleaseFast --summary all
+      - name: Geometry proofs, axiom audit, and Zig differential tests
+        run: ./scripts/verify-formal.sh
