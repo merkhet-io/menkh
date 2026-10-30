@@ -20,7 +20,11 @@ python3 scripts/benchmark-engine.py
 
 See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contracts](docs/ENGINE.md), [job/state/STL formats](docs/FORMATS.md), and [measured validation report](docs/ENGINE-VALIDATION.md). The matrix distinguishes tested behavior from restrictions; this is not a claim of ModuleWorks compatibility or feature parity. All material removal stays on the CPU. General jobs reject simultaneous orientation changes.
 
-![General job with target comparison and noncutting tool components](docs/general-job.png)
+[Watch the inspected pocket-milling video](docs/general-demo.mp4) (31 seconds).
+
+![Pocket milling with visible cutter](docs/pocket-demo.png)
+
+The default demo now uses 325 real cutting increments at 100 µm, rather than the eight-operation diagnostic fixture. Target coloring stays opt-in. The original multi-capability/collision example remains at `examples/general.json`.
 
 The sections below retain the original reproducible demos. Historical benchmark numbers describe their original checkpoint; current engine measurements are in the validation report.
 

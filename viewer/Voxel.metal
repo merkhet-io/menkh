@@ -4,7 +4,7 @@ struct Uniforms {
     float4 eye, forward, right, up, low, high, settings;
     uint4 grid;
     uint4 dimensions,blockDimensions;
-    float4 shank,shankAxis,holder,holderAxis;
+    float4 shank,shankAxis,holder,holderAxis,cutter,cutterAxis;
 };
 struct Hit { bool found; float t; float3 normal; int3 cell; };
 bool filled(int3 p,device const uint *blocks,device const uint *pool,uint3 n,uint3 nb) {
@@ -62,7 +62,9 @@ float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device 
     bool fixture=false;
     if(u.blockDimensions.w!=0){Hit fh=trace(u.eye.xyz,ray,u,fixtureBlocks,fixturePool);if(fh.found && (!hit.found || fh.t<hit.t)){hit=fh;fixture=true;}}
     Hit sh=cylinderHit(u.eye.xyz,ray,u.shank,u.shankAxis),ho=cylinderHit(u.eye.xyz,ray,u.holder,u.holderAxis);
+    Hit cutter=cylinderHit(u.eye.xyz,ray,u.cutter,u.cutterAxis);
     Hit part=(sh.found && (!ho.found || sh.t<ho.t))?sh:ho;
+    if(cutter.found && (!part.found || cutter.t<part.t))part=cutter;
     if(part.found && (!hit.found || part.t<hit.t))return float3(0.65,0.68,0.72)*(0.45+0.55*max(0.0f,dot(part.normal,normalize(float3(-0.4,-0.55,0.8)))));
     if(!hit.found)return background;
     float3 normal=hit.normal;

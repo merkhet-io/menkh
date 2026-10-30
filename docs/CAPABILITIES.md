@@ -30,7 +30,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Turning | Implemented, restricted | Complete-revolution rectangular-insert envelopes for longitudinal/facing cuts, explicit spindle origin/axis; independently validated radial profiles |
 | Combined milling and turning | Experimental geometric composition | Same stock and tilted/translated spindle transforms tested; no spindle-angle evolution, turret, synchronization, or production mill-turn claim |
 | Direct Metal inspection | Implemented, validated | Rectangular grids/origins, history scrubbing, Z section, target colors, fixture and shank/holder visibility, occupied-point picking |
-| General tool rendering | Restricted | Shank/holder shown at operation endpoints; cutter is not rendered for general jobs. Legacy mesh drill animation retains its tool illustration |
+| General tool rendering | Restricted | Flat cutter, shank and holder shown at recorded poses; other general cutter shapes are not yet rendered. Legacy mesh drill animation retains its tool illustration |
 | Incremental GPU updates | Implemented | Changed descriptors/bits uploaded in shared buffers; CPU waits for prior GPU command; no whole-state upload each frame |
 | Surface export | Implemented, validated | Greedy voxel-boundary OBJ quads, outward orientation, independently checked oriented volume and unit-edge closure; nonmanifold contacts reported |
 | Surface reconstruction / subvoxel truth | Unsupported | No Hermite samples, SDF material grid, resampling, or geometric smoothing. Normal averaging affects lighting only |

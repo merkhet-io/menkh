@@ -2,6 +2,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 ./zig build -Doptimize=ReleaseFast
-zig-out/bin/menkh job examples/general.json --out out/general
+python3 scripts/pocket-demo.py
+zig-out/bin/menkh job out/pocket-demo/job.json --out out/pocket-demo 2>out/pocket-demo/generation.log
 ./scripts/build-viewer.sh
-exec zig-out/bin/menkh-viewer out/general/voxel-animation.json --smooth-lighting --compare-target
+exec zig-out/bin/menkh-viewer out/pocket-demo/voxel-animation.json --target-z 4 "$@"

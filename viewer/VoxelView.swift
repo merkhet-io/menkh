@@ -4,7 +4,8 @@ import simd
 import AVFoundation
 
 struct NoncuttingPart:Decodable {let radius:Float;let length:Float;let offset:Float}
-struct VoxelStep:Decodable {let axis:[Float]?;let shank:NoncuttingPart?;let holder:NoncuttingPart?;let file:String;let stage:String;let occupied:UInt64;let changed_blocks:Int;let delta_bytes:Int;let tool:[Float]}
+struct CutterGeometry:Decodable {let kind:String;let radius:Float;let length:Float}
+struct VoxelStep:Decodable {let cutter:CutterGeometry?;let axis:[Float]?;let shank:NoncuttingPart?;let holder:NoncuttingPart?;let file:String;let stage:String;let occupied:UInt64;let changed_blocks:Int;let delta_bytes:Int;let tool:[Float]}
 struct VoxelHistory:Decodable {
     let format:String;let grid:[Int];let block_grid:[Int];let voxel_mm:Float
     let origin_mm:[Float]?;let motion_tolerance_mm:Float?
@@ -16,6 +17,7 @@ struct VoxelUniforms {
     var low:SIMD4<Float>;var high:SIMD4<Float>;var settings:SIMD4<Float>;var grid:SIMD4<UInt32>
     var dimensions:SIMD4<UInt32>;var blockDimensions:SIMD4<UInt32>
     var shank:SIMD4<Float>;var shankAxis:SIMD4<Float>;var holder:SIMD4<Float>;var holderAxis:SIMD4<Float>
+    var cutter:SIMD4<Float>;var cutterAxis:SIMD4<Float>
 }
 final class VoxelRenderer:NSObject,MTKViewDelegate {
     let history:VoxelHistory;let root:URL;let device:MTLDevice;let queue:MTLCommandQueue;let pipeline:MTLComputePipelineState
@@ -120,10 +122,11 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         var high=(SIMD3<Float>(history.stock_max[0],history.stock_max[1],history.stock_max[2])-origin)/h+SIMD3<Float>(repeating:1)
         high.z=min(high.z,Float(history.grid[2])*sectionFraction)
         var shank=SIMD4<Float>(repeating:0),shankAxis=SIMD4<Float>(0,0,1,0),holder=shank,holderAxis=shankAxis
+        var cutter=SIMD4<Float>(repeating:0),cutterAxis=SIMD4<Float>(0,0,1,0)
         if showHolder,frame>0 {let step=history.frames[frame-1];let axis=step.axis ?? [0,0,1]
-            if axis.count==3,step.tool.count==3 {let u=SIMD3<Float>(axis[0],axis[1],axis[2]);let p=SIMD3<Float>(step.tool[0],step.tool[1],step.tool[2]);if let part=step.shank {shank=SIMD4((p+u*part.offset-origin)/h,part.radius/h);shankAxis=SIMD4(u,part.length/h)};if let part=step.holder {holder=SIMD4((p+u*part.offset-origin)/h,part.radius/h);holderAxis=SIMD4(u,part.length/h)}}
+            if axis.count==3,step.tool.count==3 {let u=SIMD3<Float>(axis[0],axis[1],axis[2]);let p=SIMD3<Float>(step.tool[0],step.tool[1],step.tool[2]);if let part=step.cutter,part.kind=="flat" {cutter=SIMD4((p-origin)/h,part.radius/h);cutterAxis=SIMD4(u,part.length/h)};if let part=step.shank {shank=SIMD4((p+u*part.offset-origin)/h,part.radius/h);shankAxis=SIMD4(u,part.length/h)};if let part=step.holder {holder=SIMD4((p+u*part.offset-origin)/h,part.radius/h);holderAxis=SIMD4(u,part.length/h)}}
         }
-        return VoxelUniforms(eye:SIMD4((eye-origin)/h,0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis)
+        return VoxelUniforms(eye:SIMD4((eye-origin)/h,0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis)
     }
     func encode(_ texture:MTLTexture)->MTLCommandBuffer? {
         guard let command=queue.makeCommandBuffer(),let encoder=command.makeComputeCommandEncoder() else {return nil}
@@ -203,7 +206,7 @@ final class VoxelController:NSViewController {
         comparison.isEnabled=renderer.targetBlocks != nil
         let section=NSSlider(value:1,minValue:0.01,maxValue:1,target:self,action:#selector(section(_:)));section.toolTip="Z cross-section";section.widthAnchor.constraint(equalToConstant:120).isActive=true
         let fixtures=NSButton(checkboxWithTitle:"Fixtures",target:self,action:#selector(fixtures(_:)));fixtures.state = .on;fixtures.isEnabled=renderer.fixtureBlocks != nil
-        let holder=NSButton(checkboxWithTitle:"Shank / holder",target:self,action:#selector(holder(_:)));holder.state = .on
+        let holder=NSButton(checkboxWithTitle:"Tool assembly",target:self,action:#selector(holder(_:)));holder.state = .on
         let buttons=NSStackView(views:[play,restart,reset,lighting,background]);buttons.spacing=12
         let inspection=NSStackView(views:[stock,comparison,fixtures,holder,section]);inspection.spacing=12
         let top=NSStackView(views:[title,help]);top.orientation = .vertical;top.alignment = .leading;top.spacing=8;top.translatesAutoresizingMaskIntoConstraints=false;view.addSubview(top)
@@ -261,20 +264,20 @@ extension VoxelRenderer {
         input.expectsMediaDataInRealTime=false
         let adapter=AVAssetWriterInputPixelBufferAdaptor(assetWriterInput:input,sourcePixelBufferAttributes:[kCVPixelBufferPixelFormatTypeKey as String:kCVPixelFormatType_32ARGB,kCVPixelBufferWidthKey as String:width,kCVPixelBufferHeightKey as String:height,kCVPixelBufferCGImageCompatibilityKey as String:true,kCVPixelBufferCGBitmapContextCompatibilityKey as String:true])
         writer.add(input);guard writer.startWriting() else {throw writer.error ?? MeshError.imageEncoding};writer.startSession(atSourceTime:.zero)
-        let order=Array(repeating:0,count:12)+Array(0...history.frames.count)+Array(repeating:history.frames.count,count:72)
+        let order=Array(repeating:0,count:12)+Array(0...history.frames.count)+Array(repeating:history.frames.count,count:36)
         for (i,f) in order.enumerated() {
             try autoreleasepool {
                 try seek(f)
                 if i>12+history.frames.count {
-                    let t=Float(i-12-history.frames.count)/72
-                    let lo=history.stock_min;let hi=history.stock_max;let diagonal=simd_length(SIMD3<Float>(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]));distance=diagonal*(1.2-0.6*t);target.z=(lo[2]+hi[2])/2+(hi[2]-lo[2])*0.2*t;yaw = -0.8+0.8*t
+                    let t=Float(i-12-history.frames.count)/36
+                    yaw = -0.8+0.35*t
                 }
                 let image=try image(width:width,height:height)
                 image.lockFocus()
                 let title:[NSAttributedString.Key:Any]=[.font:NSFont.systemFont(ofSize:22,weight:.bold),.foregroundColor:NSColor.white]
-                ("MENKH / \(history.grid[0]) × \(history.grid[1]) × \(history.grid[2]) VOXEL" as NSString).draw(at:NSPoint(x:24,y:height-44),withAttributes:title)
+                ("MENKH / CUTTING SIMULATION" as NSString).draw(at:NSPoint(x:24,y:height-44),withAttributes:title)
                 let detail:[NSAttributedString.Key:Any]=[.font:NSFont.monospacedDigitSystemFont(ofSize:14,weight:.medium),.foregroundColor:NSColor.white]
-                ("\(frame==0 ? "Initial stock":history.frames[frame-1].stage) · Schnitt \(frame)/\(history.frames.count) · \(String(format:"%.3f",history.voxel_mm*1000)) µm · CPU-Abtrag / Metal-Darstellung" as NSString).draw(at:NSPoint(x:24,y:24),withAttributes:detail)
+                ("\(frame==0 ? "Initial stock":history.frames[frame-1].stage) · \(frame)/\(history.frames.count) · \(String(format:"%.3f",history.voxel_mm*1000)) µm · voxel stock / CPU cutting" as NSString).draw(at:NSPoint(x:24,y:24),withAttributes:detail)
                 image.unlockFocus()
                 var rect=CGRect(x:0,y:0,width:width,height:height)
                 guard let cg=image.cgImage(forProposedRect:&rect,context:nil,hints:nil),let buffers=adapter.pixelBufferPool else {throw MeshError.imageEncoding}
