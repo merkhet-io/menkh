@@ -1,0 +1,51 @@
+{
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "target_cpu": "apple_m1",
+  "process_peak_rss_bytes": 19415040,
+  "stock_mm": [
+    40,
+    30,
+    10
+  ],
+  "voxel_mm": 0.025,
+  "motion": {
+    "a": [
+      10,
+      15,
+      6
+    ],
+    "b": [
+      30,
+      15,
+      6
+    ],
+    "radius": 3,
+    "length": 10
+  },
+  "raster_approximation": true,
+  "stats": {
+    "occupied": 730040960,
+    "empty_blocks": 73120,
+    "full_blocks": 1424880,
+    "mixed_blocks": 2000,
+    "descriptor_bytes": 6000000,
+    "pool_bytes": 128000,
+    "pool_used_bytes": 128000
+  },
+  "grid_bytes": 6128000,
+  "mesh_capacity_bytes": 6636048,
+  "occupied_volume_mm3": 11406.890000000001,
+  "removed_volume_mm3": 593.11,
+  "analytic_removed_mm3": 593.0973355292325,
+  "error_mm3": 0.012664470767504099,
+  "quads": 112024,
+  "timing": {
+    "init_ns": 477208,
+    "cut_ns": 7414208,
+    "stats_ns": 3068792,
+    "surface_ns": 80394417,
+    "export_ns": 95486708
+  }
+}

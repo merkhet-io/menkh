@@ -34,6 +34,8 @@ pub const Move = struct {
 pub const Stats = struct { occupied: u64 = 0, empty_blocks: usize = 0, full_blocks: usize = 0, mixed_blocks: usize = 0, descriptor_bytes: usize = 0, pool_bytes: usize = 0, pool_used_bytes: usize = 0 };
 pub const Grid = struct {
     allocator: std.mem.Allocator,
+    origin: [3]f64 = .{ 0, 0, 0 },
+    material_bounds: ?[2][3]f64 = null,
     size: [3]f64,
     h: f64,
     n: [3]usize,
@@ -106,7 +108,8 @@ pub const Grid = struct {
     }
     pub fn query(g: Grid, p: [3]f64) bool {
         var idx: [3]usize = undefined;
-        for (p, 0..) |v, i| {
+        for (p, 0..) |world, i| {
+            const v = world - g.origin[i];
             if (!std.math.isFinite(v) or v < 0) return false;
             const q = @floor(v / g.h);
             if (q >= @as(f64, @floatFromInt(g.n[i]))) return false;
@@ -186,7 +189,12 @@ pub const Grid = struct {
         return v == 0;
     }
     pub fn cut(g: *Grid, input: Move, reference: bool) !void {
-        const m = try input.validated();
+        var local = input;
+        for (0..3) |i| {
+            local.a[i] -= g.origin[i];
+            local.b[i] -= g.origin[i];
+        }
+        const m = try local.validated();
         const r = g.range(m) orelse return;
         // Preflight only full blocks that really become mixed. Failure leaves occupancy untouched.
         var needed: usize = 0;

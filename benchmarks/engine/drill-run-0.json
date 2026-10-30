@@ -1,0 +1,3178 @@
+{
+  "format": "menkh-voxel-history-v1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "target_cpu": "apple_m1",
+  "grid": [
+    4096,
+    4096,
+    4096
+  ],
+  "block_grid": [
+    512,
+    512,
+    512
+  ],
+  "voxel_mm": 0.0146484375,
+  "world_mm": 60,
+  "stock_min": [
+    24,
+    24,
+    0
+  ],
+  "stock_max": [
+    36,
+    36,
+    60
+  ],
+  "initial_occupied": 2159116288,
+  "final_occupied": 1333399870,
+  "initial_pool_slots": 186368,
+  "pool_slots": 808040,
+  "descriptor_bytes": 536870912,
+  "pool_capacity_bytes": 51714560,
+  "init_ns": 169196625,
+  "initial_stats_ns": 104494750,
+  "initial_write_ns": 91685083,
+  "total_ns": 6260902167,
+  "process_peak_rss_bytes": 647610368,
+  "workers": 1,
+  "frames": [
+    {
+      "file": "step-0000.delta",
+      "stage": "Spannut 1",
+      "occupied": 2127257643,
+      "changed_blocks": 67711,
+      "delta_bytes": 1492980,
+      "cut_ns": 47712417,
+      "write_ns": 442792,
+      "tool": [
+        35.37611768844843,
+        30.50730523351522,
+        16.479166666666668
+      ]
+    },
+    {
+      "file": "step-0001.delta",
+      "stage": "Spannut 1",
+      "occupied": 2123291220,
+      "changed_blocks": 11719,
+      "delta_bytes": 650900,
+      "cut_ns": 25290167,
+      "write_ns": 285292,
+      "tool": [
+        35.304682000017806,
+        31.01012319975689,
+        16.958333333333332
+      ]
+    },
+    {
+      "file": "step-0002.delta",
+      "stage": "Spannut 1",
+      "occupied": 2119324122,
+      "changed_blocks": 11734,
+      "delta_bytes": 648264,
+      "cut_ns": 25554208,
+      "write_ns": 359375,
+      "tool": [
+        35.186324804844055,
+        31.504006322679288,
+        17.4375
+      ]
+    },
+    {
+      "file": "step-0003.delta",
+      "stage": "Spannut 1",
+      "occupied": 2115357369,
+      "changed_blocks": 11746,
+      "delta_bytes": 650328,
+      "cut_ns": 28171208,
+      "write_ns": 567792,
+      "tool": [
+        35.022093007893666,
+        31.984586057611402,
+        17.916666666666668
+      ]
+    },
+    {
+      "file": "step-0004.delta",
+      "stage": "Spannut 1",
+      "occupied": 2111390474,
+      "changed_blocks": 11778,
+      "delta_bytes": 656472,
+      "cut_ns": 35130375,
+      "write_ns": 623042,
+      "tool": [
+        34.813439288774575,
+        32.447611532347665,
+        18.395833333333332
+      ]
+    },
+    {
+      "file": "step-0005.delta",
+      "stage": "Spannut 1",
+      "occupied": 2107423539,
+      "changed_blocks": 11756,
+      "delta_bytes": 651024,
+      "cut_ns": 37611209,
+      "write_ns": 544125,
+      "tool": [
+        34.56220925234842,
+        32.888987147390324,
+        18.875
+      ]
+    },
+    {
+      "file": "step-0006.delta",
+      "stage": "Spannut 1",
+      "occupied": 2103456722,
+      "changed_blocks": 11753,
+      "delta_bytes": 650156,
+      "cut_ns": 35274167,
+      "write_ns": 501041,
+      "tool": [
+        34.27062510380076,
+        33.304808802758,
+        19.354166666666668
+      ]
+    },
+    {
+      "file": "step-0007.delta",
+      "stage": "Spannut 1",
+      "occupied": 2099489298,
+      "changed_blocks": 11706,
+      "delta_bytes": 645752,
+      "cut_ns": 29516583,
+      "write_ns": 358292,
+      "tool": [
+        33.94126599256831,
+        33.691398430923506,
+        19.833333333333332
+      ]
+    },
+    {
+      "file": "step-0008.delta",
+      "stage": "Spannut 1",
+      "occupied": 2095523143,
+      "changed_blocks": 11716,
+      "delta_bytes": 646384,
+      "cut_ns": 28563833,
+      "write_ns": 461209,
+      "tool": [
+        33.57704519898693,
+        34.04533653042668,
+        20.3125
+      ]
+    },
+    {
+      "file": "step-0009.delta",
+      "stage": "Spannut 1",
+      "occupied": 2091556806,
+      "changed_blocks": 11624,
+      "delta_bytes": 639904,
+      "cut_ns": 28518417,
+      "write_ns": 363583,
+      "tool": [
+        33.18118436545137,
+        34.363492412392596,
+        20.791666666666668
+      ]
+    },
+    {
+      "file": "step-0010.delta",
+      "stage": "Spannut 1",
+      "occupied": 2087590007,
+      "changed_blocks": 11728,
+      "delta_bytes": 641152,
+      "cut_ns": 27871584,
+      "write_ns": 420833,
+      "tool": [
+        32.75718500002,
+        34.64305189241567,
+        21.270833333333332
+      ]
+    },
+    {
+      "file": "step-0011.delta",
+      "stage": "Spannut 1",
+      "occupied": 2083623544,
+      "changed_blocks": 11665,
+      "delta_bytes": 637516,
+      "cut_ns": 27798458,
+      "write_ns": 402625,
+      "tool": [
+        32.308797504523525,
+        34.881542182866596,
+        21.75
+      ]
+    },
+    {
+      "file": "step-0012.delta",
+      "stage": "Spannut 1",
+      "occupied": 2079657424,
+      "changed_blocks": 11634,
+      "delta_bytes": 636824,
+      "cut_ns": 27596542,
+      "write_ns": 465041,
+      "tool": [
+        31.83998800113352,
+        35.0768537654422,
+        22.229166666666664
+      ]
+    },
+    {
+      "file": "step-0013.delta",
+      "stage": "Spannut 1",
+      "occupied": 2075691278,
+      "changed_blocks": 11630,
+      "delta_bytes": 635432,
+      "cut_ns": 27529375,
+      "write_ns": 380000,
+      "tool": [
+        31.35490325081972,
+        35.227259050488904,
+        22.708333333333336
+      ]
+    },
+    {
+      "file": "step-0014.delta",
+      "stage": "Spannut 1",
+      "occupied": 2071724567,
+      "changed_blocks": 11635,
+      "delta_bytes": 635172,
+      "cut_ns": 27524583,
+      "write_ns": 311459,
+      "tool": [
+        30.85783397400285,
+        35.331427658052434,
+        23.1875
+      ]
+    },
+    {
+      "file": "step-0015.delta",
+      "stage": "Spannut 1",
+      "occupied": 2067757645,
+      "changed_blocks": 11661,
+      "delta_bytes": 640156,
+      "cut_ns": 26861833,
+      "write_ns": 289625,
+      "tool": [
+        30.353176897842776,
+        35.38843818548846,
+        23.666666666666664
+      ]
+    },
+    {
+      "file": "step-0016.delta",
+      "stage": "Spannut 1",
+      "occupied": 2063791066,
+      "changed_blocks": 11685,
+      "delta_bytes": 641852,
+      "cut_ns": 27016083,
+      "write_ns": 301167,
+      "tool": [
+        29.845395865865246,
+        35.39778635754588,
+        24.145833333333336
+      ]
+    },
+    {
+      "file": "step-0017.delta",
+      "stage": "Spannut 1",
+      "occupied": 2059824513,
+      "changed_blocks": 11743,
+      "delta_bytes": 647540,
+      "cut_ns": 27077958,
+      "write_ns": 233542,
+      "tool": [
+        29.338982353924234,
+        35.35938948683304,
+        24.625
+      ]
+    },
+    {
+      "file": "step-0018.delta",
+      "stage": "Spannut 1",
+      "occupied": 2055857717,
+      "changed_blocks": 11753,
+      "delta_bytes": 650860,
+      "cut_ns": 27338125,
+      "write_ns": 221042,
+      "tool": [
+        28.83841574174791,
+        35.27358720521249,
+        25.104166666666664
+      ]
+    },
+    {
+      "file": "step-0019.delta",
+      "stage": "Spannut 1",
+      "occupied": 2051890959,
+      "changed_blocks": 11767,
+      "delta_bytes": 651604,
+      "cut_ns": 27291625,
+      "write_ns": 286542,
+      "tool": [
+        28.34812369147861,
+        35.141138459655195,
+        25.583333333333336
+      ]
+    },
+    {
+      "file": "step-0020.delta",
+      "stage": "Spannut 1",
+      "occupied": 2047924185,
+      "changed_blocks": 11743,
+      "delta_bytes": 652020,
+      "cut_ns": 26663958,
+      "write_ns": 263209,
+      "tool": [
+        27.87244298367034,
+        34.96321479912631,
+        26.0625
+      ]
+    },
+    {
+      "file": "step-0021.delta",
+      "stage": "Spannut 1",
+      "occupied": 2043957157,
+      "changed_blocks": 11767,
+      "delta_bytes": 653716,
+      "cut_ns": 26572416,
+      "write_ns": 263084,
+      "tool": [
+        27.415581157161228,
+        34.74139001188258,
+        26.541666666666664
+      ]
+    },
+    {
+      "file": "step-0022.delta",
+      "stage": "Spannut 1",
+      "occupied": 2039990262,
+      "changed_blocks": 11753,
+      "delta_bytes": 654188,
+      "cut_ns": 26963334,
+      "write_ns": 220708,
+      "tool": [
+        26.98157929212782,
+        34.47762620484207,
+        27.020833333333336
+      ]
+    },
+    {
+      "file": "step-0023.delta",
+      "stage": "Spannut 1",
+      "occupied": 2036023459,
+      "changed_blocks": 11736,
+      "delta_bytes": 647968,
+      "cut_ns": 26588125,
+      "write_ns": 266791,
+      "tool": [
+        26.574276265516314,
+        34.17425644815878,
+        27.5
+      ]
+    },
+    {
+      "file": "step-0024.delta",
+      "stage": "Spannut 1",
+      "occupied": 2032056551,
+      "changed_blocks": 11683,
+      "delta_bytes": 643940,
+      "cut_ns": 26591708,
+      "write_ns": 214500,
+      "tool": [
+        26.197274795022047,
+        33.833964138515825,
+        27.979166666666668
+      ]
+    },
+    {
+      "file": "step-0025.delta",
+      "stage": "Spannut 1",
+      "occupied": 2028089798,
+      "changed_blocks": 11665,
+      "delta_bytes": 640972,
+      "cut_ns": 26531750,
+      "write_ns": 257250,
+      "tool": [
+        25.853909571968636,
+        33.45975926367525,
+        28.458333333333332
+      ]
+    },
+    {
+      "file": "step-0026.delta",
+      "stage": "Spannut 1",
+      "occupied": 2024123922,
+      "changed_blocks": 11654,
+      "delta_bytes": 639624,
+      "cut_ns": 27142709,
+      "write_ns": 296625,
+      "tool": [
+        25.547217764960862,
+        33.05495177823151,
+        28.9375
+      ]
+    },
+    {
+      "file": "step-0027.delta",
+      "stage": "Spannut 1",
+      "occupied": 2020156970,
+      "changed_blocks": 11739,
+      "delta_bytes": 643524,
+      "cut_ns": 26995667,
+      "write_ns": 311333,
+      "tool": [
+        25.279912155215502,
+        32.623122326068234,
+        29.416666666666668
+      ]
+    },
+    {
+      "file": "step-0028.delta",
+      "stage": "Spannut 1",
+      "occupied": 2016190706,
+      "changed_blocks": 11648,
+      "delta_bytes": 636032,
+      "cut_ns": 27292125,
+      "write_ns": 226750,
+      "tool": [
+        25.054357141196043,
+        32.1680905684868,
+        29.895833333333332
+      ]
+    },
+    {
+      "file": "step-0029.delta",
+      "stage": "Spannut 1",
+      "occupied": 2012224305,
+      "changed_blocks": 11656,
+      "delta_bytes": 635936,
+      "cut_ns": 26904417,
+      "write_ns": 206625,
+      "tool": [
+        24.8725478247976,
+        31.693881398154012,
+        30.375
+      ]
+    },
+    {
+      "file": "step-0030.delta",
+      "stage": "Spannut 1",
+      "occupied": 2008257936,
+      "changed_blocks": 11618,
+      "delta_bytes": 634520,
+      "cut_ns": 27007166,
+      "write_ns": 188792,
+      "tool": [
+        24.736092364071002,
+        31.20468933771674,
+        30.854166666666668
+      ]
+    },
+    {
+      "file": "step-0031.delta",
+      "stage": "Spannut 1",
+      "occupied": 2004291321,
+      "changed_blocks": 11676,
+      "delta_bytes": 638992,
+      "cut_ns": 27171125,
+      "write_ns": 254458,
+      "tool": [
+        24.64619774858142,
+        30.70484143798828,
+        31.333333333333332
+      ]
+    },
+    {
+      "file": "step-0032.delta",
+      "stage": "Spannut 1",
+      "occupied": 2000324460,
+      "changed_blocks": 11658,
+      "delta_bytes": 638584,
+      "cut_ns": 27325166,
+      "write_ns": 280375,
+      "tool": [
+        24.60365912322291,
+        30.19875900388334,
+        31.8125
+      ]
+    },
+    {
+      "file": "step-0033.delta",
+      "stage": "Spannut 1",
+      "occupied": 1996357835,
+      "changed_blocks": 11705,
+      "delta_bytes": 647148,
+      "cut_ns": 27776750,
+      "write_ns": 256458,
+      "tool": [
+        24.608852754922797,
+        29.690918486647124,
+        32.29166666666667
+      ]
+    },
+    {
+      "file": "step-0034.delta",
+      "stage": "Spannut 1",
+      "occupied": 1992391310,
+      "changed_blocks": 11734,
+      "delta_bytes": 648968,
+      "cut_ns": 30489500,
+      "write_ns": 428333,
+      "tool": [
+        24.661732704447623,
+        29.185811888298602,
+        32.77083333333333
+      ]
+    },
+    {
+      "file": "step-0035.delta",
+      "stage": "Spannut 1",
+      "occupied": 1988424067,
+      "changed_blocks": 11783,
+      "delta_bytes": 655700,
+      "cut_ns": 34040834,
+      "write_ns": 522791,
+      "tool": [
+        24.76183123274946,
+        28.687907028522375,
+        33.25
+      ]
+    },
+    {
+      "file": "step-0036.delta",
+      "stage": "Spannut 1",
+      "occupied": 1984457520,
+      "changed_blocks": 11771,
+      "delta_bytes": 654852,
+      "cut_ns": 37430041,
+      "write_ns": 481459,
+      "tool": [
+        24.90826293825841,
+        28.201608025460764,
+        33.72916666666667
+      ]
+    },
+    {
+      "file": "step-0037.delta",
+      "stage": "Spannut 1",
+      "occupied": 1980490874,
+      "changed_blocks": 11751,
+      "delta_bytes": 652628,
+      "cut_ns": 33163458,
+      "write_ns": 448792,
+      "tool": [
+        25.099732588525576,
+        27.731216339965012,
+        34.20833333333333
+      ]
+    },
+    {
+      "file": "step-0038.delta",
+      "stage": "Spannut 1",
+      "occupied": 1976523992,
+      "changed_blocks": 11750,
+      "delta_bytes": 649032,
+      "cut_ns": 30569333,
+      "write_ns": 392875,
+      "tool": [
+        25.33454657694343,
+        27.280892727881124,
+        34.6875
+      ]
+    },
+    {
+      "file": "step-0039.delta",
+      "stage": "Spannut 1",
+      "occupied": 1972556972,
+      "changed_blocks": 11733,
+      "delta_bytes": 647804,
+      "cut_ns": 28611792,
+      "write_ns": 308542,
+      "tool": [
+        25.61062790320528,
+        26.854620436913866,
+        35.16666666666667
+      ]
+    },
+    {
+      "file": "step-0040.delta",
+      "stage": "Spannut 1",
+      "occupied": 1968590218,
+      "changed_blocks": 11719,
+      "delta_bytes": 645972,
+      "cut_ns": 29138958,
+      "write_ns": 475208,
+      "tool": [
+        25.925534544997276,
+        26.456169973603494,
+        35.64583333333333
+      ]
+    },
+    {
+      "file": "step-0041.delta",
+      "stage": "Spannut 1",
+      "occupied": 1964623161,
+      "changed_blocks": 11718,
+      "delta_bytes": 647432,
+      "cut_ns": 28705375,
+      "write_ns": 359000,
+      "tool": [
+        26.276481058419837,
+        26.08906575206208,
+        36.125
+      ]
+    },
+    {
+      "file": "step-0042.delta",
+      "stage": "Spannut 1",
+      "occupied": 1960656694,
+      "changed_blocks": 11653,
+      "delta_bytes": 641148,
+      "cut_ns": 28770334,
+      "write_ns": 244875,
+      "tool": [
+        26.660363216076103,
+        25.75655491947139,
+        36.60416666666667
+      ]
+    },
+    {
+      "file": "step-0043.delta",
+      "stage": "Spannut 1",
+      "occupied": 1956690455,
+      "changed_blocks": 11664,
+      "delta_bytes": 637504,
+      "cut_ns": 28942875,
+      "write_ns": 257000,
+      "tool": [
+        27.073785464896336,
+        25.46157863409004,
+        37.08333333333333
+      ]
+    },
+    {
+      "file": "step-0044.delta",
+      "stage": "Spannut 1",
+      "occupied": 1952723915,
+      "changed_blocks": 11659,
+      "delta_bytes": 635908,
+      "cut_ns": 29141625,
+      "write_ns": 407750,
+      "tool": [
+        27.513090960825505,
+        25.206746049824588,
+        37.5625
+      ]
+    },
+    {
+      "file": "step-0045.delta",
+      "stage": "Spannut 1",
+      "occupied": 1948757374,
+      "changed_blocks": 11619,
+      "delta_bytes": 634468,
+      "cut_ns": 28511750,
+      "write_ns": 317709,
+      "tool": [
+        27.974393914707996,
+        24.994311237479103,
+        38.04166666666667
+      ]
+    },
+    {
+      "file": "step-0046.delta",
+      "stage": "Spannut 1",
+      "occupied": 1944791013,
+      "changed_blocks": 11628,
+      "delta_bytes": 634896,
+      "cut_ns": 28801584,
+      "write_ns": 243625,
+      "tool": [
+        28.453613963260743,
+        24.826153246821292,
+        38.52083333333333
+      ]
+    },
+    {
+      "file": "step-0047.delta",
+      "stage": "Spannut 1",
+      "occupied": 1940824762,
+      "changed_blocks": 11615,
+      "delta_bytes": 632820,
+      "cut_ns": 28580083,
+      "write_ns": 324333,
+      "tool": [
+        28.946512261112904,
+        24.703759485822555,
+        39
+      ]
+    },
+    {
+      "file": "step-0048.delta",
+      "stage": "Spannut 1",
+      "occupied": 1936858047,
+      "changed_blocks": 11642,
+      "delta_bytes": 637752,
+      "cut_ns": 28583750,
+      "write_ns": 256667,
+      "tool": [
+        29.448728974667233,
+        24.62821256408739,
+        39.479166666666664
+      ]
+    },
+    {
+      "file": "step-0049.delta",
+      "stage": "Spannut 1",
+      "occupied": 1932891083,
+      "changed_blocks": 11696,
+      "delta_bytes": 640704,
+      "cut_ns": 29106541,
+      "write_ns": 379000,
+      "tool": [
+        29.95582184613874,
+        24.600180716846033,
+        39.958333333333336
+      ]
+    },
+    {
+      "file": "step-0050.delta",
+      "stage": "Spannut 1",
+      "occupied": 1928924325,
+      "changed_blocks": 11675,
+      "delta_bytes": 643204,
+      "cut_ns": 30464625,
+      "write_ns": 490125,
+      "tool": [
+        30.463305486659976,
+        24.619911894212997,
+        40.4375
+      ]
+    },
+    {
+      "file": "step-0051.delta",
+      "stage": "Spannut 1",
+      "occupied": 1924958035,
+      "changed_blocks": 11741,
+      "delta_bytes": 646684,
+      "cut_ns": 32477833,
+      "write_ns": 533583,
+      "tool": [
+        30.966691050893814,
+        24.68723156799378,
+        40.916666666666664
+      ]
+    },
+    {
+      "file": "step-0052.delta",
+      "stage": "Spannut 1",
+      "occupied": 1920990780,
+      "changed_blocks": 11763,
+      "delta_bytes": 652644,
+      "cut_ns": 30100208,
+      "write_ns": 395750,
+      "tool": [
+        31.461525942219673,
+        24.801544275439205,
+        41.395833333333336
+      ]
+    },
+    {
+      "file": "step-0053.delta",
+      "stage": "Spannut 1",
+      "occupied": 1917024120,
+      "changed_blocks": 11758,
+      "delta_bytes": 651944,
+      "cut_ns": 29387542,
+      "write_ns": 340083,
+      "tool": [
+        31.943433197288932,
+        24.96183888629241,
+        41.875
+      ]
+    },
+    {
+      "file": "step-0054.delta",
+      "stage": "Spannut 1",
+      "occupied": 1913057405,
+      "changed_blocks": 11725,
+      "delta_bytes": 650524,
+      "cut_ns": 30178209,
+      "write_ns": 275625,
+      "tool": [
+        32.40815020158141,
+        25.1666975465399,
+        42.354166666666664
+      ]
+    },
+    {
+      "file": "step-0055.delta",
+      "stage": "Spannut 1",
+      "occupied": 1909090577,
+      "changed_blocks": 11738,
+      "delta_bytes": 650552,
+      "cut_ns": 28791958,
+      "write_ns": 232834,
+      "tool": [
+        32.85156639351199,
+        25.414308219756474,
+        42.833333333333336
+      ]
+    },
+    {
+      "file": "step-0056.delta",
+      "stage": "Spannut 1",
+      "occupied": 1905123489,
+      "changed_blocks": 11771,
+      "delta_bytes": 651012,
+      "cut_ns": 28411834,
+      "write_ns": 451666,
+      "tool": [
+        33.269759623583354,
+        25.702480715112028,
+        43.3125
+      ]
+    },
+    {
+      "file": "step-0057.delta",
+      "stage": "Spannut 1",
+      "occupied": 1901156544,
+      "changed_blocks": 11722,
+      "delta_bytes": 647608,
+      "cut_ns": 33118500,
+      "write_ns": 493500,
+      "tool": [
+        33.65903084697726,
+        26.028666060267796,
+        43.791666666666664
+      ]
+    },
+    {
+      "file": "step-0058.delta",
+      "stage": "Spannut 1",
+      "occupied": 1897190124,
+      "changed_blocks": 11689,
+      "delta_bytes": 644076,
+      "cut_ns": 33217875,
+      "write_ns": 452333,
+      "tool": [
+        34.01593684271771,
+        26.389979047802836,
+        44.270833333333336
+      ]
+    },
+    {
+      "file": "step-0059.delta",
+      "stage": "Spannut 1",
+      "occupied": 1893223796,
+      "changed_blocks": 11603,
+      "delta_bytes": 636068,
+      "cut_ns": 29451041,
+      "write_ns": 378000,
+      "tool": [
+        34.337320669995485,
+        26.78322375574086,
+        44.75
+      ]
+    },
+    {
+      "file": "step-0060.delta",
+      "stage": "Spannut 1",
+      "occupied": 1889256890,
+      "changed_blocks": 11683,
+      "delta_bytes": 637028,
+      "cut_ns": 29334042,
+      "write_ns": 309333,
+      "tool": [
+        34.620339592258475,
+        27.20492181644077,
+        45.229166666666664
+      ]
+    },
+    {
+      "file": "step-0061.delta",
+      "stage": "Spannut 1",
+      "occupied": 1885290652,
+      "changed_blocks": 11663,
+      "delta_bytes": 636724,
+      "cut_ns": 28861791,
+      "write_ns": 214167,
+      "tool": [
+        34.86249022207096,
+        27.651343183803927,
+        45.708333333333336
+      ]
+    },
+    {
+      "file": "step-0062.delta",
+      "stage": "Spannut 1",
+      "occupied": 1881324385,
+      "changed_blocks": 11637,
+      "delta_bytes": 636220,
+      "cut_ns": 28957792,
+      "write_ns": 247042,
+      "tool": [
+        35.06163066432791,
+        28.11853912665305,
+        46.1875
+      ]
+    },
+    {
+      "file": "step-0063.delta",
+      "stage": "Spannut 1",
+      "occupied": 1877357934,
+      "changed_blocks": 11643,
+      "delta_bytes": 635588,
+      "cut_ns": 29730375,
+      "write_ns": 296166,
+      "tool": [
+        35.21599946196097,
+        28.602377156446384,
+        46.666666666666664
+      ]
+    },
+    {
+      "file": "step-0064.delta",
+      "stage": "Spannut 1",
+      "occupied": 1873391313,
+      "changed_blocks": 11672,
+      "delta_bytes": 638496,
+      "cut_ns": 29240334,
+      "write_ns": 390708,
+      "tool": [
+        35.32423117655574,
+        29.09857758038096,
+        47.145833333333336
+      ]
+    },
+    {
+      "file": "step-0065.delta",
+      "stage": "Spannut 1",
+      "occupied": 1869424664,
+      "changed_blocks": 11666,
+      "delta_bytes": 642008,
+      "cut_ns": 30427000,
+      "write_ns": 482416,
+      "tool": [
+        35.38536846606493,
+        29.602751356561797,
+        47.625
+      ]
+    },
+    {
+      "file": "step-0066.delta",
+      "stage": "Spannut 1",
+      "occupied": 1865457848,
+      "changed_blocks": 11676,
+      "delta_bytes": 642832,
+      "cut_ns": 33737833,
+      "write_ns": 458667,
+      "tool": [
+        35.39887055278649,
+        30.110438916396717,
+        48.104166666666664
+      ]
+    },
+    {
+      "file": "step-0067.delta",
+      "stage": "Spannut 1",
+      "occupied": 1861491185,
+      "changed_blocks": 11738,
+      "delta_bytes": 646072,
+      "cut_ns": 33689292,
+      "write_ns": 421292,
+      "tool": [
+        35.364618006705,
+        30.61714961082097,
+        48.583333333333336
+      ]
+    },
+    {
+      "file": "step-0068.delta",
+      "stage": "Spannut 1",
+      "occupied": 1857524752,
+      "changed_blocks": 11715,
+      "delta_bytes": 649828,
+      "cut_ns": 30788958,
+      "write_ns": 336709,
+      "tool": [
+        35.28291380188599,
+        31.118401431437977,
+        49.0625
+      ]
+    },
+    {
+      "file": "step-0069.delta",
+      "stage": "Spannut 1",
+      "occupied": 1853557725,
+      "changed_blocks": 11776,
+      "delta_bytes": 653120,
+      "cut_ns": 29637333,
+      "write_ns": 345834,
+      "tool": [
+        35.1544806365793,
+        31.60976065523079,
+        49.541666666666664
+      ]
+    },
+    {
+      "file": "step-0070.delta",
+      "stage": "Spannut 1",
+      "occupied": 1849591060,
+      "changed_blocks": 11740,
+      "delta_bytes": 651728,
+      "cut_ns": 29923166,
+      "write_ns": 473250,
+      "tool": [
+        34.98045454073582,
+        32.08688106217484,
+        50.020833333333336
+      ]
+    },
+    {
+      "file": "step-0071.delta",
+      "stage": "Spannut 1",
+      "occupied": 1845624147,
+      "changed_blocks": 11725,
+      "delta_bytes": 648732,
+      "cut_ns": 30002958,
+      "write_ns": 403833,
+      "tool": [
+        34.76237482748112,
+        32.54554237886039,
+        50.5
+      ]
+    },
+    {
+      "file": "step-0072.delta",
+      "stage": "Spannut 1",
+      "occupied": 1841657466,
+      "changed_blocks": 11762,
+      "delta_bytes": 651736,
+      "cut_ns": 29517791,
+      "write_ns": 315334,
+      "tool": [
+        34.50217047742817,
+        32.98168760807939,
+        50.979166666666664
+      ]
+    },
+    {
+      "file": "step-0073.delta",
+      "stage": "Spannut 1",
+      "occupied": 1837690467,
+      "changed_blocks": 11740,
+      "delta_bytes": 649616,
+      "cut_ns": 33039708,
+      "write_ns": 475250,
+      "tool": [
+        34.20214307626403,
+        33.39145891418521,
+        51.458333333333336
+      ]
+    },
+    {
+      "file": "step-0074.delta",
+      "stage": "Spannut 1",
+      "occupied": 1833723725,
+      "changed_blocks": 11682,
+      "delta_bytes": 643992,
+      "cut_ns": 33603917,
+      "write_ns": 386292,
+      "tool": [
+        33.86494645653262,
+        33.77123174680845,
+        51.9375
+      ]
+    },
+    {
+      "file": "step-0075.delta",
+      "stage": "Spannut 1",
+      "occupied": 1829757131,
+      "changed_blocks": 11691,
+      "delta_bytes": 641988,
+      "cut_ns": 33705875,
+      "write_ns": 441458,
+      "tool": [
+        33.493563223688234,
+        34.11764690109449,
+        52.416666666666664
+      ]
+    },
+    {
+      "file": "step-0076.delta",
+      "stage": "Spannut 1",
+      "occupied": 1825790732,
+      "changed_blocks": 11657,
+      "delta_bytes": 638636,
+      "cut_ns": 31702459,
+      "write_ns": 473041,
+      "tool": [
+        33.09127837405375,
+        34.42764023088006,
+        52.895833333333336
+      ]
+    },
+    {
+      "file": "step-0077.delta",
+      "stage": "Spannut 1",
+      "occupied": 1821824081,
+      "changed_blocks": 11706,
+      "delta_bytes": 640504,
+      "cut_ns": 32224584,
+      "write_ns": 541625,
+      "tool": [
+        32.661650238040835,
+        34.69846975198704,
+        53.375
+      ]
+    },
+    {
+      "file": "step-0078.delta",
+      "stage": "Spannut 1",
+      "occupied": 1817857553,
+      "changed_blocks": 11641,
+      "delta_bytes": 635116,
+      "cut_ns": 30923167,
+      "write_ns": 410125,
+      "tool": [
+        32.208479005647845,
+        34.92773989589677,
+        53.854166666666664
+      ]
+    },
+    {
+      "file": "step-0079.delta",
+      "stage": "Spannut 1",
+      "occupied": 1813891470,
+      "changed_blocks": 11659,
+      "delta_bytes": 638084,
+      "cut_ns": 29353292,
+      "write_ns": 308833,
+      "tool": [
+        31.73577311263707,
+        35.11342269927357,
+        54.333333333333336
+      ]
+    },
+    {
+      "file": "step-0080.delta",
+      "stage": "Spannut 1",
+      "occupied": 1809924809,
+      "changed_blocks": 11662,
+      "delta_bytes": 639016,
+      "cut_ns": 30266833,
+      "write_ns": 392708,
+      "tool": [
+        31.247713784715625,
+        35.25387574191002,
+        54.8125
+      ]
+    },
+    {
+      "file": "step-0081.delta",
+      "stage": "Spannut 1",
+      "occupied": 1805958497,
+      "changed_blocks": 11645,
+      "delta_bytes": 639964,
+      "cut_ns": 32107791,
+      "write_ns": 512292,
+      "tool": [
+        30.748618053337225,
+        35.34785667442739,
+        55.291666666666664
+      ]
+    },
+    {
+      "file": "step-0082.delta",
+      "stage": "Spannut 1",
+      "occupied": 1801991661,
+      "changed_blocks": 11708,
+      "delta_bytes": 645776,
+      "cut_ns": 31100875,
+      "write_ns": 355209,
+      "tool": [
+        30.24290057026144,
+        35.39453420722926,
+        55.770833333333336
+      ]
+    },
+    {
+      "file": "step-0083.delta",
+      "stage": "Spannut 1",
+      "occupied": 1798024948,
+      "changed_blocks": 11695,
+      "delta_bytes": 644852,
+      "cut_ns": 29634792,
+      "write_ns": 314542,
+      "tool": [
+        29.735034558631945,
+        35.39349546350793,
+        56.25
+      ]
+    },
+    {
+      "file": "step-0084.delta",
+      "stage": "Spannut 1",
+      "occupied": 1794061186,
+      "changed_blocks": 11715,
+      "delta_bytes": 644772,
+      "cut_ns": 29090375,
+      "write_ns": 404041,
+      "tool": [
+        29.229512245973247,
+        35.344749631263824,
+        56.729166666666664
+      ]
+    },
+    {
+      "file": "step-0085.delta",
+      "stage": "Spannut 1",
+      "occupied": 1790698155,
+      "changed_blocks": 10192,
+      "delta_bytes": 584192,
+      "cut_ns": 25533667,
+      "write_ns": 453000,
+      "tool": [
+        28.730805129087994,
+        35.24872788203491,
+        57.208333333333336
+      ]
+    },
+    {
+      "file": "step-0086.delta",
+      "stage": "Spannut 1",
+      "occupied": 1788076263,
+      "changed_blocks": 8128,
+      "delta_bytes": 477888,
+      "cut_ns": 22575042,
+      "write_ns": 494292,
+      "tool": [
+        28.243324422323784,
+        35.10627955705482,
+        57.6875
+      ]
+    },
+    {
+      "file": "step-0087.delta",
+      "stage": "Spannut 1",
+      "occupied": 1786014006,
+      "changed_blocks": 6449,
+      "delta_bytes": 388492,
+      "cut_ns": 20202375,
+      "write_ns": 313083,
+      "tool": [
+        27.77138203905627,
+        34.91866465457435,
+        58.166666666666664
+      ]
+    },
+    {
+      "file": "step-0088.delta",
+      "stage": "Spannut 1",
+      "occupied": 1784412482,
+      "changed_blocks": 5133,
+      "delta_bytes": 318108,
+      "cut_ns": 17060791,
+      "write_ns": 348334,
+      "tool": [
+        27.319152451519383,
+        34.68754268479824,
+        58.645833333333336
+      ]
+    },
+    {
+      "file": "step-0089.delta",
+      "stage": "Spannut 1",
+      "occupied": 1783199411,
+      "changed_blocks": 4024,
+      "delta_bytes": 258464,
+      "cut_ns": 14520917,
+      "write_ns": 251375,
+      "tool": [
+        26.890635766343635,
+        34.414957991018554,
+        59.125
+      ]
+    },
+    {
+      "file": "step-0090.delta",
+      "stage": "Spannut 1",
+      "occupied": 1782312932,
+      "changed_blocks": 3036,
+      "delta_bytes": 204560,
+      "cut_ns": 12749834,
+      "write_ns": 243583,
+      "tool": [
+        26.48962234241067,
+        34.103321666783835,
+        59.604166666666664
+      ]
+    },
+    {
+      "file": "step-0091.delta",
+      "stage": "Spannut 1",
+      "occupied": 1781696976,
+      "changed_blocks": 2263,
+      "delta_bytes": 162900,
+      "cut_ns": 11586709,
+      "write_ns": 244333,
+      "tool": [
+        26.119659263989632,
+        33.755390229051905,
+        60.083333333333336
+      ]
+    },
+    {
+      "file": "step-0092.delta",
+      "stage": "Spannut 1",
+      "occupied": 1781299636,
+      "changed_blocks": 1615,
+      "delta_bytes": 125428,
+      "cut_ns": 11236125,
+      "write_ns": 238250,
+      "tool": [
+        25.78401896571069,
+        33.37424123596889,
+        60.5625
+      ]
+    },
+    {
+      "file": "step-0093.delta",
+      "stage": "Spannut 1",
+      "occupied": 1781071081,
+      "changed_blocks": 1054,
+      "delta_bytes": 91048,
+      "cut_ns": 9503167,
+      "write_ns": 252666,
+      "tool": [
+        25.485670286897093,
+        32.96324606494233,
+        61.041666666666664
+      ]
+    },
+    {
+      "file": "step-0094.delta",
+      "stage": "Spannut 1",
+      "occupied": 1780963533,
+      "changed_blocks": 634,
+      "delta_bytes": 61176,
+      "cut_ns": 8450541,
+      "write_ns": 255125,
+      "tool": [
+        25.22725221128898,
+        32.526040091794684,
+        61.520833333333336
+      ]
+    },
+    {
+      "file": "step-0095.delta",
+      "stage": "Spannut 1",
+      "occupied": 1780930358,
+      "changed_blocks": 298,
+      "delta_bytes": 32952,
+      "cut_ns": 2547583,
+      "write_ns": 149375,
+      "tool": [
+        25.011050524439053,
+        32.06649053477149,
+        62
+      ]
+    },
+    {
+      "file": "step-0096.delta",
+      "stage": "Spannut 2",
+      "occupied": 1749071713,
+      "changed_blocks": 67711,
+      "delta_bytes": 1492980,
+      "cut_ns": 58573875,
+      "write_ns": 652667,
+      "tool": [
+        24.623882311551572,
+        29.49269476648478,
+        16.479166666666668
+      ]
+    },
+    {
+      "file": "step-0097.delta",
+      "stage": "Spannut 2",
+      "occupied": 1745105290,
+      "changed_blocks": 11719,
+      "delta_bytes": 650900,
+      "cut_ns": 30636500,
+      "write_ns": 446458,
+      "tool": [
+        24.695317999982194,
+        28.98987680024311,
+        16.958333333333332
+      ]
+    },
+    {
+      "file": "step-0098.delta",
+      "stage": "Spannut 2",
+      "occupied": 1741138192,
+      "changed_blocks": 11734,
+      "delta_bytes": 648264,
+      "cut_ns": 30662000,
+      "write_ns": 458958,
+      "tool": [
+        24.813675195155945,
+        28.495993677320715,
+        17.4375
+      ]
+    },
+    {
+      "file": "step-0099.delta",
+      "stage": "Spannut 2",
+      "occupied": 1737171439,
+      "changed_blocks": 11746,
+      "delta_bytes": 650328,
+      "cut_ns": 30900791,
+      "write_ns": 379084,
+      "tool": [
+        24.977906992106334,
+        28.015413942388598,
+        17.916666666666668
+      ]
+    },
+    {
+      "file": "step-0100.delta",
+      "stage": "Spannut 2",
+      "occupied": 1733204544,
+      "changed_blocks": 11778,
+      "delta_bytes": 656472,
+      "cut_ns": 31611000,
+      "write_ns": 275042,
+      "tool": [
+        25.18656071122542,
+        27.552388467652335,
+        18.395833333333332
+      ]
+    },
+    {
+      "file": "step-0101.delta",
+      "stage": "Spannut 2",
+      "occupied": 1729237609,
+      "changed_blocks": 11756,
+      "delta_bytes": 651024,
+      "cut_ns": 29397541,
+      "write_ns": 221042,
+      "tool": [
+        25.43779074765158,
+        27.111012852609676,
+        18.875
+      ]
+    },
+    {
+      "file": "step-0102.delta",
+      "stage": "Spannut 2",
+      "occupied": 1725270792,
+      "changed_blocks": 11753,
+      "delta_bytes": 650156,
+      "cut_ns": 29037375,
+      "write_ns": 253833,
+      "tool": [
+        25.72937489619924,
+        26.695191197242004,
+        19.354166666666668
+      ]
+    },
+    {
+      "file": "step-0103.delta",
+      "stage": "Spannut 2",
+      "occupied": 1721303368,
+      "changed_blocks": 11706,
+      "delta_bytes": 645752,
+      "cut_ns": 30887875,
+      "write_ns": 371959,
+      "tool": [
+        26.058734007431685,
+        26.308601569076497,
+        19.833333333333332
+      ]
+    },
+    {
+      "file": "step-0104.delta",
+      "stage": "Spannut 2",
+      "occupied": 1717337213,
+      "changed_blocks": 11716,
+      "delta_bytes": 646384,
+      "cut_ns": 32409875,
+      "write_ns": 460042,
+      "tool": [
+        26.422954801013073,
+        25.95466346957332,
+        20.3125
+      ]
+    },
+    {
+      "file": "step-0105.delta",
+      "stage": "Spannut 2",
+      "occupied": 1713370876,
+      "changed_blocks": 11624,
+      "delta_bytes": 639904,
+      "cut_ns": 34426125,
+      "write_ns": 476250,
+      "tool": [
+        26.818815634548628,
+        25.636507587607404,
+        20.791666666666668
+      ]
+    },
+    {
+      "file": "step-0106.delta",
+      "stage": "Spannut 2",
+      "occupied": 1709404077,
+      "changed_blocks": 11728,
+      "delta_bytes": 641152,
+      "cut_ns": 31810625,
+      "write_ns": 450083,
+      "tool": [
+        27.24281499997999,
+        25.356948107584337,
+        21.270833333333332
+      ]
+    },
+    {
+      "file": "step-0107.delta",
+      "stage": "Spannut 2",
+      "occupied": 1705437614,
+      "changed_blocks": 11665,
+      "delta_bytes": 637516,
+      "cut_ns": 29929458,
+      "write_ns": 337542,
+      "tool": [
+        27.691202495476475,
+        25.118457817133407,
+        21.75
+      ]
+    },
+    {
+      "file": "step-0108.delta",
+      "stage": "Spannut 2",
+      "occupied": 1701471494,
+      "changed_blocks": 11634,
+      "delta_bytes": 636824,
+      "cut_ns": 30539750,
+      "write_ns": 331166,
+      "tool": [
+        28.16001199886648,
+        24.923146234557798,
+        22.229166666666664
+      ]
+    },
+    {
+      "file": "step-0109.delta",
+      "stage": "Spannut 2",
+      "occupied": 1697505348,
+      "changed_blocks": 11630,
+      "delta_bytes": 635432,
+      "cut_ns": 29556167,
+      "write_ns": 289542,
+      "tool": [
+        28.645096749180276,
+        24.772740949511096,
+        22.708333333333336
+      ]
+    },
+    {
+      "file": "step-0110.delta",
+      "stage": "Spannut 2",
+      "occupied": 1693538637,
+      "changed_blocks": 11635,
+      "delta_bytes": 635172,
+      "cut_ns": 29288750,
+      "write_ns": 314584,
+      "tool": [
+        29.14216602599715,
+        24.668572341947566,
+        23.1875
+      ]
+    },
+    {
+      "file": "step-0111.delta",
+      "stage": "Spannut 2",
+      "occupied": 1689571715,
+      "changed_blocks": 11661,
+      "delta_bytes": 640156,
+      "cut_ns": 29610125,
+      "write_ns": 298000,
+      "tool": [
+        29.646823102157224,
+        24.61156181451154,
+        23.666666666666664
+      ]
+    },
+    {
+      "file": "step-0112.delta",
+      "stage": "Spannut 2",
+      "occupied": 1685605136,
+      "changed_blocks": 11685,
+      "delta_bytes": 641852,
+      "cut_ns": 30371250,
+      "write_ns": 331375,
+      "tool": [
+        30.15460413413475,
+        24.602213642454117,
+        24.145833333333336
+      ]
+    },
+    {
+      "file": "step-0113.delta",
+      "stage": "Spannut 2",
+      "occupied": 1681638583,
+      "changed_blocks": 11743,
+      "delta_bytes": 647540,
+      "cut_ns": 30470583,
+      "write_ns": 347583,
+      "tool": [
+        30.66101764607577,
+        24.640610513166965,
+        24.625
+      ]
+    },
+    {
+      "file": "step-0114.delta",
+      "stage": "Spannut 2",
+      "occupied": 1677671787,
+      "changed_blocks": 11753,
+      "delta_bytes": 650860,
+      "cut_ns": 29552416,
+      "write_ns": 248625,
+      "tool": [
+        31.161584258252088,
+        24.726412794787503,
+        25.104166666666664
+      ]
+    },
+    {
+      "file": "step-0115.delta",
+      "stage": "Spannut 2",
+      "occupied": 1673705029,
+      "changed_blocks": 11767,
+      "delta_bytes": 651604,
+      "cut_ns": 29397000,
+      "write_ns": 249083,
+      "tool": [
+        31.651876308521388,
+        24.858861540344808,
+        25.583333333333336
+      ]
+    },
+    {
+      "file": "step-0116.delta",
+      "stage": "Spannut 2",
+      "occupied": 1669738255,
+      "changed_blocks": 11743,
+      "delta_bytes": 652020,
+      "cut_ns": 29246791,
+      "write_ns": 257292,
+      "tool": [
+        32.12755701632966,
+        25.036785200873688,
+        26.0625
+      ]
+    },
+    {
+      "file": "step-0117.delta",
+      "stage": "Spannut 2",
+      "occupied": 1665771227,
+      "changed_blocks": 11767,
+      "delta_bytes": 653716,
+      "cut_ns": 29710541,
+      "write_ns": 295500,
+      "tool": [
+        32.58441884283877,
+        25.25860998811742,
+        26.541666666666664
+      ]
+    },
+    {
+      "file": "step-0118.delta",
+      "stage": "Spannut 2",
+      "occupied": 1661804332,
+      "changed_blocks": 11753,
+      "delta_bytes": 654188,
+      "cut_ns": 29373709,
+      "write_ns": 209125,
+      "tool": [
+        33.01842070787218,
+        25.52237379515793,
+        27.020833333333336
+      ]
+    },
+    {
+      "file": "step-0119.delta",
+      "stage": "Spannut 2",
+      "occupied": 1657837529,
+      "changed_blocks": 11736,
+      "delta_bytes": 647968,
+      "cut_ns": 25523166,
+      "write_ns": 233375,
+      "tool": [
+        33.42572373448368,
+        25.825743551841217,
+        27.5
+      ]
+    },
+    {
+      "file": "step-0120.delta",
+      "stage": "Spannut 2",
+      "occupied": 1653870621,
+      "changed_blocks": 11683,
+      "delta_bytes": 643940,
+      "cut_ns": 25208416,
+      "write_ns": 209167,
+      "tool": [
+        33.802725204977946,
+        26.166035861484172,
+        27.979166666666668
+      ]
+    },
+    {
+      "file": "step-0121.delta",
+      "stage": "Spannut 2",
+      "occupied": 1649903868,
+      "changed_blocks": 11665,
+      "delta_bytes": 640972,
+      "cut_ns": 25327750,
+      "write_ns": 213000,
+      "tool": [
+        34.146090428031364,
+        26.54024073632475,
+        28.458333333333332
+      ]
+    },
+    {
+      "file": "step-0122.delta",
+      "stage": "Spannut 2",
+      "occupied": 1645937992,
+      "changed_blocks": 11654,
+      "delta_bytes": 639624,
+      "cut_ns": 25505041,
+      "write_ns": 186042,
+      "tool": [
+        34.45278223503914,
+        26.945048221768488,
+        28.9375
+      ]
+    },
+    {
+      "file": "step-0123.delta",
+      "stage": "Spannut 2",
+      "occupied": 1641971040,
+      "changed_blocks": 11739,
+      "delta_bytes": 643524,
+      "cut_ns": 25100375,
+      "write_ns": 255625,
+      "tool": [
+        34.7200878447845,
+        27.376877673931762,
+        29.416666666666668
+      ]
+    },
+    {
+      "file": "step-0124.delta",
+      "stage": "Spannut 2",
+      "occupied": 1638004776,
+      "changed_blocks": 11648,
+      "delta_bytes": 636032,
+      "cut_ns": 25460333,
+      "write_ns": 200167,
+      "tool": [
+        34.94564285880396,
+        27.8319094315132,
+        29.895833333333332
+      ]
+    },
+    {
+      "file": "step-0125.delta",
+      "stage": "Spannut 2",
+      "occupied": 1634038375,
+      "changed_blocks": 11656,
+      "delta_bytes": 635936,
+      "cut_ns": 25278709,
+      "write_ns": 182708,
+      "tool": [
+        35.1274521752024,
+        28.306118601845988,
+        30.375
+      ]
+    },
+    {
+      "file": "step-0126.delta",
+      "stage": "Spannut 2",
+      "occupied": 1630072006,
+      "changed_blocks": 11618,
+      "delta_bytes": 634520,
+      "cut_ns": 25291375,
+      "write_ns": 174625,
+      "tool": [
+        35.263907635929,
+        28.795310662283264,
+        30.854166666666668
+      ]
+    },
+    {
+      "file": "step-0127.delta",
+      "stage": "Spannut 2",
+      "occupied": 1626105391,
+      "changed_blocks": 11676,
+      "delta_bytes": 638992,
+      "cut_ns": 22485500,
+      "write_ns": 188500,
+      "tool": [
+        35.35380225141857,
+        29.295158562011714,
+        31.333333333333332
+      ]
+    },
+    {
+      "file": "step-0128.delta",
+      "stage": "Spannut 2",
+      "occupied": 1622138530,
+      "changed_blocks": 11658,
+      "delta_bytes": 638584,
+      "cut_ns": 24036459,
+      "write_ns": 202875,
+      "tool": [
+        35.39634087677709,
+        29.80124099611666,
+        31.8125
+      ]
+    },
+    {
+      "file": "step-0129.delta",
+      "stage": "Spannut 2",
+      "occupied": 1618171905,
+      "changed_blocks": 11705,
+      "delta_bytes": 647148,
+      "cut_ns": 25945458,
+      "write_ns": 178125,
+      "tool": [
+        35.39114724507721,
+        30.309081513352876,
+        32.29166666666667
+      ]
+    },
+    {
+      "file": "step-0130.delta",
+      "stage": "Spannut 2",
+      "occupied": 1614205380,
+      "changed_blocks": 11734,
+      "delta_bytes": 648968,
+      "cut_ns": 23190875,
+      "write_ns": 152959,
+      "tool": [
+        35.338267295552384,
+        30.814188111701394,
+        32.77083333333333
+      ]
+    },
+    {
+      "file": "step-0131.delta",
+      "stage": "Spannut 2",
+      "occupied": 1610238137,
+      "changed_blocks": 11783,
+      "delta_bytes": 655700,
+      "cut_ns": 22983833,
+      "write_ns": 199292,
+      "tool": [
+        35.23816876725054,
+        31.312092971477625,
+        33.25
+      ]
+    },
+    {
+      "file": "step-0132.delta",
+      "stage": "Spannut 2",
+      "occupied": 1606271590,
+      "changed_blocks": 11771,
+      "delta_bytes": 654852,
+      "cut_ns": 23495416,
+      "write_ns": 243792,
+      "tool": [
+        35.09173706174159,
+        31.79839197453924,
+        33.72916666666667
+      ]
+    },
+    {
+      "file": "step-0133.delta",
+      "stage": "Spannut 2",
+      "occupied": 1602304944,
+      "changed_blocks": 11751,
+      "delta_bytes": 652628,
+      "cut_ns": 23189000,
+      "write_ns": 199500,
+      "tool": [
+        34.900267411474424,
+        32.268783660034984,
+        34.20833333333333
+      ]
+    },
+    {
+      "file": "step-0134.delta",
+      "stage": "Spannut 2",
+      "occupied": 1598338062,
+      "changed_blocks": 11750,
+      "delta_bytes": 649032,
+      "cut_ns": 22901625,
+      "write_ns": 164792,
+      "tool": [
+        34.66545342305657,
+        32.719107272118876,
+        34.6875
+      ]
+    },
+    {
+      "file": "step-0135.delta",
+      "stage": "Spannut 2",
+      "occupied": 1594371042,
+      "changed_blocks": 11733,
+      "delta_bytes": 647804,
+      "cut_ns": 23020167,
+      "write_ns": 165375,
+      "tool": [
+        34.389372096794716,
+        33.14537956308614,
+        35.16666666666667
+      ]
+    },
+    {
+      "file": "step-0136.delta",
+      "stage": "Spannut 2",
+      "occupied": 1590404288,
+      "changed_blocks": 11719,
+      "delta_bytes": 645972,
+      "cut_ns": 23156375,
+      "write_ns": 212458,
+      "tool": [
+        34.07446545500272,
+        33.543830026396506,
+        35.64583333333333
+      ]
+    },
+    {
+      "file": "step-0137.delta",
+      "stage": "Spannut 2",
+      "occupied": 1586437231,
+      "changed_blocks": 11718,
+      "delta_bytes": 647432,
+      "cut_ns": 25746500,
+      "write_ns": 172250,
+      "tool": [
+        33.72351894158017,
+        33.91093424793792,
+        36.125
+      ]
+    },
+    {
+      "file": "step-0138.delta",
+      "stage": "Spannut 2",
+      "occupied": 1582470764,
+      "changed_blocks": 11653,
+      "delta_bytes": 641148,
+      "cut_ns": 22760750,
+      "write_ns": 151334,
+      "tool": [
+        33.3396367839239,
+        34.24344508052861,
+        36.60416666666667
+      ]
+    },
+    {
+      "file": "step-0139.delta",
+      "stage": "Spannut 2",
+      "occupied": 1578504525,
+      "changed_blocks": 11664,
+      "delta_bytes": 637504,
+      "cut_ns": 24572167,
+      "write_ns": 152042,
+      "tool": [
+        32.92621453510367,
+        34.53842136590996,
+        37.08333333333333
+      ]
+    },
+    {
+      "file": "step-0140.delta",
+      "stage": "Spannut 2",
+      "occupied": 1574537985,
+      "changed_blocks": 11659,
+      "delta_bytes": 635908,
+      "cut_ns": 22894792,
+      "write_ns": 191291,
+      "tool": [
+        32.48690903917449,
+        34.79325395017541,
+        37.5625
+      ]
+    },
+    {
+      "file": "step-0141.delta",
+      "stage": "Spannut 2",
+      "occupied": 1570571444,
+      "changed_blocks": 11619,
+      "delta_bytes": 634468,
+      "cut_ns": 23124875,
+      "write_ns": 155416,
+      "tool": [
+        32.025606085292004,
+        35.0056887625209,
+        38.04166666666667
+      ]
+    },
+    {
+      "file": "step-0142.delta",
+      "stage": "Spannut 2",
+      "occupied": 1566605083,
+      "changed_blocks": 11628,
+      "delta_bytes": 634896,
+      "cut_ns": 22575209,
+      "write_ns": 175708,
+      "tool": [
+        31.546386036739257,
+        35.17384675317871,
+        38.52083333333333
+      ]
+    },
+    {
+      "file": "step-0143.delta",
+      "stage": "Spannut 2",
+      "occupied": 1562638832,
+      "changed_blocks": 11615,
+      "delta_bytes": 632820,
+      "cut_ns": 22973250,
+      "write_ns": 161750,
+      "tool": [
+        31.053487738887096,
+        35.29624051417744,
+        39
+      ]
+    },
+    {
+      "file": "step-0144.delta",
+      "stage": "Spannut 2",
+      "occupied": 1558672117,
+      "changed_blocks": 11642,
+      "delta_bytes": 637752,
+      "cut_ns": 23256667,
+      "write_ns": 141125,
+      "tool": [
+        30.551271025332767,
+        35.37178743591261,
+        39.479166666666664
+      ]
+    },
+    {
+      "file": "step-0145.delta",
+      "stage": "Spannut 2",
+      "occupied": 1554705153,
+      "changed_blocks": 11696,
+      "delta_bytes": 640704,
+      "cut_ns": 22809667,
+      "write_ns": 169791,
+      "tool": [
+        30.04417815386126,
+        35.39981928315397,
+        39.958333333333336
+      ]
+    },
+    {
+      "file": "step-0146.delta",
+      "stage": "Spannut 2",
+      "occupied": 1550738395,
+      "changed_blocks": 11675,
+      "delta_bytes": 643204,
+      "cut_ns": 23720583,
+      "write_ns": 175375,
+      "tool": [
+        29.536694513340024,
+        35.380088105787,
+        40.4375
+      ]
+    },
+    {
+      "file": "step-0147.delta",
+      "stage": "Spannut 2",
+      "occupied": 1546772105,
+      "changed_blocks": 11741,
+      "delta_bytes": 646684,
+      "cut_ns": 24633458,
+      "write_ns": 172417,
+      "tool": [
+        29.033308949106182,
+        35.31276843200622,
+        40.916666666666664
+      ]
+    },
+    {
+      "file": "step-0148.delta",
+      "stage": "Spannut 2",
+      "occupied": 1542804850,
+      "changed_blocks": 11763,
+      "delta_bytes": 652644,
+      "cut_ns": 25529584,
+      "write_ns": 191583,
+      "tool": [
+        28.538474057780324,
+        35.198455724560795,
+        41.395833333333336
+      ]
+    },
+    {
+      "file": "step-0149.delta",
+      "stage": "Spannut 2",
+      "occupied": 1538838190,
+      "changed_blocks": 11758,
+      "delta_bytes": 651944,
+      "cut_ns": 25813708,
+      "write_ns": 192667,
+      "tool": [
+        28.056566802711068,
+        35.03816111370759,
+        41.875
+      ]
+    },
+    {
+      "file": "step-0150.delta",
+      "stage": "Spannut 2",
+      "occupied": 1534871475,
+      "changed_blocks": 11725,
+      "delta_bytes": 650524,
+      "cut_ns": 25693125,
+      "write_ns": 170667,
+      "tool": [
+        27.591849798418593,
+        34.83330245346011,
+        42.354166666666664
+      ]
+    },
+    {
+      "file": "step-0151.delta",
+      "stage": "Spannut 2",
+      "occupied": 1530904647,
+      "changed_blocks": 11738,
+      "delta_bytes": 650552,
+      "cut_ns": 25716042,
+      "write_ns": 223125,
+      "tool": [
+        27.148433606488013,
+        34.58569178024352,
+        42.833333333333336
+      ]
+    },
+    {
+      "file": "step-0152.delta",
+      "stage": "Spannut 2",
+      "occupied": 1526937559,
+      "changed_blocks": 11771,
+      "delta_bytes": 651012,
+      "cut_ns": 25721458,
+      "write_ns": 204792,
+      "tool": [
+        26.730240376416646,
+        34.297519284887976,
+        43.3125
+      ]
+    },
+    {
+      "file": "step-0153.delta",
+      "stage": "Spannut 2",
+      "occupied": 1522970614,
+      "changed_blocks": 11722,
+      "delta_bytes": 647608,
+      "cut_ns": 26239167,
+      "write_ns": 340583,
+      "tool": [
+        26.340969153022744,
+        33.971333939732204,
+        43.791666666666664
+      ]
+    },
+    {
+      "file": "step-0154.delta",
+      "stage": "Spannut 2",
+      "occupied": 1519004194,
+      "changed_blocks": 11689,
+      "delta_bytes": 644076,
+      "cut_ns": 30688708,
+      "write_ns": 354917,
+      "tool": [
+        25.984063157282293,
+        33.61002095219717,
+        44.270833333333336
+      ]
+    },
+    {
+      "file": "step-0155.delta",
+      "stage": "Spannut 2",
+      "occupied": 1515037866,
+      "changed_blocks": 11603,
+      "delta_bytes": 636068,
+      "cut_ns": 31656916,
+      "write_ns": 476834,
+      "tool": [
+        25.662679330004515,
+        33.21677624425914,
+        44.75
+      ]
+    },
+    {
+      "file": "step-0156.delta",
+      "stage": "Spannut 2",
+      "occupied": 1511070960,
+      "changed_blocks": 11683,
+      "delta_bytes": 637028,
+      "cut_ns": 50604292,
+      "write_ns": 622708,
+      "tool": [
+        25.379660407741518,
+        32.79507818355923,
+        45.229166666666664
+      ]
+    },
+    {
+      "file": "step-0157.delta",
+      "stage": "Spannut 2",
+      "occupied": 1507104722,
+      "changed_blocks": 11663,
+      "delta_bytes": 636724,
+      "cut_ns": 61031167,
+      "write_ns": 907083,
+      "tool": [
+        25.137509777929033,
+        32.34865681619607,
+        45.708333333333336
+      ]
+    },
+    {
+      "file": "step-0158.delta",
+      "stage": "Spannut 2",
+      "occupied": 1503138455,
+      "changed_blocks": 11637,
+      "delta_bytes": 636220,
+      "cut_ns": 41563000,
+      "write_ns": 757750,
+      "tool": [
+        24.938369335672096,
+        31.88146087334695,
+        46.1875
+      ]
+    },
+    {
+      "file": "step-0159.delta",
+      "stage": "Spannut 2",
+      "occupied": 1499172004,
+      "changed_blocks": 11643,
+      "delta_bytes": 635588,
+      "cut_ns": 35338542,
+      "write_ns": 467333,
+      "tool": [
+        24.784000538039034,
+        31.39762284355362,
+        46.666666666666664
+      ]
+    },
+    {
+      "file": "step-0160.delta",
+      "stage": "Spannut 2",
+      "occupied": 1495205383,
+      "changed_blocks": 11672,
+      "delta_bytes": 638496,
+      "cut_ns": 32640458,
+      "write_ns": 366709,
+      "tool": [
+        24.675768823444255,
+        30.90142241961904,
+        47.145833333333336
+      ]
+    },
+    {
+      "file": "step-0161.delta",
+      "stage": "Spannut 2",
+      "occupied": 1491238734,
+      "changed_blocks": 11666,
+      "delta_bytes": 642008,
+      "cut_ns": 30318958,
+      "write_ns": 291458,
+      "tool": [
+        24.614631533935075,
+        30.39724864343821,
+        47.625
+      ]
+    },
+    {
+      "file": "step-0162.delta",
+      "stage": "Spannut 2",
+      "occupied": 1487271918,
+      "changed_blocks": 11676,
+      "delta_bytes": 642832,
+      "cut_ns": 30765375,
+      "write_ns": 232667,
+      "tool": [
+        24.60112944721351,
+        29.889561083603287,
+        48.104166666666664
+      ]
+    },
+    {
+      "file": "step-0163.delta",
+      "stage": "Spannut 2",
+      "occupied": 1483305255,
+      "changed_blocks": 11738,
+      "delta_bytes": 646072,
+      "cut_ns": 26579708,
+      "write_ns": 213375,
+      "tool": [
+        24.635381993295,
+        29.38285038917903,
+        48.583333333333336
+      ]
+    },
+    {
+      "file": "step-0164.delta",
+      "stage": "Spannut 2",
+      "occupied": 1479338822,
+      "changed_blocks": 11715,
+      "delta_bytes": 649828,
+      "cut_ns": 26844500,
+      "write_ns": 219083,
+      "tool": [
+        24.71708619811401,
+        28.88159856856202,
+        49.0625
+      ]
+    },
+    {
+      "file": "step-0165.delta",
+      "stage": "Spannut 2",
+      "occupied": 1475371795,
+      "changed_blocks": 11776,
+      "delta_bytes": 653120,
+      "cut_ns": 27029583,
+      "write_ns": 252833,
+      "tool": [
+        24.8455193634207,
+        28.39023934476921,
+        49.541666666666664
+      ]
+    },
+    {
+      "file": "step-0166.delta",
+      "stage": "Spannut 2",
+      "occupied": 1471405130,
+      "changed_blocks": 11740,
+      "delta_bytes": 651728,
+      "cut_ns": 26650833,
+      "write_ns": 236542,
+      "tool": [
+        25.019545459264187,
+        27.913118937825157,
+        50.020833333333336
+      ]
+    },
+    {
+      "file": "step-0167.delta",
+      "stage": "Spannut 2",
+      "occupied": 1467438217,
+      "changed_blocks": 11725,
+      "delta_bytes": 648732,
+      "cut_ns": 26438042,
+      "write_ns": 206375,
+      "tool": [
+        25.237625172518882,
+        27.454457621139614,
+        50.5
+      ]
+    },
+    {
+      "file": "step-0168.delta",
+      "stage": "Spannut 2",
+      "occupied": 1463471536,
+      "changed_blocks": 11762,
+      "delta_bytes": 651736,
+      "cut_ns": 24013917,
+      "write_ns": 167333,
+      "tool": [
+        25.497829522571823,
+        27.018312391920617,
+        50.979166666666664
+      ]
+    },
+    {
+      "file": "step-0169.delta",
+      "stage": "Spannut 2",
+      "occupied": 1459504537,
+      "changed_blocks": 11740,
+      "delta_bytes": 649616,
+      "cut_ns": 23885416,
+      "write_ns": 183417,
+      "tool": [
+        25.797856923735967,
+        26.6085410858148,
+        51.458333333333336
+      ]
+    },
+    {
+      "file": "step-0170.delta",
+      "stage": "Spannut 2",
+      "occupied": 1455537795,
+      "changed_blocks": 11682,
+      "delta_bytes": 643992,
+      "cut_ns": 23944500,
+      "write_ns": 180625,
+      "tool": [
+        26.135053543467375,
+        26.22876825319155,
+        51.9375
+      ]
+    },
+    {
+      "file": "step-0171.delta",
+      "stage": "Spannut 2",
+      "occupied": 1451571201,
+      "changed_blocks": 11691,
+      "delta_bytes": 641988,
+      "cut_ns": 23906000,
+      "write_ns": 169833,
+      "tool": [
+        26.50643677631177,
+        25.882353098905504,
+        52.416666666666664
+      ]
+    },
+    {
+      "file": "step-0172.delta",
+      "stage": "Spannut 2",
+      "occupied": 1447604802,
+      "changed_blocks": 11657,
+      "delta_bytes": 638636,
+      "cut_ns": 23528708,
+      "write_ns": 147792,
+      "tool": [
+        26.90872162594625,
+        25.57235976911994,
+        52.895833333333336
+      ]
+    },
+    {
+      "file": "step-0173.delta",
+      "stage": "Spannut 2",
+      "occupied": 1443638151,
+      "changed_blocks": 11706,
+      "delta_bytes": 640504,
+      "cut_ns": 23311583,
+      "write_ns": 170167,
+      "tool": [
+        27.33834976195917,
+        25.301530248012956,
+        53.375
+      ]
+    },
+    {
+      "file": "step-0174.delta",
+      "stage": "Spannut 2",
+      "occupied": 1439671623,
+      "changed_blocks": 11641,
+      "delta_bytes": 635116,
+      "cut_ns": 23562750,
+      "write_ns": 140125,
+      "tool": [
+        27.791520994352155,
+        25.07226010410323,
+        53.854166666666664
+      ]
+    },
+    {
+      "file": "step-0175.delta",
+      "stage": "Spannut 2",
+      "occupied": 1435705540,
+      "changed_blocks": 11659,
+      "delta_bytes": 638084,
+      "cut_ns": 23580875,
+      "write_ns": 201375,
+      "tool": [
+        28.264226887362934,
+        24.886577300726426,
+        54.333333333333336
+      ]
+    },
+    {
+      "file": "step-0176.delta",
+      "stage": "Spannut 2",
+      "occupied": 1431738879,
+      "changed_blocks": 11662,
+      "delta_bytes": 639016,
+      "cut_ns": 24149792,
+      "write_ns": 160000,
+      "tool": [
+        28.752286215284375,
+        24.746124258089974,
+        54.8125
+      ]
+    },
+    {
+      "file": "step-0177.delta",
+      "stage": "Spannut 2",
+      "occupied": 1427772567,
+      "changed_blocks": 11645,
+      "delta_bytes": 639964,
+      "cut_ns": 23919000,
+      "write_ns": 161375,
+      "tool": [
+        29.251381946662768,
+        24.65214332557261,
+        55.291666666666664
+      ]
+    },
+    {
+      "file": "step-0178.delta",
+      "stage": "Spannut 2",
+      "occupied": 1423805731,
+      "changed_blocks": 11708,
+      "delta_bytes": 645776,
+      "cut_ns": 23715167,
+      "write_ns": 184916,
+      "tool": [
+        29.757099429738552,
+        24.605465792770737,
+        55.770833333333336
+      ]
+    },
+    {
+      "file": "step-0179.delta",
+      "stage": "Spannut 2",
+      "occupied": 1419839018,
+      "changed_blocks": 11695,
+      "delta_bytes": 644852,
+      "cut_ns": 23772250,
+      "write_ns": 194666,
+      "tool": [
+        30.264965441368055,
+        24.606504536492068,
+        56.25
+      ]
+    },
+    {
+      "file": "step-0180.delta",
+      "stage": "Spannut 2",
+      "occupied": 1415875256,
+      "changed_blocks": 11715,
+      "delta_bytes": 644772,
+      "cut_ns": 23658667,
+      "write_ns": 162166,
+      "tool": [
+        30.77048775402676,
+        24.655250368736173,
+        56.729166666666664
+      ]
+    },
+    {
+      "file": "step-0181.delta",
+      "stage": "Spannut 2",
+      "occupied": 1412512225,
+      "changed_blocks": 10192,
+      "delta_bytes": 584192,
+      "cut_ns": 21040375,
+      "write_ns": 156625,
+      "tool": [
+        31.269194870912006,
+        24.75127211796509,
+        57.208333333333336
+      ]
+    },
+    {
+      "file": "step-0182.delta",
+      "stage": "Spannut 2",
+      "occupied": 1409890333,
+      "changed_blocks": 8128,
+      "delta_bytes": 477888,
+      "cut_ns": 19050500,
+      "write_ns": 276792,
+      "tool": [
+        31.756675577676212,
+        24.89372044294518,
+        57.6875
+      ]
+    },
+    {
+      "file": "step-0183.delta",
+      "stage": "Spannut 2",
+      "occupied": 1407828076,
+      "changed_blocks": 6449,
+      "delta_bytes": 388492,
+      "cut_ns": 16720583,
+      "write_ns": 220250,
+      "tool": [
+        32.22861796094373,
+        25.08133534542565,
+        58.166666666666664
+      ]
+    },
+    {
+      "file": "step-0184.delta",
+      "stage": "Spannut 2",
+      "occupied": 1406226552,
+      "changed_blocks": 5133,
+      "delta_bytes": 318108,
+      "cut_ns": 14557083,
+      "write_ns": 192875,
+      "tool": [
+        32.680847548480614,
+        25.312457315201762,
+        58.645833333333336
+      ]
+    },
+    {
+      "file": "step-0185.delta",
+      "stage": "Spannut 2",
+      "occupied": 1405013481,
+      "changed_blocks": 4024,
+      "delta_bytes": 258464,
+      "cut_ns": 13198833,
+      "write_ns": 223000,
+      "tool": [
+        33.109364233656365,
+        25.585042008981446,
+        59.125
+      ]
+    },
+    {
+      "file": "step-0186.delta",
+      "stage": "Spannut 2",
+      "occupied": 1404127002,
+      "changed_blocks": 3036,
+      "delta_bytes": 204560,
+      "cut_ns": 12192875,
+      "write_ns": 164583,
+      "tool": [
+        33.51037765758933,
+        25.896678333216165,
+        59.604166666666664
+      ]
+    },
+    {
+      "file": "step-0187.delta",
+      "stage": "Spannut 2",
+      "occupied": 1403511046,
+      "changed_blocks": 2263,
+      "delta_bytes": 162900,
+      "cut_ns": 10615583,
+      "write_ns": 169667,
+      "tool": [
+        33.88034073601037,
+        26.244609770948095,
+        60.083333333333336
+      ]
+    },
+    {
+      "file": "step-0188.delta",
+      "stage": "Spannut 2",
+      "occupied": 1403113706,
+      "changed_blocks": 1615,
+      "delta_bytes": 125428,
+      "cut_ns": 9020875,
+      "write_ns": 123459,
+      "tool": [
+        34.215981034289314,
+        26.62575876403111,
+        60.5625
+      ]
+    },
+    {
+      "file": "step-0189.delta",
+      "stage": "Spannut 2",
+      "occupied": 1402885151,
+      "changed_blocks": 1054,
+      "delta_bytes": 91048,
+      "cut_ns": 7897000,
+      "write_ns": 133500,
+      "tool": [
+        34.51432971310291,
+        27.036753935057668,
+        61.041666666666664
+      ]
+    },
+    {
+      "file": "step-0190.delta",
+      "stage": "Spannut 2",
+      "occupied": 1402777603,
+      "changed_blocks": 634,
+      "delta_bytes": 61176,
+      "cut_ns": 6843625,
+      "write_ns": 113750,
+      "tool": [
+        34.772747788711015,
+        27.47395990820532,
+        61.520833333333336
+      ]
+    },
+    {
+      "file": "step-0191.delta",
+      "stage": "Spannut 2",
+      "occupied": 1402744428,
+      "changed_blocks": 298,
+      "delta_bytes": 32952,
+      "cut_ns": 1624791,
+      "write_ns": 99750,
+      "tool": [
+        34.98894947556094,
+        27.93350946522851,
+        62
+      ]
+    },
+    {
+      "file": "step-0192.delta",
+      "stage": "Spitze",
+      "occupied": 1372957268,
+      "changed_blocks": 63275,
+      "delta_bytes": 1372228,
+      "cut_ns": 17910000,
+      "write_ns": 264250,
+      "tool": [
+        37,
+        30,
+        57
+      ]
+    },
+    {
+      "file": "step-0193.delta",
+      "stage": "Spitze",
+      "occupied": 1371488078,
+      "changed_blocks": 4865,
+      "delta_bytes": 321356,
+      "cut_ns": 16307625,
+      "write_ns": 141833,
+      "tool": [
+        36.86549696282261,
+        31.365632254112896,
+        57
+      ]
+    },
+    {
+      "file": "step-0194.delta",
+      "stage": "Spitze",
+      "occupied": 1370722896,
+      "changed_blocks": 3308,
+      "delta_bytes": 272720,
+      "cut_ns": 17412542,
+      "write_ns": 174791,
+      "tool": [
+        36.46715672757901,
+        32.67878402655563,
+        57
+      ]
+    },
+    {
+      "file": "step-0195.delta",
+      "stage": "Spitze",
+      "occupied": 1370260748,
+      "changed_blocks": 2234,
+      "delta_bytes": 196024,
+      "cut_ns": 18505792,
+      "write_ns": 138542,
+      "tool": [
+        35.82028728611782,
+        33.888991631137216,
+        57
+      ]
+    },
+    {
+      "file": "step-0196.delta",
+      "stage": "Spitze",
+      "occupied": 1369944311,
+      "changed_blocks": 1619,
+      "delta_bytes": 148068,
+      "cut_ns": 18932292,
+      "write_ns": 134292,
+      "tool": [
+        34.94974746830583,
+        34.94974746830583,
+        57
+      ]
+    },
+    {
+      "file": "step-0197.delta",
+      "stage": "Spitze",
+      "occupied": 1369699081,
+      "changed_blocks": 1293,
+      "delta_bytes": 119004,
+      "cut_ns": 17688667,
+      "write_ns": 128250,
+      "tool": [
+        33.888991631137216,
+        35.82028728611782,
+        57
+      ]
+    },
+    {
+      "file": "step-0198.delta",
+      "stage": "Spitze",
+      "occupied": 1369481637,
+      "changed_blocks": 1124,
+      "delta_bytes": 102640,
+      "cut_ns": 15721416,
+      "write_ns": 143625,
+      "tool": [
+        32.67878402655563,
+        36.46715672757901,
+        57
+      ]
+    },
+    {
+      "file": "step-0199.delta",
+      "stage": "Spitze",
+      "occupied": 1369256394,
+      "changed_blocks": 1084,
+      "delta_bytes": 95696,
+      "cut_ns": 12556375,
+      "write_ns": 125708,
+      "tool": [
+        31.3656322541129,
+        36.86549696282261,
+        57
+      ]
+    },
+    {
+      "file": "step-0200.delta",
+      "stage": "Spitze",
+      "occupied": 1368979828,
+      "changed_blocks": 1085,
+      "delta_bytes": 79516,
+      "cut_ns": 8961458,
+      "write_ns": 132792,
+      "tool": [
+        30,
+        37,
+        57
+      ]
+    },
+    {
+      "file": "step-0201.delta",
+      "stage": "Spitze",
+      "occupied": 1367411358,
+      "changed_blocks": 5261,
+      "delta_bytes": 342684,
+      "cut_ns": 17064250,
+      "write_ns": 147125,
+      "tool": [
+        28.634367745887104,
+        36.86549696282261,
+        57
+      ]
+    },
+    {
+      "file": "step-0202.delta",
+      "stage": "Spitze",
+      "occupied": 1363754379,
+      "changed_blocks": 10398,
+      "delta_bytes": 538408,
+      "cut_ns": 22523834,
+      "write_ns": 152041,
+      "tool": [
+        27.32121597344437,
+        36.46715672757901,
+        57
+      ]
+    },
+    {
+      "file": "step-0203.delta",
+      "stage": "Spitze",
+      "occupied": 1359496692,
+      "changed_blocks": 12303,
+      "delta_bytes": 655412,
+      "cut_ns": 26697292,
+      "write_ns": 192083,
+      "tool": [
+        26.111008368862787,
+        35.82028728611782,
+        57
+      ]
+    },
+    {
+      "file": "step-0204.delta",
+      "stage": "Spitze",
+      "occupied": 1355046019,
+      "changed_blocks": 13157,
+      "delta_bytes": 728188,
+      "cut_ns": 28079125,
+      "write_ns": 215500,
+      "tool": [
+        25.05025253169417,
+        34.94974746830583,
+        57
+      ]
+    },
+    {
+      "file": "step-0205.delta",
+      "stage": "Spitze",
+      "occupied": 1350555310,
+      "changed_blocks": 13497,
+      "delta_bytes": 761772,
+      "cut_ns": 27883750,
+      "write_ns": 200167,
+      "tool": [
+        24.179712713882182,
+        33.888991631137216,
+        57
+      ]
+    },
+    {
+      "file": "step-0206.delta",
+      "stage": "Spitze",
+      "occupied": 1346064067,
+      "changed_blocks": 13420,
+      "delta_bytes": 752656,
+      "cut_ns": 26048584,
+      "write_ns": 208750,
+      "tool": [
+        23.532843272420994,
+        32.67878402655563,
+        57
+      ]
+    },
+    {
+      "file": "step-0207.delta",
+      "stage": "Spitze",
+      "occupied": 1341572681,
+      "changed_blocks": 13223,
+      "delta_bytes": 725716,
+      "cut_ns": 23036750,
+      "write_ns": 201500,
+      "tool": [
+        23.13450303717739,
+        31.3656322541129,
+        57
+      ]
+    },
+    {
+      "file": "step-0208.delta",
+      "stage": "Spitze",
+      "occupied": 1338284989,
+      "changed_blocks": 9903,
+      "delta_bytes": 551092,
+      "cut_ns": 12702041,
+      "write_ns": 182292,
+      "tool": [
+        23,
+        30,
+        57
+      ]
+    },
+    {
+      "file": "step-0209.delta",
+      "stage": "Spitze",
+      "occupied": 1336838118,
+      "changed_blocks": 4803,
+      "delta_bytes": 319460,
+      "cut_ns": 16520375,
+      "write_ns": 201500,
+      "tool": [
+        23.13450303717739,
+        28.6343677458871,
+        57
+      ]
+    },
+    {
+      "file": "step-0210.delta",
+      "stage": "Spitze",
+      "occupied": 1336119126,
+      "changed_blocks": 3161,
+      "delta_bytes": 263468,
+      "cut_ns": 17144000,
+      "write_ns": 168959,
+      "tool": [
+        23.53284327242099,
+        27.32121597344437,
+        57
+      ]
+    },
+    {
+      "file": "step-0211.delta",
+      "stage": "Spitze",
+      "occupied": 1335715273,
+      "changed_blocks": 2027,
+      "delta_bytes": 181636,
+      "cut_ns": 18402750,
+      "write_ns": 152667,
+      "tool": [
+        24.179712713882182,
+        26.111008368862787,
+        57
+      ]
+    },
+    {
+      "file": "step-0212.delta",
+      "stage": "Spitze",
+      "occupied": 1335467855,
+      "changed_blocks": 1363,
+      "delta_bytes": 129188,
+      "cut_ns": 17753541,
+      "write_ns": 159625,
+      "tool": [
+        25.050252531694166,
+        25.05025253169417,
+        57
+      ]
+    },
+    {
+      "file": "step-0213.delta",
+      "stage": "Spitze",
+      "occupied": 1335305227,
+      "changed_blocks": 969,
+      "delta_bytes": 95020,
+      "cut_ns": 15220791,
+      "write_ns": 115959,
+      "tool": [
+        26.111008368862784,
+        24.179712713882182,
+        57
+      ]
+    },
+    {
+      "file": "step-0214.delta",
+      "stage": "Spitze",
+      "occupied": 1335191373,
+      "changed_blocks": 723,
+      "delta_bytes": 72356,
+      "cut_ns": 13441875,
+      "write_ns": 139000,
+      "tool": [
+        27.321215973444367,
+        23.532843272420994,
+        57
+      ]
+    },
+    {
+      "file": "step-0215.delta",
+      "stage": "Spitze",
+      "occupied": 1335106919,
+      "changed_blocks": 551,
+      "delta_bytes": 56468,
+      "cut_ns": 5929167,
+      "write_ns": 113291,
+      "tool": [
+        28.634367745887097,
+        23.13450303717739,
+        57
+      ]
+    },
+    {
+      "file": "step-0216.delta",
+      "stage": "Spitze",
+      "occupied": 1335045505,
+      "changed_blocks": 367,
+      "delta_bytes": 34100,
+      "cut_ns": 9567917,
+      "write_ns": 132125,
+      "tool": [
+        30,
+        23,
+        57
+      ]
+    },
+    {
+      "file": "step-0217.delta",
+      "stage": "Spitze",
+      "occupied": 1334932775,
+      "changed_blocks": 620,
+      "delta_bytes": 58384,
+      "cut_ns": 6648959,
+      "write_ns": 133750,
+      "tool": [
+        31.365632254112896,
+        23.13450303717739,
+        57
+      ]
+    },
+    {
+      "file": "step-0218.delta",
+      "stage": "Spitze",
+      "occupied": 1334643085,
+      "changed_blocks": 1267,
+      "delta_bytes": 104740,
+      "cut_ns": 16021334,
+      "write_ns": 134500,
+      "tool": [
+        32.67878402655563,
+        23.532843272420994,
+        57
+      ]
+    },
+    {
+      "file": "step-0219.delta",
+      "stage": "Spitze",
+      "occupied": 1334231966,
+      "changed_blocks": 1810,
+      "delta_bytes": 151576,
+      "cut_ns": 18556209,
+      "write_ns": 170125,
+      "tool": [
+        33.888991631137216,
+        24.179712713882182,
+        57
+      ]
+    },
+    {
+      "file": "step-0220.delta",
+      "stage": "Spitze",
+      "occupied": 1333841926,
+      "changed_blocks": 1908,
+      "delta_bytes": 170800,
+      "cut_ns": 19826958,
+      "write_ns": 143625,
+      "tool": [
+        34.94974746830583,
+        25.050252531694166,
+        57
+      ]
+    },
+    {
+      "file": "step-0221.delta",
+      "stage": "Spitze",
+      "occupied": 1333580821,
+      "changed_blocks": 1589,
+      "delta_bytes": 157692,
+      "cut_ns": 18766416,
+      "write_ns": 148042,
+      "tool": [
+        35.82028728611782,
+        26.111008368862784,
+        57
+      ]
+    },
+    {
+      "file": "step-0222.delta",
+      "stage": "Spitze",
+      "occupied": 1333447322,
+      "changed_blocks": 1056,
+      "delta_bytes": 114944,
+      "cut_ns": 16157958,
+      "write_ns": 141875,
+      "tool": [
+        36.46715672757901,
+        27.321215973444367,
+        57
+      ]
+    },
+    {
+      "file": "step-0223.delta",
+      "stage": "Spitze",
+      "occupied": 1333399870,
+      "changed_blocks": 588,
+      "delta_bytes": 71312,
+      "cut_ns": 13720500,
+      "write_ns": 121042,
+      "tool": [
+        36.86549696282261,
+        28.634367745887097,
+        57
+      ]
+    }
+  ]
+}

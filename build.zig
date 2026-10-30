@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) void {
     b.step("viewer", "Build standalone native macOS viewer (requires Apple Swift)").dependOn(&viewer.step);
     const tests = b.addTest(.{ .root_module = b.createModule(.{ .root_source_file = b.path("src/tests.zig"), .target = target, .optimize = optimize }) });
     b.step("test", "Run core and surface tests").dependOn(&b.addRunArtifact(tests).step);
-    inline for (.{ "demo", "bench", "export", "drill" }) |name| {
+    inline for (.{ "demo", "bench", "export", "drill", "job" }) |name| {
         const run = b.addRunArtifact(exe);
         run.addArg(name);
         if (b.args) |args| run.addArgs(args);

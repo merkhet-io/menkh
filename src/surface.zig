@@ -103,7 +103,7 @@ pub fn obj(g: core.Grid, quads: []const Quad, dir: std.fs.Dir) !void {
             var p = q.p;
             p[u] += offset[0];
             p[v] += offset[1];
-            const s = try std.fmt.bufPrint(textbuf[len..], "v {d:.8} {d:.8} {d:.8}\n", .{ @as(f64, @floatFromInt(p[0])) * g.h, @as(f64, @floatFromInt(p[1])) * g.h, @as(f64, @floatFromInt(p[2])) * g.h });
+            const s = try std.fmt.bufPrint(textbuf[len..], "v {d:.8} {d:.8} {d:.8}\n", .{ g.origin[0] + @as(f64, @floatFromInt(p[0])) * g.h, g.origin[1] + @as(f64, @floatFromInt(p[1])) * g.h, g.origin[2] + @as(f64, @floatFromInt(p[2])) * g.h });
             len += s.len;
         }
         const base = idx * 4 + 1;

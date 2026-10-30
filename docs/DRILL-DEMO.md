@@ -1,5 +1,7 @@
 # From a cylinder to a twist drill
 
+This page records the original demo checkpoint. The shared-engine implementation, current capabilities, and newly measured regressions/results are documented in [ENGINE-VALIDATION.md](ENGINE-VALIDATION.md) and [CAPABILITIES.md](CAPABILITIES.md).
+
 This demo shows progressive **actual voxel removal**. The Zig process maintains a single material state and applies cuts sequentially, exporting its unmodified voxel surface at every animation step. The separate player loads these states on demand; pausing and rewinding do not repeat material removal.
 
 ## Watching the demo

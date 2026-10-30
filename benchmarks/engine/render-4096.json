@@ -1,0 +1,22 @@
+{
+  "averaged_normals" : true,
+  "fixtures_visible" : true,
+  "frame" : 224,
+  "gpu_ms_max" : 9.2660833324771374,
+  "gpu_ms_median" : 5.5974583374336362,
+  "gpu_ms_min" : 5.2297500078566372,
+  "grid" : [
+    4096,
+    4096,
+    4096
+  ],
+  "height" : 900,
+  "holder_visible" : true,
+  "note" : "GPU command duration only, offscreen static view; not interactive FPS",
+  "samples" : 10,
+  "samples_per_pixel" : 4,
+  "section_fraction" : 1,
+  "target_comparison" : false,
+  "warmups" : 3,
+  "width" : 1280
+}

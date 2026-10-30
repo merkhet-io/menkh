@@ -1,5 +1,7 @@
 # Exactly 4096 × 4096 × 4096 voxels
 
+This page records the original demo checkpoint. The shared-engine implementation, current capabilities, and newly measured regressions/results are documented in [ENGINE-VALIDATION.md](ENGINE-VALIDATION.md) and [CAPABILITIES.md](CAPABILITIES.md).
+
 [**Watch the new animation**](drill-4096.mp4) · [Preview image](drill-4096.png)
 
 The high-resolution version is implemented and has actually been run. **All three grid dimensions are 4096**, not just the drill length. This provides 68,719,476,736 addressable cells in a 60 × 60 × 60 mm simulation volume, with **14.6484375 µm cubic voxels**. The Ø 12 × 60 mm cylinder is centered at XY = (30,30), leaving the surrounding region empty. Initially, **2,159,116,288 voxels are occupied**; after cutting, **1,333,399,870** remain. Addressable cells are not reported as occupied or individually processed voxels.

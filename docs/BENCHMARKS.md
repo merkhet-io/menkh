@@ -1,5 +1,7 @@
 # Measured benchmarks
 
+This page records the original demo checkpoint. The shared-engine implementation, current capabilities, and newly measured regressions/results are documented in [ENGINE-VALIDATION.md](ENGINE-VALIDATION.md) and [CAPABILITIES.md](CAPABILITIES.md).
+
 Measured on October 29–30, 2026, on a **MacBook Pro Mac17,6, Apple M5 Max, 18 CPU cores (6 Super + 12 Performance), 128 GB RAM, macOS 27.0.1**. Native aarch64-macos binary, Zig **0.15.2**, **ReleaseFast**, **one worker**. On this hardware, this Zig version resolves `-mcpu=native` to `apple_m1` with native feature flags. This describes compiler detection, not the physical CPU model. Zig uses the existing macOS 15.4 SDK; the viewer uses Apple Swift 6.3.2.
 
 All figures come from completed runs. Raw data are in [`../benchmarks/`](../benchmarks/), with hardware and build details in [`environment.json`](../benchmarks/environment.json). The tables contain the final complete measurement series for the original core implementation; preliminary development measurements may differ.

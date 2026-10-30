@@ -1,4 +1,6 @@
-# Architecture and contracts
+# Original core architecture and contracts
+
+For the general engine, explicit origins, tools, jobs, imported stock, inspection, turning envelopes and checkpoint formats, see [ENGINE.md](ENGINE.md) and [FORMATS.md](FORMATS.md). This page describes the retained original constant-Z API and voxel mesh export.
 
 ## Data flow
 
@@ -24,7 +26,7 @@ All allocators are passed explicitly. Dimension products and capacity sums are c
 
 ## Coordinates and numerical rules
 
-- The origin is the lower-left bottom corner of the stock, (0,0,0), with Z pointing upward. All units are mm.
+- The original demo uses the lower-left bottom corner (0,0,0); general grids carry an explicit `Grid.origin`, with Z pointing upward. All units are mm.
 - The center of global voxel index `(i,j,k)` is `((i+0.5)h,(j+0.5)h,(k+0.5)h)`.
 - An initial voxel exists exactly when its center lies inside the half-open ideal cuboid `[0,Lx) × [0,Ly) × [0,Lz)`. Dimensions obtained by division are corrected against the actual center predicate.
 - Out-of-bounds `occupied` index queries return `false`. Spatial `query` calls use `floor(p/h)` and the bounds of the **represented grid**, `[0,nx*h) × …`, rather than reapplying the ideal stock dimensions. Queries, meshes, and volume therefore agree even at stock boundaries that are not integer multiples of the spacing. Negative, non-finite, or excessively large coordinates return `false`.
@@ -61,4 +63,4 @@ The classic end-mill API does not support adding material, tilted tool axes, Z m
 
 ## Extension: exact 4096³ grid
 
-The additional `drill --grid 4096` path (`src/fine.zig`) retains the same block format but exports voxel state and reversible block changes instead of per-step meshes. `viewer/VoxelView.swift` and `viewer/Voxel.metal` render these data directly through Metal, without SceneKit. CPU material removal and GPU rendering remain separate. For conservative block classification, file formats, visual references, tests, and completed 4096³ runs, see [VOXEL-4096.md](VOXEL-4096.md).
+The additional `drill --grid 4096` demo/history writer (`src/fine.zig`) now calls the shared `engine.zig` operations and retains the same block format but exports voxel state and reversible block changes instead of per-step meshes. `viewer/VoxelView.swift` and `viewer/Voxel.metal` render these data directly through Metal, without SceneKit. CPU material removal and GPU rendering remain separate. For conservative block classification, file formats, visual references, tests, and completed 4096³ runs, see [VOXEL-4096.md](VOXEL-4096.md).
