@@ -36,6 +36,12 @@ jobs:
           xcrun clang++ -std=c++17 -O2 viewer/windows/history-test.cpp -o out/history-test
           python3 scripts/test-provenance.py
           python3 scripts/test-viewer-provenance.py --exe out/history-test
+      - name: C embedding boundary and independent host
+        run: |
+          ./zig build sdk -Doptimize=ReleaseFast
+          ./zig build sdk-test --summary all
+          ./zig build sdk-test -Doptimize=ReleaseFast --summary all
+          python3 scripts/test-sdk.py
       - name: Job CLI voxel overrides
         run: python3 scripts/test-job-options.py
       - name: Independent final-surface provenance oracle
@@ -77,6 +83,15 @@ jobs:
       - name: ReleaseFast tests
         shell: pwsh
         run: ./zig.ps1 build test -Doptimize=ReleaseFast --summary all
+      - name: C embedding DLL and independent host
+        shell: pwsh
+        run: |
+          ./zig.ps1 build sdk -Doptimize=ReleaseFast
+          if ($LASTEXITCODE -ne 0) { throw 'SDK build failed' }
+          ./zig.ps1 build sdk-test --summary all
+          if ($LASTEXITCODE -ne 0) { throw 'SDK tests failed' }
+          python scripts/test-sdk.py
+          if ($LASTEXITCODE -ne 0) { throw 'C host failed' }
       - name: Execute pocket demo and inspect its surface
         shell: pwsh
         run: |
