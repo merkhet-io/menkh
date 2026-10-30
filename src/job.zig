@@ -13,7 +13,7 @@ pub const Stock = struct { primitives: []const e.Primitive = &.{}, stl: ?MeshSou
 pub const Noncutting = struct { radius: f64, length: f64, offset: f64 };
 pub const Assembly = struct { cutter: e.Tool, shank: ?Noncutting = null, holder: ?Noncutting = null };
 pub const Line = struct { a: e.Pose, b: e.Pose };
-pub const Operation = struct { id: []const u8, tool: ?usize = null, line: ?Line = null, arc: ?motion.Arc = null, turning: ?motion.Turning = null, subtract: ?e.Primitive = null, feed_mm_min: ?f64 = null };
+pub const Operation = struct { id: []const u8, tool: ?usize = null, line: ?Line = null, arc: ?motion.Arc = null, rotary: ?motion.RotaryLine = null, turning: ?motion.Turning = null, subtract: ?e.Primitive = null, feed_mm_min: ?f64 = null };
 pub const Query = struct { point: e.V };
 pub const Ray = struct { origin: e.V, direction: e.V, max_distance_mm: f64 };
 pub const Job = struct {
@@ -94,16 +94,22 @@ pub fn validate(a: std.mem.Allocator, j: Job) !void {
         if (op.id.len == 0) return error.MissingOperationId;
         for (j.operations[0..index]) |previous| if (std.mem.eql(u8, op.id, previous.id)) return error.DuplicateOperationId;
         if (op.turning) |t| {
-            if (op.subtract != null or op.tool != null or op.line != null or op.arc != null or op.feed_mm_min != null) return error.AmbiguousOperation;
+            if (op.subtract != null or op.tool != null or op.line != null or op.arc != null or op.rotary != null or op.feed_mm_min != null) return error.AmbiguousOperation;
             _ = try t.shape();
             continue;
         }
         if (op.subtract) |s| {
-            if (op.tool != null or op.line != null or op.arc != null or op.feed_mm_min != null) return error.AmbiguousOperation;
+            if (op.tool != null or op.line != null or op.arc != null or op.rotary != null or op.feed_mm_min != null) return error.AmbiguousOperation;
             try s.validate();
         } else {
             const tool = op.tool orelse return error.MissingTool;
             if (tool >= j.tools.len) return error.InvalidToolIndex;
+            if (op.rotary) |rotary_input| {
+                if (op.line != null or op.arc != null or op.feed_mm_min != null or j.tools[tool].shank != null or j.tools[tool].holder != null) return error.RotaryAssemblyOrFeedUnsupported;
+                const plan = try motion.rotary(a, j.tools[tool].cutter, rotary_input, j.motion_tolerance_mm);
+                plan.deinit(a);
+                continue;
+            }
             if (op.arc) |arc_input| {
                 if (op.line != null or op.feed_mm_min != null or j.tools[tool].shank != null or j.tools[tool].holder != null) return error.ArcAssemblyOrFeedUnsupported;
                 const plan = try motion.arc(a, j.tools[tool].cutter, arc_input, j.motion_tolerance_mm);
@@ -240,6 +246,13 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
         timer.reset();
         if (op.turning) |t| {
             shape = try t.shape();
+        } else if (op.rotary) |rotary_input| {
+            const cutter = j.tools[op.tool.?].cutter;
+            arc_plan = try motion.rotary(a, cutter, rotary_input, j.motion_tolerance_mm);
+            shape = .{ .path = arc_plan.?.segments };
+            bound = arc_plan.?.over_removal_bound_mm;
+            toolpos = rotary_input.b.pose(cutter.length).position;
+            if (fixtures) |f| cf = try inspect.collision(f, shape);
         } else if (op.arc) |arc_input| {
             arc_plan = try motion.arc(a, j.tools[op.tool.?].cutter, arc_input, j.motion_tolerance_mm);
             shape = .{ .path = arc_plan.?.segments };
@@ -275,7 +288,7 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
         history_bytes += changes.bytes.items.len;
         const volume = @as(f64, @floatFromInt(changes.removed)) * g.h * g.h * g.h;
         reports[index] = .{ .work = changes.work, .id = op.id, .removed_voxels = changes.removed, .engagement_volume_mm3 = volume, .remaining_voxels = occupied, .affected_region = changes.affected, .motion_over_removal_bound_mm = bound, .cut_ns = cut_ns, .collision_ns = collision_ns, .history_write_ns = history_ns, .shank_stock = shank, .holder_stock = holder, .shank_fixture = sf, .holder_fixture = hf, .cutter_fixture = cf, .geometric_feed_time_min = minutes, .average_removal_mm3_min = if (minutes != null and minutes.? > 0) volume / minutes.? else null };
-        frames[index] = .{ .file = name, .stage = op.id, .occupied = occupied, .changed_blocks = changes.blocks, .delta_bytes = changes.bytes.items.len, .tool = toolpos, .axis = if (op.line) |l| l.b.axis else if (op.arc) |arc| arc.axis else .{ 0, 0, 1 }, .shank = if (op.tool) |t| j.tools[t].shank else null, .holder = if (op.tool) |t| j.tools[t].holder else null, .cutter = if (op.tool) |t| j.tools[t].cutter else null };
+        frames[index] = .{ .file = name, .stage = op.id, .occupied = occupied, .changed_blocks = changes.blocks, .delta_bytes = changes.bytes.items.len, .tool = toolpos, .axis = if (op.line) |l| l.b.axis else if (op.arc) |arc| arc.axis else if (op.rotary) |r| r.b.axis() else .{ 0, 0, 1 }, .shank = if (op.tool) |t| j.tools[t].shank else null, .holder = if (op.tool) |t| j.tools[t].holder else null, .cutter = if (op.tool) |t| j.tools[t].cutter else null };
         std.debug.print("{s}: removed {d} voxels, {d:.3} ms\n", .{ op.id, changes.removed, @as(f64, @floatFromInt(cut_ns)) / 1e6 });
         try progress.emit("cutting", index + 1, op.id);
     }

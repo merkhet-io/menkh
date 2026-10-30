@@ -221,7 +221,7 @@ final class VoxelController:NSViewController {
         comparison.isEnabled=renderer.targetBlocks != nil
         let section=sectionControl;section.target=self;section.action=#selector(section(_:));section.toolTip="Z cross-section";section.widthAnchor.constraint(equalToConstant:120).isActive=true
         let fixtures=fixtureControl;fixtures.target=self;fixtures.action=#selector(fixtures(_:));fixtures.state = .on;fixtures.isEnabled=renderer.fixtureBlocks != nil
-        let holder=holderControl;holder.target=self;holder.action=#selector(holder(_:));holder.state = .on
+        let holder=holderControl;holder.target=self;holder.action=#selector(holder(_:));holder.state = renderer.showHolder ? .on:.off
         let buttons=NSStackView(views:[play,restart,reset,lighting,background]);buttons.spacing=12
         let axes=axesControl;axes.addItems(withTitles:["Section X","Section Y","Section Z"]);axes.selectItem(at:renderer.sectionAxis);axes.target=self;axes.action=#selector(sectionAxis(_:))
         let provenance=NSPopUpButton();provenance.addItems(withTitles:["Material color","Exposure operation","Exposure tool"]);provenance.isEnabled=renderer.provenanceBuffer != nil;provenance.target=self;provenance.action=#selector(provenance(_:))
@@ -426,6 +426,6 @@ extension VoxelRenderer {
 extension VoxelRenderer {
     func resetView() {
         let low=SIMD3<Float>(history.stock_min[0],history.stock_min[1],history.stock_min[2]);let high=SIMD3<Float>(history.stock_max[0],history.stock_max[1],history.stock_max[2])
-        target=(low+high)/2;distance=max(1,simd_length(high-low)*1.2);yaw = -0.8;elevation=0.5;roll=0
+        target=(low+high)/2;distance=max(1,simd_length(high-low)*1.5);yaw = -0.8;elevation=0.5;roll=0
     }
 }

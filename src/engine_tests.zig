@@ -798,3 +798,105 @@ test "provenance allocation failures leave authoritative stock unchanged" {
     defer a.free(after);
     try std.testing.expectEqualSlices(u8, before, after);
 }
+
+test "XYZAC cylinder continuous coverage and independent sampled distance envelope" {
+    const m = @import("motion.zig");
+    const tool = e.Tool{ .radius = 1.1, .length = 0.7 };
+    const input = m.RotaryLine{ .a = .{ .position = .{ -0.2, 0.1, 0.2 }, .a_deg = 18, .c_deg = -30 }, .b = .{ .position = .{ 0.3, -0.1, 0.1 }, .a_deg = 79, .c_deg = 75 } };
+    const plan = try m.rotary(a, tool, input, 0.08);
+    defer plan.deinit(a);
+    try std.testing.expect(plan.over_removal_bound_mm <= 0.08 + 1e-14);
+    const shape = e.Shape{ .path = plan.segments };
+    // Independent inverse Euler matrix and finite-cylinder Euclidean distance.
+    // Dense temporal samples validate coverage; time Lipschitz bound brackets
+    // the missed minimum between oracle samples (not a certified FP proof).
+    const samples = 512;
+    const lipschitz = e.norm(e.sub(input.b.position, input.a.position)) +
+        @sqrt(1.1 * 1.1 + 0.35 * 0.35) * (61.0 + 105.0) * std.math.pi / 180.0;
+    var rng = std.Random.DefaultPrng.init(0x2121);
+    for (0..1000) |_| {
+        var p: e.V = undefined;
+        for (&p) |*v| v.* = rng.random().float(f64) * 3 - 1.5;
+        var best: f64 = std.math.inf(f64);
+        for (0..samples + 1) |i| {
+            const t = @as(f64, @floatFromInt(i)) / samples;
+            const angle_a = (18 + 61 * t) * std.math.pi / 180.0;
+            const angle_c = (-30 + 105 * t) * std.math.pi / 180.0;
+            const x = p[0] - (-0.2 + 0.5 * t);
+            const y = p[1] - (0.1 - 0.2 * t);
+            const z = p[2] - (0.2 - 0.1 * t);
+            const xx = @cos(angle_c) * x + @sin(angle_c) * y;
+            const yy = -@sin(angle_c) * x + @cos(angle_c) * y;
+            const local_y = @cos(angle_a) * yy + @sin(angle_a) * z;
+            const local_z = -@sin(angle_a) * yy + @cos(angle_a) * z;
+            const dr = @sqrt(xx * xx + local_y * local_y) - 1.1;
+            const dz = @abs(local_z) - 0.35;
+            const d = @sqrt(@max(dr, 0) * @max(dr, 0) + @max(dz, 0) * @max(dz, 0)) + @min(@max(dr, dz), 0);
+            best = @min(best, d);
+        }
+        if (best <= 0) try std.testing.expect(shape.contains(p));
+        if (shape.contains(p)) try std.testing.expect(best <= plan.over_removal_bound_mm + lipschitz / (2 * samples) + 1e-9);
+    }
+    const reverse = try m.rotary(a, tool, .{ .a = input.b, .b = input.a }, 0.08);
+    defer reverse.deinit(a);
+    const bounds = e.Bounds{ .lo = .{ -2, -2, -2 }, .hi = .{ 2, 2, 2 } };
+    var g = try e.stock(a, bounds, 0.2, &.{.{ .box = bounds }});
+    defer g.deinit();
+    var r = try e.stock(a, bounds, 0.2, &.{.{ .box = bounds }});
+    defer r.deinit();
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    try e.subtract(&g, shape, &changes, false);
+    try e.subtract(&r, shape, &changes, true);
+    for (0..g.blocks.len) |i| try std.testing.expectEqualSlices(u64, &g.bits(i), &r.bits(i));
+    for (0..20) |z| for (0..20) |y| for (0..20) |x| {
+        const p: e.V = .{ -1.9 + @as(f64, @floatFromInt(x)) * 0.2, -1.9 + @as(f64, @floatFromInt(y)) * 0.2, -1.9 + @as(f64, @floatFromInt(z)) * 0.2 };
+        try std.testing.expectEqual(shape.contains(p), (e.Shape{ .path = reverse.segments }).contains(p));
+    };
+}
+
+test "XYZAC stationary exact cylinder, unwrapped turns, limits and allocation failure" {
+    const m = @import("motion.zig");
+    const p = m.XYZAC{ .position = .{ 1, 2, 3 }, .a_deg = 90, .c_deg = 90 };
+    const tool = e.Tool{ .radius = 2, .length = 1 };
+    const plan = try m.rotary(a, tool, .{ .a = p, .b = p }, 0.01);
+    defer plan.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), plan.segments.len);
+    try std.testing.expectEqual(@as(f64, 0), plan.over_removal_bound_mm);
+    try std.testing.expectApproxEqAbs(@as(f64, 1), p.axis()[0], 1e-12);
+    const end = m.XYZAC{ .position = p.position, .a_deg = 90, .c_deg = 450 };
+    const turn = try m.rotary(a, tool, .{ .a = p, .b = end }, 0.1);
+    defer turn.deinit(a);
+    try std.testing.expect(turn.segments.len > 100);
+    try std.testing.expectError(error.MotionToleranceTooSmall, m.rotary(a, tool, .{ .a = p, .b = end }, 1e-12));
+    try std.testing.expectError(error.RotaryRequiresCylinder, m.rotary(a, .{ .kind = .ball, .radius = 1, .length = 2 }, .{ .a = p, .b = p }, 0.1));
+    try std.testing.expectError(error.OutOfMemory, m.rotary(std.testing.failing_allocator, tool, .{ .a = p, .b = p }, 0.1));
+}
+
+test "rotary pure rotation covers intermediate poses and split curves within bound" {
+    const m = @import("motion.zig");
+    const tool = e.Tool{ .radius = 1.1, .length = 0.2 };
+    const line = m.RotaryLine{ .a = .{ .position = .{ 0, 0, 0 }, .a_deg = 0, .c_deg = 0 }, .b = .{ .position = .{ 0, 0, 0 }, .a_deg = 180, .c_deg = 0 } };
+    const plan = try m.rotary(a, tool, line, 0.02);
+    defer plan.deinit(a);
+    const first = try m.rotary(a, tool, .{ .a = line.a, .b = line.at(0.5) }, 0.02);
+    defer first.deinit(a);
+    const second = try m.rotary(a, tool, .{ .a = line.at(0.5), .b = line.b }, 0.02);
+    defer second.deinit(a);
+    // A half turn of this centered disc contains the radius-1.1 ball, including
+    // yz diagonal points missed by stamping only the two endpoint discs.
+    for (0..100) |i| {
+        const angle = @as(f64, @floatFromInt(i)) * 2 * std.math.pi / 100;
+        const p: e.V = .{ 0, @cos(angle), @sin(angle) };
+        try std.testing.expect((e.Shape{ .path = plan.segments }).contains(p));
+        try std.testing.expect((e.Shape{ .path = first.segments }).contains(p) or (e.Shape{ .path = second.segments }).contains(p));
+        const outside: e.V = .{ 0, @cos(angle) * 1.2, @sin(angle) * 1.2 };
+        try std.testing.expect(!(e.Shape{ .path = plan.segments }).contains(outside));
+    }
+    // Splitting may change subdivision/dilation, so voxel-exact equality is not
+    // promised for general split inputs; both retain the same declared bound.
+    const tiny = try m.rotary(a, tool, .{ .a = line.a, .b = .{ .position = .{ 1e-12, 0, 0 }, .a_deg = 1e-10, .c_deg = -1e-10 } }, 0.02);
+    defer tiny.deinit(a);
+    try std.testing.expect(tiny.over_removal_bound_mm < 1e-10);
+    try std.testing.expect((e.Shape{ .path = tiny.segments }).contains(.{ 0, 0, 0 }));
+}
