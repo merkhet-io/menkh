@@ -1,0 +1,14 @@
+{
+  "README.md": "953c7b4e189561c870bde2ed4554a0230b60c1922d6894fdadecc3d357cf6359",
+  "debug.log": "c948e759bdaaf3e428f375ae60c4d371db2d5aaceff5a6c96b24b7bdb34d40b5",
+  "formal.log": "f32d11626acee0559ec6dabce885bb106c826137b32d1cacd5932898d47260c5",
+  "identifiers.json": "a5d5427e2bcb4db45f68bbfd28f1e6906fcc041f91ffbbca2e2dd4ed44627388",
+  "import-oracles.json": "7d28c980e79e5111b1d2f7bbc166f00ae457907ee4a2dcd19bdc51b8ec81a53e",
+  "raw.json.gz": "7af8ae27f8b690c8aa9c585e0dcae4409086c06414cc7002ed0ecfff5ab6aace",
+  "release.log": "6a08f953ac8f73aa6eb1576beb649be45a21c3e69c1240d24a1fe43665cbb1c1",
+  "smoke-summary.json": "b3407ec744cd0b8aa670f1d6025707d3021a690114695fcfea8bd2782d84faf3",
+  "smoke.log": "c1a876db6b13fd975671efa12491f7b43a5cbd35319f67a878e0e2dee3c98e9e",
+  "summary.json": "8f17febe513916be6c7ba1ba58454af6ec983898c38ed912ff5d00c77300a760",
+  "varied.json.gz": "28d6bfb529a3e9480251f04bcb93346e248952f26948534af5de5b09a58b0749",
+  "varied.log": "61a1630fcf72a12b6fcc24bc0019c48b8fc8eea9b5573d19217043be3755c920"
+}

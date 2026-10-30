@@ -1,0 +1,63 @@
+{
+  "first_100_missing_target_centers_mm": [],
+  "tessellation_vertical_samples": {
+    "samples": 6144,
+    "min_mm": -0.026719737393823273,
+    "max_mm": 0.014958544636748172,
+    "max_abs_mm": 0.026719737393823273,
+    "mean_mm": -8.703182043688524e-07
+  },
+  "designed_path_minus_analytic_target": {
+    "samples": 6144,
+    "min_mm": 0.012386224002690405,
+    "max_mm": 0.26335564443558734,
+    "max_abs_mm": 0.26335564443558734,
+    "mean_mm": 0.0404063781964429
+  },
+  "raster_height_minus_continuous_path": {
+    "samples": 6144,
+    "min_mm": -0.017430858888826783,
+    "max_mm": 0.015044266477230117,
+    "max_abs_mm": 0.017430858888826783,
+    "mean_mm": -0.0009912986358200538
+  },
+  "thin_rib_samples": [
+    {
+      "x_mm": 4.013,
+      "y_mm": 7.983,
+      "remaining_height_mm": 6.259,
+      "analytic_target_height_mm": 6.235599229536115,
+      "vertical_excess_mm": 0.023400770463885223
+    },
+    {
+      "x_mm": 8.013,
+      "y_mm": 7.983,
+      "remaining_height_mm": 6.434000000000001,
+      "analytic_target_height_mm": 6.4030318162178474,
+      "vertical_excess_mm": 0.030968183782153602
+    },
+    {
+      "x_mm": 12.013,
+      "y_mm": 7.983,
+      "remaining_height_mm": 7.2090000000000005,
+      "analytic_target_height_mm": 7.186128007510022,
+      "vertical_excess_mm": 0.02287199248997851
+    },
+    {
+      "x_mm": 16.013,
+      "y_mm": 7.983,
+      "remaining_height_mm": 6.984000000000001,
+      "analytic_target_height_mm": 6.96669476348614,
+      "vertical_excess_mm": 0.01730523651386129
+    },
+    {
+      "x_mm": 20.013,
+      "y_mm": 7.983,
+      "remaining_height_mm": 6.4590000000000005,
+      "analytic_target_height_mm": 6.454942917243493,
+      "vertical_excess_mm": 0.004057082756507846
+    }
+  ],
+  "occupancy_sha256": "881fe586c3ed1230805f1814e4ab2272a596e61a59003a3c041163bb8520133f",
+  "note": "6144 offset XY samples, vertical height differences, not shortest surface distances or Hausdorff bounds. Input error samples use exact procedural triangle interpolation; binary STL f32 quantization is additional. Thin rib sampled explicitly at five x positions; no global feature guarantee."
+}

@@ -1,0 +1,266 @@
+[
+  {
+    "voxel_mm": 0.25,
+    "motion_tolerance_mm": 0.005,
+    "sections": [
+      {
+        "y_mm": 2.108,
+        "raster_to_ideal": {
+          "samples": 50,
+          "max_mm": 0.12898184081962663,
+          "mean_mm": 0.04716556004066423
+        },
+        "ideal_to_raster": {
+          "samples": 1102,
+          "max_mm": 3.002603037366079,
+          "mean_mm": 0.49057097436420016
+        }
+      },
+      {
+        "y_mm": 4.108,
+        "raster_to_ideal": {
+          "samples": 38,
+          "max_mm": 0.12898184081962707,
+          "mean_mm": 0.09668237321761187
+        },
+        "ideal_to_raster": {
+          "samples": 1002,
+          "max_mm": 2.003902442735175,
+          "mean_mm": 0.32302975710689846
+        }
+      }
+    ],
+    "note": "Bidirectional sampled XZ contour distances, not certified Hausdorff; ideal sampling 0.01 mm including jump faces. No STL input in fixture A."
+  },
+  {
+    "voxel_mm": 0.25,
+    "motion_tolerance_mm": 0.001,
+    "sections": [
+      {
+        "y_mm": 2.108,
+        "raster_to_ideal": {
+          "samples": 48,
+          "max_mm": 0.12096823280977327,
+          "mean_mm": 0.048469938870478325
+        },
+        "ideal_to_raster": {
+          "samples": 1102,
+          "max_mm": 3.002603037366079,
+          "mean_mm": 0.49364251282246346
+        }
+      },
+      {
+        "y_mm": 4.108,
+        "raster_to_ideal": {
+          "samples": 36,
+          "max_mm": 0.12141825917121798,
+          "mean_mm": 0.09626342889307823
+        },
+        "ideal_to_raster": {
+          "samples": 1002,
+          "max_mm": 2.003902442735175,
+          "mean_mm": 0.3225192788233835
+        }
+      }
+    ],
+    "note": "Bidirectional sampled XZ contour distances, not certified Hausdorff; ideal sampling 0.01 mm including jump faces. No STL input in fixture A."
+  },
+  {
+    "voxel_mm": 0.1,
+    "motion_tolerance_mm": 0.005,
+    "sections": [
+      {
+        "y_mm": 2.0330000000000004,
+        "raster_to_ideal": {
+          "samples": 154,
+          "max_mm": 0.04000435920722907,
+          "mean_mm": 0.017476621514303913
+        },
+        "ideal_to_raster": {
+          "samples": 1102,
+          "max_mm": 0.10626733544838289,
+          "mean_mm": 0.028622379931319063
+        }
+      },
+      {
+        "y_mm": 4.0329999999999995,
+        "raster_to_ideal": {
+          "samples": 114,
+          "max_mm": 0.04000435920722908,
+          "mean_mm": 0.02285115199927333
+        },
+        "ideal_to_raster": {
+          "samples": 1002,
+          "max_mm": 0.10626733544838446,
+          "mean_mm": 0.03569107711616927
+        }
+      }
+    ],
+    "note": "Bidirectional sampled XZ contour distances, not certified Hausdorff; ideal sampling 0.01 mm including jump faces. No STL input in fixture A."
+  },
+  {
+    "voxel_mm": 0.1,
+    "motion_tolerance_mm": 0.001,
+    "sections": [
+      {
+        "y_mm": 2.0330000000000004,
+        "raster_to_ideal": {
+          "samples": 154,
+          "max_mm": 0.04000435920722907,
+          "mean_mm": 0.017476621514303913
+        },
+        "ideal_to_raster": {
+          "samples": 1102,
+          "max_mm": 0.10626733544838289,
+          "mean_mm": 0.028622379931319063
+        }
+      },
+      {
+        "y_mm": 4.0329999999999995,
+        "raster_to_ideal": {
+          "samples": 114,
+          "max_mm": 0.04000435920722908,
+          "mean_mm": 0.02285115199927333
+        },
+        "ideal_to_raster": {
+          "samples": 1002,
+          "max_mm": 0.10626733544838446,
+          "mean_mm": 0.03569107711616927
+        }
+      }
+    ],
+    "note": "Bidirectional sampled XZ contour distances, not certified Hausdorff; ideal sampling 0.01 mm including jump faces. No STL input in fixture A."
+  },
+  {
+    "voxel_mm": 0.05,
+    "motion_tolerance_mm": 0.005,
+    "sections": [
+      {
+        "y_mm": 2.0580000000000003,
+        "raster_to_ideal": {
+          "samples": 309,
+          "max_mm": 0.02872307835622235,
+          "mean_mm": 0.011384440843472132
+        },
+        "ideal_to_raster": {
+          "samples": 1103,
+          "max_mm": 0.049138873051510296,
+          "mean_mm": 0.01587625578681131
+        }
+      },
+      {
+        "y_mm": 4.058,
+        "raster_to_ideal": {
+          "samples": 229,
+          "max_mm": 0.028723078356222783,
+          "mean_mm": 0.02002971487670884
+        },
+        "ideal_to_raster": {
+          "samples": 1003,
+          "max_mm": 0.04913887305151183,
+          "mean_mm": 0.025395341419135315
+        }
+      }
+    ],
+    "note": "Bidirectional sampled XZ contour distances, not certified Hausdorff; ideal sampling 0.01 mm including jump faces. No STL input in fixture A."
+  },
+  {
+    "voxel_mm": 0.05,
+    "motion_tolerance_mm": 0.001,
+    "sections": [
+      {
+        "y_mm": 2.0580000000000003,
+        "raster_to_ideal": {
+          "samples": 307,
+          "max_mm": 0.022470367275378166,
+          "mean_mm": 0.011347155713311642
+        },
+        "ideal_to_raster": {
+          "samples": 1103,
+          "max_mm": 0.049138873051510296,
+          "mean_mm": 0.015926216593511556
+        }
+      },
+      {
+        "y_mm": 4.058,
+        "raster_to_ideal": {
+          "samples": 227,
+          "max_mm": 0.022478633938801562,
+          "mean_mm": 0.01685855217815604
+        },
+        "ideal_to_raster": {
+          "samples": 1003,
+          "max_mm": 0.04913887305151183,
+          "mean_mm": 0.022218443290783207
+        }
+      }
+    ],
+    "note": "Bidirectional sampled XZ contour distances, not certified Hausdorff; ideal sampling 0.01 mm including jump faces. No STL input in fixture A."
+  },
+  {
+    "voxel_mm": 0.025,
+    "motion_tolerance_mm": 0.005,
+    "sections": [
+      {
+        "y_mm": 2.0705,
+        "raster_to_ideal": {
+          "samples": 616,
+          "max_mm": 0.026400704684262706,
+          "mean_mm": 0.00955666011184817
+        },
+        "ideal_to_raster": {
+          "samples": 1103,
+          "max_mm": 0.043926474356630364,
+          "mean_mm": 0.0107170851061911
+        }
+      },
+      {
+        "y_mm": 4.0705,
+        "raster_to_ideal": {
+          "samples": 456,
+          "max_mm": 0.026400704684263115,
+          "mean_mm": 0.006232853698786693
+        },
+        "ideal_to_raster": {
+          "samples": 1003,
+          "max_mm": 0.04392647435663164,
+          "mean_mm": 0.008609017968248684
+        }
+      }
+    ],
+    "note": "Bidirectional sampled XZ contour distances, not certified Hausdorff; ideal sampling 0.01 mm including jump faces. No STL input in fixture A."
+  },
+  {
+    "voxel_mm": 0.025,
+    "motion_tolerance_mm": 0.001,
+    "sections": [
+      {
+        "y_mm": 2.0705,
+        "raster_to_ideal": {
+          "samples": 617,
+          "max_mm": 0.028670493679489945,
+          "mean_mm": 0.006871133375847028
+        },
+        "ideal_to_raster": {
+          "samples": 1103,
+          "max_mm": 0.021189986517669197,
+          "mean_mm": 0.008533412900593488
+        }
+      },
+      {
+        "y_mm": 4.0705,
+        "raster_to_ideal": {
+          "samples": 457,
+          "max_mm": 0.028670493679490323,
+          "mean_mm": 0.005920990396384515
+        },
+        "ideal_to_raster": {
+          "samples": 1003,
+          "max_mm": 0.02118998651767063,
+          "mean_mm": 0.008394644943181904
+        }
+      }
+    ],
+    "note": "Bidirectional sampled XZ contour distances, not certified Hausdorff; ideal sampling 0.01 mm including jump faces. No STL input in fixture A."
+  }
+]

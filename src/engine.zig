@@ -252,15 +252,35 @@ pub const Sweep = struct {
         const d = sub(qr, scale(vr, t));
         return dot(d, d) <= r * r;
     }
+    fn poseDistance(s: Sweep, p: V, i: usize, n: usize) f64 {
+        const t = @as(f64, @floatFromInt(i)) / @as(f64, @floatFromInt(n));
+        const q = sub(p, add(s.a.position, scale(sub(s.b.position, s.a.position), t)));
+        const z = dot(q, s.a.axis);
+        return s.tool.distance(norm(sub(q, scale(s.a.axis, z))), z);
+    }
     pub fn distance(s: Sweep, p: V) f64 {
-        var best: f64 = std.math.inf(f64);
+        return s.distanceCounted(p, false, null);
+    }
+    pub fn distanceFast(s: Sweep, p: V) f64 {
+        return s.distanceCounted(p, true, null);
+    }
+    pub fn distanceCounted(s: Sweep, p: V, optimized: bool, evaluations: ?*u64) f64 {
         const n = s.samples();
-        for (0..n + 1) |i| {
-            const t = @as(f64, @floatFromInt(i)) / @as(f64, @floatFromInt(n));
-            const q = sub(p, add(s.a.position, scale(sub(s.b.position, s.a.position), t)));
-            const z = dot(q, s.a.axis);
-            best = @min(best, s.tool.distance(norm(sub(q, scale(s.a.axis, z))), z));
-        }
+        var lo: usize = 0;
+        var hi = n;
+        // The complete ball tool is convex; its signed distance restricted to
+        // a translation line is convex. Minimize on the SAME discrete pose lattice.
+        // Keep the original pose arithmetic and a final exhaustive small bracket.
+        if (optimized and s.tool.kind == .ball) while (hi - lo > 8) {
+            const mid = lo + (hi - lo) / 2;
+            const left = s.poseDistance(p, mid, n);
+            const right = s.poseDistance(p, mid + 1, n);
+            if (evaluations) |v| v.* += 2;
+            if (left < right) hi = mid + 1 else lo = mid;
+        };
+        var best: f64 = std.math.inf(f64);
+        for (lo..hi + 1) |i| best = @min(best, s.poseDistance(p, i, n));
+        if (evaluations) |v| v.* += hi + 1 - lo;
         return best - s.errorBound();
     }
 };
@@ -305,9 +325,9 @@ pub const Shape = union(enum) {
     // Tight bound for the canonical +Z finite cylinder. Other orientations retain
     // the conservative general bound. Scalar subtraction keeps the original bound.
     pub fn cuttingBounds(s: Shape) Bounds {
-        if (s == .sweep and s.sweep.exact() and std.mem.eql(f64, &s.sweep.a.axis, &V{ 0, 0, 1 })) {
+        if (s == .sweep and std.mem.eql(f64, &s.sweep.a.axis, &V{ 0, 0, 1 })) {
             const v = s.sweep;
-            const eps = core.tolerance + v.dilation_mm;
+            const eps = core.tolerance + v.errorBound();
             var b = segmentBounds(v.a.position, v.b.position);
             for (0..2) |j| {
                 b.lo[j] -= v.tool.radius + eps;
@@ -416,7 +436,7 @@ pub const Shape = union(enum) {
         const d = switch (s) {
             .path => unreachable,
             .primitive => |v| v.distance(mid),
-            .sweep => |v| v.distance(mid),
+            .sweep => |v| v.distanceFast(mid),
         };
         if (d > rad + core.tolerance + 1e-8) return .outside;
         if (d < -rad - 1e-8) return .inside;
@@ -435,7 +455,9 @@ pub const Shape = union(enum) {
     }
 };
 pub const FlatColumn = struct { coverage: Coverage, bits: u64 = 0, ready: bool = false };
+pub const Work = struct { candidate_blocks: u64 = 0, partial_blocks: u64 = 0, voxel_tests: u64 = 0, point_pose_evaluations: u64 = 0 };
 pub const Changes = struct {
+    work: Work = .{},
     bytes: std.ArrayList(u8) = .empty,
     // One byte per candidate-range block, reused between operations. Geometry
     // classification happens before mutation and is not repeated by the write pass.
@@ -614,9 +636,9 @@ pub fn blockBounds(g: core.Grid, b: [3]usize) Bounds {
     return out;
 }
 pub fn mask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, available: core.Bits) core.Bits {
-    return classifiedMask(g, b, s, reference, available, if (reference) .partial else s.classify(blockBounds(g, b)));
+    return classifiedMask(g, b, s, reference, available, if (reference) .partial else s.classify(blockBounds(g, b)), null);
 }
-fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, available: core.Bits, coverage: Coverage) core.Bits {
+fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, available: core.Bits, coverage: Coverage, work: ?*Work) core.Bits {
     switch (coverage) {
         .outside => return @splat(0),
         .inside => return available,
@@ -630,7 +652,9 @@ fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, availabl
     for (0..e[2]) |z| for (0..e[1]) |y| for (0..e[0]) |x| {
         if (available[z] & (@as(u64, 1) << @as(u6, @intCast(y * 8 + x))) == 0) continue;
         const p = add(g.origin, .{ g.center(b[0] * 8 + x), g.center(b[1] * 8 + y), g.center(b[2] * 8 + z) });
-        if (s.contains(p)) bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
+        if (work) |w| w.voxel_tests += 1;
+        const inside = if (s == .sweep and !s.sweep.exact()) s.sweep.distanceCounted(p, !reference, if (work) |w| &w.point_pose_evaluations else null) <= core.tolerance else s.contains(p);
+        if (inside) bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
     };
     return bits;
 }
@@ -650,6 +674,7 @@ fn writeChange(c: *Changes, i: usize, old: u32, new: u32, before: core.Bits, aft
 }
 pub fn subtract(g: *core.Grid, s: Shape, c: *Changes, reference: bool) !void {
     try s.validate();
+    c.work = .{};
     var bounds = if (reference) s.bounds() else s.cuttingBounds();
     if (g.material_bounds) |mb| for (0..3) |j| {
         bounds.lo[j] = @max(bounds.lo[j], mb[0][j]);
@@ -693,6 +718,8 @@ pub fn subtract(g: *core.Grid, s: Shape, c: *Changes, reference: bool) !void {
         if (!reference) c.coverage.appendAssumeCapacity(coverage);
         if (coverage == .outside) continue;
         candidates += 1;
+        c.work.candidate_blocks += 1;
+        if (coverage == .partial) c.work.partial_blocks += 1;
         if (d == core.full and coverage == .partial) needed += 1;
     };
     try c.bytes.ensureTotalCapacityPrecise(g.allocator, try std.math.mul(usize, candidates, 140));
@@ -720,7 +747,7 @@ pub fn subtract(g: *core.Grid, s: Shape, c: *Changes, reference: bool) !void {
                 column.ready = true;
             }
             break :blk flat.?.maskWithXY(g.*, b, before, column.bits);
-        } else classifiedMask(g.*, b, s, reference, before, coverage);
+        } else classifiedMask(g.*, b, s, reference, before, coverage, &c.work);
         for (&after, m) |*w, v| w.* &= ~v;
         if (std.mem.eql(u64, &before, &after)) continue;
         const remaining = count(after);

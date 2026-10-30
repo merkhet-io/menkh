@@ -28,6 +28,22 @@ See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contract
 
 The default demo now uses 325 real cutting increments at 100 µm, rather than the eight-operation diagnostic fixture. Target coloring stays opt-in. The original multi-capability/collision example remains at `examples/general.json`.
 
+## Imported ball-end finishing workflow
+
+```sh
+python3 scripts/finishing-workflow.py --smoke
+python3 scripts/finishing-workflow.py
+```
+
+This experiment imports separate closed STL stock and target, runs 5,199 ball-end
+segments at 25 µm, compares remaining material with the target, checks checkpoint
+and compacted-checkpoint resumption, and saves native Metal inspection images.
+The smoke run keeps the same geometry/path at 250 µm. See the [frozen protocol](docs/FINISHING-PROTOCOL.md),
+[implementation and reproduction](docs/FINISHING-ARCHITECTURE.md), and
+[measured results and accuracy limits](docs/FINISHING-RESULTS.md). A
+[follow-up import optimization](docs/IMPORT-CACHE-RESULTS.md) completes the same
+25 µm job in 48.05 s median with 119.77 MB peak RSS on the M5 Max.
+
 ## CPU performance
 
 On an M5 Max, the 325-segment, 100 µm pocket demo takes **2.43 ms for cutting** and **50.72 ms for the full CLI run**. At 25 µm, cutting takes **60.65 ms** for stock with 221 million occupied voxels; the full run takes **117.08 ms with mesh export disabled**. The second optimization pass improves 25 µm cutting by another **1.55×** and CLI wall time by **2.57×** over the first pass. These are repeated ReleaseFast medians with identical material/history and height-image output. Rendering is excluded.

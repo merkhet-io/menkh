@@ -1,0 +1,8 @@
+{
+  "generator": "scripts/finishing-fixture.py",
+  "protocol": "v1",
+  "license": "original project code; repository license",
+  "triangulation_mm": 0.125,
+  "stock_allowance_mm": 0.8,
+  "max_vertex_coordinate_rounding_mm": 4.882812483231191e-07
+}

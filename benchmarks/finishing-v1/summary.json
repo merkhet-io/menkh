@@ -1,0 +1,25 @@
+{
+  "warmups": 1,
+  "repeats": 2,
+  "wall_seconds": {
+    "min": 51.850650499982294,
+    "median": 51.99250777099223,
+    "max": 52.13436504200217
+  },
+  "cut_seconds": {
+    "min": 19.283380502,
+    "median": 19.3633521515,
+    "max": 19.443323801
+  },
+  "peak_rss_bytes": 119767040,
+  "remaining_voxels": 146096939,
+  "target_comparison": {
+    "excess": 870680,
+    "missing": 2,
+    "common": 145226259,
+    "excess_mm3": 13.604375000000003,
+    "missing_mm3": 3.125000000000001e-05
+  },
+  "resume_exact": true,
+  "occupancy_sha256": "6971519449ef91e2fc0ca7dbbade173feeaa6393a2f2daa3f6914d869517eab7"
+}

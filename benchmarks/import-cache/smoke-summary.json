@@ -1,0 +1,25 @@
+{
+  "warmups": 1,
+  "repeats": 2,
+  "wall_seconds": {
+    "min": 1.8608052500057966,
+    "median": 1.8691982079908485,
+    "max": 1.8775911659759004
+  },
+  "cut_seconds": {
+    "min": 0.919361429,
+    "median": 0.920024586,
+    "max": 0.920687743
+  },
+  "peak_rss_bytes": 107298816,
+  "remaining_voxels": 146130,
+  "target_comparison": {
+    "excess": 920,
+    "missing": 0,
+    "common": 145210,
+    "excess_mm3": 14.375,
+    "missing_mm3": 0
+  },
+  "resume_exact": true,
+  "occupancy_sha256": "386b97f786bf0c6dd175f4a3a4b0a60b8dab2f60c3a7ef56056d1e85d210a2da"
+}

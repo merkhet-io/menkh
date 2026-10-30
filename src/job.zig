@@ -35,8 +35,8 @@ pub const Job = struct {
 fn read(a: std.mem.Allocator, path: []const u8) ![]u8 {
     return std.fs.cwd().readFileAlloc(a, path, 1024 * 1024 * 1024);
 }
-pub const InputTiming = struct { read_ns: u64 = 0, parse_bvh_ns: u64 = 0, voxelization_ns: u64 = 0, state_decode_ns: u64 = 0 };
-pub fn initialize(a: std.mem.Allocator, j: Job, s: Stock, timing: *InputTiming) !c.Grid {
+pub const InputTiming = struct { read_ns: u64 = 0, parse_bvh_ns: u64 = 0, voxelization_ns: u64 = 0, state_decode_ns: u64 = 0, parse_validate_ns: u64 = 0, bvh_ns: u64 = 0, intersection_validate_ns: u64 = 0, ray_cache_ns: u64 = 0, ray_cache_bytes: usize = 0, uniform_blocks: u64 = 0, point_queries: u64 = 0 };
+pub fn initialize(a: std.mem.Allocator, j: Job, s: Stock, timing: *InputTiming, reference: bool) !c.Grid {
     var timer = try std.time.Timer.start();
     const sources = @as(usize, @intFromBool(s.primitives.len > 0)) + @intFromBool(s.stl != null) + @intFromBool(s.state_file != null);
     if (sources != 1) return error.ChooseOneStockSource;
@@ -57,7 +57,14 @@ pub fn initialize(a: std.mem.Allocator, j: Job, s: Stock, timing: *InputTiming) 
         var mesh = try stl.Mesh.parse(a, bytes, source.unit_scale_mm, source.translation);
         defer mesh.deinit();
         timing.parse_bvh_ns += timer.lap();
-        const g = try mesh.voxelize(a, j.bounds, j.voxel_mm);
+        timing.parse_validate_ns += mesh.parse_validate_ns;
+        timing.bvh_ns += mesh.bvh_ns;
+        timing.intersection_validate_ns += mesh.intersection_validate_ns;
+        timing.ray_cache_ns += mesh.ray_cache_ns;
+        timing.ray_cache_bytes += mesh.rayCacheBytes();
+        const g = try mesh.voxelizeMode(a, j.bounds, j.voxel_mm, reference);
+        timing.uniform_blocks += mesh.uniform_blocks;
+        timing.point_queries += mesh.point_queries;
         timing.voxelization_ns += timer.lap();
         return g;
     }
@@ -104,7 +111,7 @@ pub fn validate(a: std.mem.Allocator, j: Job) !void {
     }
 }
 const Step = struct { file: []const u8, stage: []const u8, occupied: u64, changed_blocks: usize, delta_bytes: usize, tool: e.V, axis: e.V = .{ 0, 0, 1 }, shank: ?Noncutting = null, holder: ?Noncutting = null, cutter: ?e.Tool = null };
-const OpReport = struct { id: []const u8, removed_voxels: u64, engagement_volume_mm3: f64, remaining_voxels: u64, affected_region: ?e.Bounds, motion_over_removal_bound_mm: f64, cut_ns: u64, collision_ns: u64, history_write_ns: u64, shank_stock: inspect.Contact, holder_stock: inspect.Contact, shank_fixture: inspect.Contact, holder_fixture: inspect.Contact, cutter_fixture: inspect.Contact, geometric_feed_time_min: ?f64, average_removal_mm3_min: ?f64 };
+const OpReport = struct { work: e.Work, id: []const u8, removed_voxels: u64, engagement_volume_mm3: f64, remaining_voxels: u64, affected_region: ?e.Bounds, motion_over_removal_bound_mm: f64, cut_ns: u64, collision_ns: u64, history_write_ns: u64, shank_stock: inspect.Contact, holder_stock: inspect.Contact, shank_fixture: inspect.Contact, holder_fixture: inspect.Contact, cutter_fixture: inspect.Contact, geometric_feed_time_min: ?f64, average_removal_mm3_min: ?f64 };
 fn contact(g: c.Grid, line: Line, p: ?Noncutting) !inspect.Contact {
     const part = p orelse return .{};
     const shape = e.Shape{ .sweep = .{ .tool = .{ .radius = part.radius, .length = part.length }, .a = .{ .position = e.add(line.a.position, e.scale(line.a.axis, part.offset)), .axis = line.a.axis }, .b = .{ .position = e.add(line.b.position, e.scale(line.b.axis, part.offset)), .axis = line.b.axis } } };
@@ -116,25 +123,26 @@ pub fn json(a: std.mem.Allocator, dir: std.fs.Dir, name: []const u8, value: anyt
     try dir.writeFile(.{ .sub_path = name, .data = bytes });
 }
 pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: bool) !void {
+    var total = try std.time.Timer.start();
     const bytes = try read(a, path);
     defer a.free(bytes);
     const parsed = try std.json.parseFromSlice(Job, a, bytes, .{ .allocate = .alloc_always });
     defer parsed.deinit();
     const j = parsed.value;
     try validate(a, j);
-    var total = try std.time.Timer.start();
+    const job_parse_validate_ns = total.read();
     var timer = try std.time.Timer.start();
     var stock_input: InputTiming = .{};
     var auxiliary_input: InputTiming = .{};
-    var g = try initialize(a, j, j.stock, &stock_input);
+    var g = try initialize(a, j, j.stock, &stock_input, reference);
     defer g.deinit();
     const init_ns = timer.lap();
     var target: ?c.Grid = null;
     defer if (target) |*v| v.deinit();
-    if (j.target) |t| target = try initialize(a, j, t, &auxiliary_input);
+    if (j.target) |t| target = try initialize(a, j, t, &auxiliary_input, reference);
     var fixtures: ?c.Grid = null;
     defer if (fixtures) |*v| v.deinit();
-    if (j.fixtures) |f| fixtures = try initialize(a, j, f, &auxiliary_input);
+    if (j.fixtures) |f| fixtures = try initialize(a, j, f, &auxiliary_input, reference);
     const auxiliary_ns = timer.lap();
     try std.fs.cwd().makePath(out);
     var dir = try std.fs.cwd().openDir(out, .{});
@@ -231,7 +239,7 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
         const history_ns = timer.lap();
         history_bytes += changes.bytes.items.len;
         const volume = @as(f64, @floatFromInt(changes.removed)) * g.h * g.h * g.h;
-        reports[index] = .{ .id = op.id, .removed_voxels = changes.removed, .engagement_volume_mm3 = volume, .remaining_voxels = occupied, .affected_region = changes.affected, .motion_over_removal_bound_mm = bound, .cut_ns = cut_ns, .collision_ns = collision_ns, .history_write_ns = history_ns, .shank_stock = shank, .holder_stock = holder, .shank_fixture = sf, .holder_fixture = hf, .cutter_fixture = cf, .geometric_feed_time_min = minutes, .average_removal_mm3_min = if (minutes != null and minutes.? > 0) volume / minutes.? else null };
+        reports[index] = .{ .work = changes.work, .id = op.id, .removed_voxels = changes.removed, .engagement_volume_mm3 = volume, .remaining_voxels = occupied, .affected_region = changes.affected, .motion_over_removal_bound_mm = bound, .cut_ns = cut_ns, .collision_ns = collision_ns, .history_write_ns = history_ns, .shank_stock = shank, .holder_stock = holder, .shank_fixture = sf, .holder_fixture = hf, .cutter_fixture = cf, .geometric_feed_time_min = minutes, .average_removal_mm3_min = if (minutes != null and minutes.? > 0) volume / minutes.? else null };
         frames[index] = .{ .file = name, .stage = op.id, .occupied = occupied, .changed_blocks = changes.blocks, .delta_bytes = changes.bytes.items.len, .tool = toolpos, .axis = if (op.line) |l| l.b.axis else if (op.arc) |arc| arc.axis else .{ 0, 0, 1 }, .shank = if (op.tool) |t| j.tools[t].shank else null, .holder = if (op.tool) |t| j.tools[t].holder else null, .cutter = if (op.tool) |t| j.tools[t].cutter else null };
         std.debug.print("{s}: removed {d} voxels, {d:.3} ms\n", .{ op.id, changes.removed, @as(f64, @floatFromInt(cut_ns)) / 1e6 });
     }
@@ -289,10 +297,13 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
     const surface_analysis_ns = timer.lap();
     if (j.export_mesh) try surface.obj(g, mesh.items, dir);
     try surface.ppm(a, g, dir);
+    const image_export_ns = timer.lap();
     const encoded = try state.encode(a, g);
     defer a.free(encoded);
+    const checkpoint_encode_ns = timer.lap();
     try dir.writeFile(.{ .sub_path = "final.menkh", .data = encoded });
-    const export_ns = timer.lap();
+    const checkpoint_write_ns = timer.lap();
+    const export_ns = image_export_ns + checkpoint_encode_ns + checkpoint_write_ns;
     try json(a, dir, "voxel-animation.json", .{ .format = "menkh-voxel-history-v1", .grid = g.n, .block_grid = g.nb, .origin_mm = g.origin, .voxel_mm = g.h, .stock_min = j.bounds.lo, .stock_max = j.bounds.hi, .initial_occupied = initial, .final_occupied = occupied, .initial_pool_slots = initial_slots, .pool_slots = g.pool.items.len, .motion_tolerance_mm = j.motion_tolerance_mm, .frames = frames });
-    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn), .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
+    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
 }

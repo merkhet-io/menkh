@@ -459,3 +459,105 @@ test "vertical sweep specialization matches scalar masks and cap rounding" {
         }
     }
 }
+
+test "ball discrete convex search preserves exhaustive pose semantics" {
+    var random = std.Random.DefaultPrng.init(0x5199);
+    const r = random.random();
+    for (0..12000) |i| {
+        const radius = 0.2 + r.float(f64) * 2;
+        var sweep = e.Sweep{ .tool = .{ .kind = .ball, .radius = radius, .length = radius + r.float(f64) * 4 }, .a = .{ .position = .{ 0.013, -0.017, 0.009 } }, .b = .{ .position = .{ r.float(f64) * 6, r.float(f64) * 4, r.float(f64) * 4 } }, .tolerance_mm = 0.005 };
+        if (i % 5 == 0) sweep.b.position = sweep.a.position;
+        if (i % 5 == 1) sweep.b.position = e.add(sweep.a.position, .{ 0, 0, 3 });
+        if (i % 5 == 2) sweep.b.position = e.add(sweep.a.position, .{ 1e-8, 0, 0 });
+        if (i % 5 == 3) {
+            sweep.a.axis = .{ 0.6, 0, 0.8 };
+            sweep.b.axis = sweep.a.axis;
+        }
+        const p = e.V{ r.float(f64) * 10 - 2, r.float(f64) * 8 - 2, r.float(f64) * 10 - 2 };
+        const scalar = sweep.distance(p);
+        const fast = sweep.distanceFast(p);
+        try std.testing.expectApproxEqAbs(scalar, fast, 1e-11);
+        try std.testing.expectEqual(scalar <= @import("core.zig").tolerance, fast <= @import("core.zig").tolerance);
+        const reverse = e.Sweep{ .tool = sweep.tool, .a = sweep.b, .b = sweep.a, .tolerance_mm = sweep.tolerance_mm };
+        try std.testing.expectApproxEqAbs(fast, reverse.distanceFast(p), 1e-10);
+    }
+}
+
+test "mesh uniform block fill matches scalar including partial boundary blocks" {
+    const bytes = try cubeSTL(a);
+    defer a.free(bytes);
+    for ([_]e.V{ .{ 0, 0, 0 }, .{ 0.013, -0.017, 0.009 } }) |translation| {
+        var m = try mesh.Mesh.parse(a, bytes, 1, translation);
+        defer m.deinit();
+        const bounds = e.Bounds{ .lo = .{ -0.3, -0.3, -0.3 }, .hi = .{ 3.1, 3.1, 3.1 } };
+        var fast = try m.voxelizeMode(a, bounds, 0.1, false);
+        defer fast.deinit();
+        try std.testing.expect(m.uniform_blocks > 0);
+        var scalar = try m.voxelizeMode(a, bounds, 0.1, true);
+        defer scalar.deinit();
+        for (0..fast.blocks.len) |i| try std.testing.expectEqualSlices(u64, &scalar.bits(i), &fast.bits(i));
+    }
+}
+
+test "complete moving ball covers independently constructed hemisphere and flute points" {
+    for ([_]e.V{ .{ 0, 0, 0 }, .{ 0, 0, 3 }, .{ 3, 1, 2 }, .{ 1e-8, 0, 0 } }) |end| {
+        const s = e.Sweep{ .tool = .{ .kind = .ball, .radius = 1, .length = 4 }, .a = .{ .position = .{ 0, 0, 0 } }, .b = .{ .position = end }, .tolerance_mm = 0.005 };
+        for (0..101) |i| {
+            const t = @as(f64, @floatFromInt(i)) / 100;
+            const base = e.scale(end, t);
+            // Independent interior points of hemisphere, cylindrical flute and near tangency.
+            for ([_]e.V{ .{ 0.6, 0, 0.2 }, .{ 0.8, 0, 3.9 }, .{ 0, 0, 0 }, .{ 1, 0, 1 } }) |q| {
+                try std.testing.expect(s.distanceFast(e.add(base, q)) <= 1e-10);
+            }
+        }
+    }
+}
+
+test "ball split motion lattice and near tangent translated centers" {
+    const s = e.Sweep{ .tool = .{ .kind = .ball, .radius = 1, .length = 4 }, .a = .{ .position = .{ 10000.013, -9999.983, 0.009 } }, .b = .{ .position = .{ 10002.013, -9999.983, 0.009 } }, .tolerance_mm = 0.025 };
+    var left = s;
+    var right = s;
+    left.b.position = e.scale(e.add(s.a.position, s.b.position), 0.5);
+    right.a = left.b;
+    for (0..100) |i| for ([_]f64{ -1e-9, 0, 1e-9, 0.01 }) |delta| {
+        const p = e.add(s.a.position, .{ @as(f64, @floatFromInt(i)) / 50, 1 + s.errorBound() + delta, 2 });
+        const scalar = s.distance(p);
+        try std.testing.expectEqual(scalar <= 1e-10, s.distanceFast(p) <= 1e-10);
+        try std.testing.expectEqual(scalar <= 1e-10, @min(left.distanceFast(p), right.distanceFast(p)) <= 1e-10);
+    };
+    left.b.position = e.add(s.a.position, .{ 0.713, 0, 0 });
+    right.a = left.b;
+    // A non-lattice split changes the sampled approximation, not the continuous path.
+    // Both approximations contain that path and stay within the declared tolerance.
+    for (0..100) |i| {
+        const p = e.add(s.a.position, .{ @as(f64, @floatFromInt(i)) / 50, 1.01, 0.9 });
+        try std.testing.expect(@abs(s.distanceFast(p) - @min(left.distanceFast(p), right.distanceFast(p))) <= 2 * s.tolerance_mm + 1e-8);
+    }
+}
+
+test "cached STL rays match uncached parity at translated faces edges and random points" {
+    const bytes = try cubeSTL(a);
+    defer a.free(bytes);
+    var random = std.Random.DefaultPrng.init(0x5241594341434845);
+    const r = random.random();
+    for ([_]f64{ 0.001, 1, 100 }) |scale| {
+        for ([_]e.V{ .{ 0, 0, 0 }, .{ 0.013, -0.017, 0.009 }, .{ 10000.013, -9999.983, 0.009 } }) |origin| {
+            var m = try mesh.Mesh.parse(a, bytes, scale, origin);
+            defer m.deinit();
+            try std.testing.expect(m.rayCacheBytes() > 0);
+            for (0..2000) |_| {
+                const local = e.V{ (r.float(f64) * 4 - 1) * scale, (r.float(f64) * 4 - 1) * scale, (r.float(f64) * 4 - 1) * scale };
+                const p = e.add(origin, local);
+                const expected = local[0] >= 0 and local[0] <= 2 * scale and local[1] >= 0 and local[1] <= 2 * scale and local[2] >= 0 and local[2] <= 2 * scale;
+                try std.testing.expectEqual(try m.containsReference(p), try m.contains(p));
+                try std.testing.expectEqual(expected, try m.contains(p));
+            }
+            // Exact faces, edges and vertices, plus either side of the existing
+            // boundary tolerance: preserve both classification and error behavior.
+            for ([_]e.V{ .{ 0, 0, 0 }, .{ 2, 2, 2 }, .{ 1, 0, 0 }, .{ 1, 1, 0 }, .{ 1, 1, 2 }, .{ -1e-8, 1, 1 }, .{ 1e-8, 1, 1 } }) |local| {
+                const p = e.add(origin, e.scale(local, scale));
+                try std.testing.expectEqual(m.containsReference(p), m.contains(p));
+            }
+        }
+    }
+}
