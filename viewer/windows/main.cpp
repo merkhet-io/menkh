@@ -110,7 +110,7 @@ struct App {
         }
     }
     void draw() {
-        if (!dirty || IsIconic(window))
+        if (!renderer || !dirty || IsIconic(window))
             return;
         RECT r{};
         GetClientRect(viewport, &r);
@@ -167,6 +167,7 @@ LRESULT CALLBACK procedure(HWND w, UINT msg, WPARAM wp, LPARAM lp) {
             app->mouse(msg, wp, lp);
             return 0;
         case WM_CLOSE:
+            app->renderer.reset();
             DestroyWindow(w);
             return 0;
         case WM_DESTROY:
@@ -314,11 +315,11 @@ int wmain(int argc, wchar_t **argv) {
             SendMessageW(app.viewport, WM_KEYDOWN, 'R', 0);
             app.draw();
             std::cerr << "Window smoke: End and reset rendered\n";
+            app.renderer.reset();
+            std::cerr << "Window smoke: renderer released\n";
             DestroyWindow(app.window);
             std::cerr << "Window smoke: window destroyed\n";
             std::cout << "Window, swapchain, resize, slider and Home/End controls passed\n";
-            app.renderer.reset();
-            std::cerr << "Window smoke: renderer released\n";
             return 0;
         }
         MSG msg{};

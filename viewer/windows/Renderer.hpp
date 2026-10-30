@@ -306,6 +306,9 @@ class Renderer {
         hr(constants->Map(0, &noRead, reinterpret_cast<void **>(&constantData)), "Map constants");
     }
     ~Renderer() {
+        // DXGI may still own presentation work after the command fence completes.
+        // Release the swapchain while its HWND and device/queue are still alive.
+        swap.Reset();
         if (event)
             CloseHandle(event);
     }

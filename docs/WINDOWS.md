@@ -1,10 +1,35 @@
-# Windows CLI and benchmark
+# Windows engine and viewer
 
 The Zig engine, CLI, checkpoint inspection and CPU predicate benchmark have an
 experimental Windows x86-64 build. The Swift/Metal viewer remains macOS-only; a separate [D3D12 viewer](../viewer/windows/README.md) now reads the same voxel history on Windows.
 MSVC does not compile the Zig sources; no Visual Studio version or C++ toolset is
 required. This is not a C++ port or an MSVC SDK integration. Visual Studio can be
 used as an editor and to launch the PowerShell commands.
+
+## Native viewer
+
+The separate C++17 viewer uses D3D12 and reads the engine's voxel history.
+Build it with `viewer\windows\build.bat` or open
+`viewer/windows/menkh-viewer.vcxproj` in Visual Studio 2026 (v145, Release/x64).
+Start it with:
+
+```powershell
+.\out\windows-viewer\menkh-viewer.exe out/windows-pocket/voxel-animation.json
+```
+
+For playback without a compiler, download the `windows-d3d12-viewer` CI artifact,
+extract its `menkh-windows-viewer-demo.zip`, then run `open-demo.bat`.
+The demo ZIP is produced only after rendering and window smoke tests pass.
+See the [viewer instructions](../viewer/windows/README.md) for camera controls,
+scrubbing, Z sections, software rendering and limitations.
+
+![25 µm pocket rendered by the Windows D3D12 viewer](windows-viewer.png)
+
+This viewport image was rendered by D3D12 WARP on Windows and visually inspected.
+It demonstrates rendering, not hardware-GPU throughput. The stepped surface and
+face-normal shading display the voxel grid without changing material occupancy.
+
+## Zig CLI
 
 From a PowerShell terminal in the repository:
 
