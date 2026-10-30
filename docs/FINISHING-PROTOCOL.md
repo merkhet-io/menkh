@@ -16,7 +16,7 @@ procedurally generated on a 0.125 mm XY lattice. The target height is
 + 0.65 exp(-((y-8)/0.25)^2) mm. This produces two curved pockets and a narrow rib.
 Stock uses the same surface plus 0.8 mm: a pre-roughed small insert, not a billet
 roughing benchmark. Stock and target share neither occupancy nor surface height.
-Both are imported independently. The generator is original project code (repo license).
+Both are imported independently. The generator is original project code (no third-party geometry).
 
 Ball end mill: radius 1 mm, total cutting length 5 mm, fixed +Z orientation;
 hemisphere plus finite cylindrical flute. Shank radius 0.8, length 2, offset 5;
@@ -80,3 +80,9 @@ report violations, never silently reduce the frozen workload. No durable-I/O cla
 If a baseline times out, preserve its log and timeout record. Report full-case
 failure distinctly from smoke success. Any later protocol amendment is versioned
 and must not replace unfavorable results.
+
+## Validation additions (workload unchanged)
+
+The full imported case also receives a single 0.001 mm tolerance sensitivity run.
+This is an additional diagnostic, not substituted for the frozen 0.005 mm timing
+comparison. Original geometry, path density and unfavorable baseline results remain.

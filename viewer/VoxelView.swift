@@ -25,7 +25,7 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
     var targetBlocks:MTLBuffer?;var targetPool:MTLBuffer?
     var fixtureBlocks:MTLBuffer?;var fixturePool:MTLBuffer?
     var showFixtures=true;var showHolder=true;var showStock=true
-    var compareTarget=false;var sectionFraction:Float=1
+    var compareTarget=false;var sectionFraction:Float=1;var sectionAxis=2
     var picked:String=""
     var origin:SIMD3<Float> {let o=history.origin_mm ?? [0,0,0];return SIMD3(o[0],o[1],o[2])}
     var frame=0;var yaw:Float = -0.8;var elevation:Float = 0.27;var distance:Float = 72
@@ -120,13 +120,13 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         let h=history.voxel_mm
         let low=(SIMD3<Float>(history.stock_min[0],history.stock_min[1],history.stock_min[2])-origin)/h-SIMD3<Float>(repeating:1)
         var high=(SIMD3<Float>(history.stock_max[0],history.stock_max[1],history.stock_max[2])-origin)/h+SIMD3<Float>(repeating:1)
-        high.z=min(high.z,Float(history.grid[2])*sectionFraction)
+        high[sectionAxis]=min(high[sectionAxis],Float(history.grid[sectionAxis])*sectionFraction)
         var shank=SIMD4<Float>(repeating:0),shankAxis=SIMD4<Float>(0,0,1,0),holder=shank,holderAxis=shankAxis
         var cutter=SIMD4<Float>(repeating:0),cutterAxis=SIMD4<Float>(0,0,1,0)
         if showHolder,frame>0 {let step=history.frames[frame-1];let axis=step.axis ?? [0,0,1]
-            if axis.count==3,step.tool.count==3 {let u=SIMD3<Float>(axis[0],axis[1],axis[2]);let p=SIMD3<Float>(step.tool[0],step.tool[1],step.tool[2]);if let part=step.cutter,part.kind=="flat" {cutter=SIMD4((p-origin)/h,part.radius/h);cutterAxis=SIMD4(u,part.length/h)};if let part=step.shank {shank=SIMD4((p+u*part.offset-origin)/h,part.radius/h);shankAxis=SIMD4(u,part.length/h)};if let part=step.holder {holder=SIMD4((p+u*part.offset-origin)/h,part.radius/h);holderAxis=SIMD4(u,part.length/h)}}
+            if axis.count==3,step.tool.count==3 {let u=SIMD3<Float>(axis[0],axis[1],axis[2]);let p=SIMD3<Float>(step.tool[0],step.tool[1],step.tool[2]);if let part=step.cutter,(part.kind=="flat" || part.kind=="ball") {cutter=SIMD4((p-origin)/h,part.radius/h);cutterAxis=SIMD4(u,part.length/h)};if let part=step.shank {shank=SIMD4((p+u*part.offset-origin)/h,part.radius/h);shankAxis=SIMD4(u,part.length/h)};if let part=step.holder {holder=SIMD4((p+u*part.offset-origin)/h,part.radius/h);holderAxis=SIMD4(u,part.length/h)}}
         }
-        return VoxelUniforms(eye:SIMD4((eye-origin)/h,0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis)
+        return VoxelUniforms(eye:SIMD4((eye-origin)/h,frame>0 && history.frames[frame-1].cutter?.kind=="ball" ? 1:0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis)
     }
     func encode(_ texture:MTLTexture)->MTLCommandBuffer? {
         guard let command=queue.makeCommandBuffer(),let encoder=command.makeComputeCommandEncoder() else {return nil}
@@ -208,7 +208,8 @@ final class VoxelController:NSViewController {
         let fixtures=NSButton(checkboxWithTitle:"Fixtures",target:self,action:#selector(fixtures(_:)));fixtures.state = .on;fixtures.isEnabled=renderer.fixtureBlocks != nil
         let holder=NSButton(checkboxWithTitle:"Tool assembly",target:self,action:#selector(holder(_:)));holder.state = .on
         let buttons=NSStackView(views:[play,restart,reset,lighting,background]);buttons.spacing=12
-        let inspection=NSStackView(views:[stock,comparison,fixtures,holder,section]);inspection.spacing=12
+        let axes=NSPopUpButton();axes.addItems(withTitles:["Section X","Section Y","Section Z"]);axes.selectItem(at:renderer.sectionAxis);axes.target=self;axes.action=#selector(sectionAxis(_:))
+        let inspection=NSStackView(views:[stock,comparison,fixtures,holder,axes,section]);inspection.spacing=12
         let top=NSStackView(views:[title,help]);top.orientation = .vertical;top.alignment = .leading;top.spacing=8;top.translatesAutoresizingMaskIntoConstraints=false;view.addSubview(top)
         let bottom=NSStackView(views:[status,slider,buttons,inspection]);bottom.orientation = .vertical;bottom.alignment = .leading;bottom.spacing=10;bottom.translatesAutoresizingMaskIntoConstraints=false;view.addSubview(bottom)
         NSLayoutConstraint.activate([top.leadingAnchor.constraint(equalTo:view.leadingAnchor,constant:22),top.topAnchor.constraint(equalTo:view.topAnchor,constant:20),bottom.leadingAnchor.constraint(equalTo:view.leadingAnchor,constant:22),bottom.trailingAnchor.constraint(equalTo:view.trailingAnchor,constant:-22),bottom.bottomAnchor.constraint(equalTo:view.bottomAnchor,constant:-22),slider.widthAnchor.constraint(equalTo:bottom.widthAnchor)])
@@ -225,6 +226,7 @@ final class VoxelController:NSViewController {
     @objc func fixtures(_ sender:NSButton) {renderer.showFixtures=sender.state == .on}
     @objc func holder(_ sender:NSButton) {renderer.showHolder=sender.state == .on}
     @objc func compare(_ sender:NSButton) {renderer.compareTarget=sender.state == .on}
+    @objc func sectionAxis(_ sender:NSPopUpButton) {renderer.sectionAxis=sender.indexOfSelectedItem}
     @objc func section(_ sender:NSSlider) {renderer.sectionFraction=Float(sender.doubleValue)}
     @objc func lighting(_ b:NSButton) {renderer.smoothLighting=b.state == .on}
     @objc func background(_ b:NSButton) {renderer.darkBackground=b.state == .on}
@@ -232,18 +234,24 @@ final class VoxelController:NSViewController {
 }
 extension Delegate {
     func openVoxels(_ file:URL) throws {
-        let renderer=try VoxelRenderer(file);let args=CommandLine.arguments
+        let loadStart=CFAbsoluteTimeGetCurrent();let renderer=try VoxelRenderer(file);let loadSeconds=CFAbsoluteTimeGetCurrent()-loadStart;let seekStart=CFAbsoluteTimeGetCurrent();let args=CommandLine.arguments
         if let i=args.firstIndex(of:"--frame"),i+1<args.count,let frame=Int(args[i+1]) {try renderer.seek(frame)}
+        let seekSeconds=CFAbsoluteTimeGetCurrent()-seekStart
+        if let i=args.firstIndex(of:"--section-axis"),i+1<args.count,let axis=["x","y","z"].firstIndex(of:args[i+1]) {renderer.sectionAxis=axis}
+        if let i=args.firstIndex(of:"--yaw"),i+1<args.count,let value=Float(args[i+1]),value.isFinite {renderer.yaw=value}
+        if let i=args.firstIndex(of:"--elevation"),i+1<args.count,let value=Float(args[i+1]),value.isFinite {renderer.elevation=max(-1.5,min(1.5,value))}
+        if args.contains("--hide-tool") {renderer.showHolder=false}
         if args.contains("--smooth-lighting") {renderer.smoothLighting=true}
         if args.contains("--compare-target") {renderer.compareTarget=true}
         if let i=args.firstIndex(of:"--section"),i+1<args.count,let value=Float(args[i+1]),value>0,value<=1 {renderer.sectionFraction=value}
         if let i=args.firstIndex(of:"--distance"),i+1<args.count,let distance=Float(args[i+1]),distance.isFinite,distance>0 {renderer.distance=distance}
         if let i=args.firstIndex(of:"--target-z"),i+1<args.count,let z=Float(args[i+1]),z.isFinite {renderer.target.z=z}
+        if args.contains("--pick-center") {renderer.focus(x:0.5,y:0.5,aspect:1280/900);guard !renderer.picked.isEmpty else {throw MeshError.invalidOBJ("Center pick missed material")}}
         if let i=args.firstIndex(of:"--movie"),i+1<args.count {try renderer.movie(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
         if let i=args.firstIndex(of:"--verify-history"),i+1<args.count {try renderer.verifyHistory(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
         if let i=args.firstIndex(of:"--render-bench"),i+1<args.count {
             var samples=[Double]();for j in 0..<13 {_ = try renderer.image();if j>=3 {samples.append(renderer.lastGPUms)}};samples.sort()
-            let record:[String:Any] = ["grid":renderer.history.grid,"frame":renderer.frame,"width":1280,"height":900,"samples":10,"warmups":3,"gpu_ms_min":samples.first!,"gpu_ms_median":(samples[4]+samples[5])/2,"gpu_ms_max":samples.last!,"averaged_normals":renderer.smoothLighting,"samples_per_pixel":4,"target_comparison":renderer.compareTarget,"section_fraction":renderer.sectionFraction,"fixtures_visible":renderer.showFixtures,"holder_visible":renderer.showHolder,"note":"GPU command duration only, offscreen static view; not interactive FPS"]
+            let record:[String:Any] = ["load_upload_seconds":loadSeconds,"seek_seconds":seekSeconds,"section_axis":renderer.sectionAxis,"grid":renderer.history.grid,"frame":renderer.frame,"width":1280,"height":900,"samples":10,"warmups":3,"gpu_ms_min":samples.first!,"gpu_ms_median":(samples[4]+samples[5])/2,"gpu_ms_max":samples.last!,"averaged_normals":renderer.smoothLighting,"samples_per_pixel":4,"target_comparison":renderer.compareTarget,"section_fraction":renderer.sectionFraction,"fixtures_visible":renderer.showFixtures,"holder_visible":renderer.showHolder,"note":"GPU command duration only, offscreen static view; not interactive FPS"]
             try JSONSerialization.data(withJSONObject:record,options:[.prettyPrinted,.sortedKeys]).write(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return
         }
         if let i=args.firstIndex(of:"--snapshot"),i+1<args.count {
@@ -306,8 +314,10 @@ extension VoxelRenderer {
         return count
     }
     func verifyHistory(to url:URL) throws {
+        let started=CFAbsoluteTimeGetCurrent()
         try seek(0);let initial=occupiedCount();guard initial==history.initial_occupied else {throw MeshError.invalidOBJ("Initial count mismatch")}
         try seek(history.frames.count);let final=occupiedCount();guard final==history.final_occupied else {throw MeshError.invalidOBJ("Final count mismatch")}
+        let finalBlocks=Data(bytes:blocks.contents(),count:blocks.length);let finalPool=Data(bytes:pool.contents(),count:pool.length)
         // Compare the entire reconstructed initial descriptor array and original pool bytes.
         try seek(0)
         let source=try Data(contentsOf:root.appendingPathComponent("initial.blocks"),options:.mappedIfSafe)
@@ -316,7 +326,9 @@ extension VoxelRenderer {
         let samePool=bits.withUnsafeBytes {memcmp($0.baseAddress!,pool.contents(),bits.count)==0}
         guard same && samePool else {throw MeshError.invalidOBJ("Backward history differs")}
         try seek(history.frames.count);guard occupiedCount()==final else {throw MeshError.invalidOBJ("Replay differs")}
-        let record:[String:Any]=["grid":history.grid,"initial_occupied":initial,"final_occupied":final,"reverse_descriptors_byte_exact":same,"reverse_initial_pool_byte_exact":samePool,"forward_replay_validated":true]
+        let finalExact=finalBlocks.withUnsafeBytes {memcmp($0.baseAddress!,blocks.contents(),blocks.length)==0} && finalPool.withUnsafeBytes {memcmp($0.baseAddress!,pool.contents(),pool.length)==0}
+        guard finalExact else {throw MeshError.invalidOBJ("Final replay bytes differ")}
+        let record:[String:Any]=["replay_seconds":CFAbsoluteTimeGetCurrent()-started,"shared_buffer_bytes":blocks.length+pool.length+(targetBlocks?.length ?? 0)+(targetPool?.length ?? 0)+(fixtureBlocks?.length ?? 0)+(fixturePool?.length ?? 0),"final_replay_byte_exact":finalExact,"grid":history.grid,"initial_occupied":initial,"final_occupied":final,"reverse_descriptors_byte_exact":same,"reverse_initial_pool_byte_exact":samePool,"forward_replay_validated":true]
         try JSONSerialization.data(withJSONObject:record,options:[.prettyPrinted,.sortedKeys]).write(to:url)
         print("Full-size forward/backward/forward history verified")
     }

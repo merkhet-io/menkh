@@ -25,11 +25,17 @@ pub const Mesh = struct {
     triangles: []Tri,
     nodes: std.ArrayList(Node) = .empty,
     bounds: e.Bounds,
+    parse_validate_ns: u64 = 0,
+    bvh_ns: u64 = 0,
+    intersection_validate_ns: u64 = 0,
+    uniform_blocks: u64 = 0,
+    point_queries: u64 = 0,
     pub fn deinit(m: *Mesh) void {
         m.allocator.free(m.triangles);
         m.nodes.deinit(m.allocator);
     }
     pub fn parse(a: std.mem.Allocator, bytes: []const u8, scale_mm: f64, translation: e.V) !Mesh {
+        var timer = try std.time.Timer.start();
         if (bytes.len < 84 or !std.math.isFinite(scale_mm) or scale_mm <= 0 or scale_mm > 1e6) return error.InvalidSTL;
         try e.validV(translation);
         const n = std.mem.readInt(u32, bytes[80..84], .little);
@@ -81,8 +87,11 @@ pub const Mesh = struct {
         var m = Mesh{ .allocator = a, .triangles = ts, .bounds = bounds };
         errdefer m.nodes.deinit(a);
         try m.nodes.ensureTotalCapacityPrecise(a, try std.math.mul(usize, n, 2));
+        m.parse_validate_ns = timer.lap();
         _ = m.build(0, n);
+        m.bvh_ns = timer.lap();
         for (0..m.triangles.len) |index| try m.validateIntersections(index, 0);
+        m.intersection_validate_ns = timer.lap();
         return m;
     }
     fn overlap(a: e.Bounds, b: e.Bounds) bool {
@@ -245,7 +254,46 @@ pub const Mesh = struct {
         }
         return answer orelse error.AmbiguousMesh;
     }
-    pub fn voxelize(m: Mesh, a: std.mem.Allocator, b: e.Bounds, h: f64) !c.Grid {
+    // A triangle can intersect a center-box only if its AABB overlaps it.
+    // No overlap proves the entire connected box lies in one parity component,
+    // including cavities and disconnected shells. Overlap never implies inside.
+    fn surfaceOverlap(m: Mesh, id: usize, b: e.Bounds) bool {
+        const n = m.nodes.items[id];
+        if (!overlap(n.bounds, b)) return false;
+        if (n.len > 8) return m.surfaceOverlap(n.left, b) or m.surfaceOverlap(n.right, b);
+        for (m.triangles[n.start..][0..n.len]) |t| if (overlap(t.bounds, b)) return true;
+        return false;
+    }
+    fn fillRegion(m: *Mesh, g: c.Grid, block: [3]usize, lo: [3]usize, hi: [3]usize, bits: *c.Bits) !void {
+        var bb: e.Bounds = undefined;
+        var longest: usize = 0;
+        for (0..3) |j| {
+            bb.lo[j] = g.origin[j] + g.center(block[j] * 8 + lo[j]);
+            bb.hi[j] = g.origin[j] + g.center(block[j] * 8 + hi[j] - 1);
+            if (hi[j] - lo[j] > hi[longest] - lo[longest]) longest = j;
+        }
+        if (hi[longest] - lo[longest] == 1 or !m.surfaceOverlap(0, bb)) {
+            m.point_queries += 1;
+            if (try m.contains(e.scale(e.add(bb.lo, bb.hi), 0.5))) {
+                for (lo[2]..hi[2]) |z| for (lo[1]..hi[1]) |y| for (lo[0]..hi[0]) |x| {
+                    bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
+                };
+            }
+            return;
+        }
+        var left = hi;
+        var right = lo;
+        left[longest] = (lo[longest] + hi[longest]) / 2;
+        right[longest] = left[longest];
+        try m.fillRegion(g, block, lo, left, bits);
+        try m.fillRegion(g, block, right, hi, bits);
+    }
+    pub fn voxelize(m: *Mesh, a: std.mem.Allocator, b: e.Bounds, h: f64) !c.Grid {
+        return m.voxelizeMode(a, b, h, false);
+    }
+    pub fn voxelizeMode(m: *Mesh, a: std.mem.Allocator, b: e.Bounds, h: f64, reference: bool) !c.Grid {
+        m.uniform_blocks = 0;
+        m.point_queries = 0;
         try b.validate();
         var g = try c.Grid.init(a, e.sub(b.hi, b.lo), h);
         errdefer g.deinit();
@@ -260,10 +308,25 @@ pub const Mesh = struct {
                 outside = true;
             };
             if (outside) continue;
+            if (!reference and !m.surfaceOverlap(0, bb)) {
+                m.point_queries += 1;
+                m.uniform_blocks += 1;
+                if (try m.contains(e.scale(e.add(bb.lo, bb.hi), 0.5))) {
+                    const valid = g.validBits(block);
+                    if (e.count(valid) == 512) d.* = c.full else {
+                        try g.pool.append(a, valid);
+                        d.* = @intCast(g.pool.items.len - 1);
+                    }
+                }
+                continue;
+            }
             var bits: c.Bits = @splat(0);
             const ex = g.extent(block);
-            for (0..ex[2]) |z| for (0..ex[1]) |y| for (0..ex[0]) |x| {
+            if (!reference) {
+                try m.fillRegion(g, block, .{ 0, 0, 0 }, ex, &bits);
+            } else for (0..ex[2]) |z| for (0..ex[1]) |y| for (0..ex[0]) |x| {
                 const p = e.add(g.origin, .{ g.center(block[0] * 8 + x), g.center(block[1] * 8 + y), g.center(block[2] * 8 + z) });
+                m.point_queries += 1;
                 if (try m.contains(p)) bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
             };
             if (e.count(bits) == 0) continue;

@@ -51,6 +51,21 @@ Hit cylinderHit(float3 eye,float3 ray,float4 part,float4 axial) {
     if(a<1e-12f){if(c>0)return hit;}else {float disc=b*b-a*c;if(disc<0)return hit;float root=sqrt(disc);low=max(low,(-b-root)/a);high=min(high,(-b+root)/a);}
     if(low>high)return hit;hit.found=true;hit.t=low;float3 p=q+low*ray;float h=dot(p,axial.xyz);hit.normal=h<0.002f?-axial.xyz:(h>axial.w-0.002f?axial.xyz:normalize(p-h*axial.xyz));return hit;
 }
+// Complete ball cutter: lower hemisphere plus finite upper cylindrical flute.
+Hit ballHit(float3 eye,float3 ray,float4 part,float4 axial) {
+    float4 upper=part;upper.xyz+=axial.xyz*part.w;
+    float4 flute=axial;flute.w=max(0.0f,axial.w-part.w);
+    Hit hit=cylinderHit(eye,ray,upper,flute);
+    if(part.w<=0)return hit;
+    float3 q=eye-upper.xyz;float b=dot(q,ray),c=dot(q,q)-part.w*part.w;
+    float disc=b*b-c;if(disc<0)return hit;
+    float lo=max(0.0f,-b-sqrt(disc)),hi=-b+sqrt(disc);
+    float z=dot(q,axial.xyz),v=dot(ray,axial.xyz);
+    if(abs(v)<1e-10f){if(z>0)return hit;}
+    else if(v>0)hi=min(hi,-z/v);else lo=max(lo,-z/v);
+    if(lo<=hi && (!hit.found || lo<hit.t)){hit.found=true;hit.t=lo;float3 p=q+ray*lo;hit.normal=abs(dot(p,axial.xyz))<.001f?axial.xyz:normalize(p);}
+    return hit;
+}
 float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device const uint *pool,device const uint *targetBlocks,device const uint *targetPool,device const uint *fixtureBlocks,device const uint *fixturePool) {
     float2 uv=(pixel/u.settings.yz)*2-1;uv.y=-uv.y;uv.x*=u.settings.y/u.settings.z;
     float3 ray=normalize(u.forward.xyz+u.settings.w*(uv.x*u.right.xyz+uv.y*u.up.xyz));
@@ -62,7 +77,7 @@ float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device 
     bool fixture=false;
     if(u.blockDimensions.w!=0){Hit fh=trace(u.eye.xyz,ray,u,fixtureBlocks,fixturePool);if(fh.found && (!hit.found || fh.t<hit.t)){hit=fh;fixture=true;}}
     Hit sh=cylinderHit(u.eye.xyz,ray,u.shank,u.shankAxis),ho=cylinderHit(u.eye.xyz,ray,u.holder,u.holderAxis);
-    Hit cutter=cylinderHit(u.eye.xyz,ray,u.cutter,u.cutterAxis);
+    Hit cutter=u.eye.w!=0?ballHit(u.eye.xyz,ray,u.cutter,u.cutterAxis):cylinderHit(u.eye.xyz,ray,u.cutter,u.cutterAxis);
     Hit part=(sh.found && (!ho.found || sh.t<ho.t))?sh:ho;
     if(cutter.found && (!part.found || cutter.t<part.t))part=cutter;
     if(part.found && (!hit.found || part.t<hit.t))return float3(0.65,0.68,0.72)*(0.45+0.55*max(0.0f,dot(part.normal,normalize(float3(-0.4,-0.55,0.8)))));
