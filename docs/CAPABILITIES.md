@@ -39,3 +39,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Kinematics, controller, thermal/force simulation | Outside product boundary | No collision against moving machine components, G-code execution, feeds/speeds planning, or physical cutting forces |
 
 The three largest gaps toward an industrial cutting SDK are robust simultaneous orientation-changing sweeps and richer tool assemblies; certified large-mesh/topology and clearance analysis; and scalable mutable storage plus long-running interactive integration. The viewer is evidence of inspectability, not evidence of feature parity.
+
+## Formal verification
+
+Implemented and locally validated: 23 named Lean results, 50 Veil transition verification conditions, axiom audits, and 20,480 Lean/Zig differential records. Restricted to the explicit models and hypotheses in [FORMAL-VERIFICATION.md](FORMAL-VERIFICATION.md). Full Zig refinement, floating-point correctness and certified geometric clearance remain unsupported.

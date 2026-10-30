@@ -5,3 +5,6 @@ out/
 .DS_Store
 
 __pycache__/
+
+formal/.lake/
+formal/veil/.lake/

@@ -1,0 +1,14 @@
+name = "menkhTransitions"
+version = "0.1.0"
+defaultTargets = ["Cutting"]
+
+[leanOptions]
+warningAsError = true
+
+[[require]]
+name = "veil"
+git = "https://github.com/verse-lab/veil.git"
+rev = "eb458cb602d3cf9a19d8f5d8af21edcf27775c8e"
+
+[[lean_lib]]
+name = "Cutting"
