@@ -1,11 +1,11 @@
-# CPU performance: first optimization pass
+# CPU performance
 
 Measured on Apple M5 Max (18 logical CPUs), macOS 27.0.1, Zig 0.15.2,
 ReleaseFast. Material removal still uses **one CPU worker**. Geometry remains
 `f64` with continuous sweeps and the existing occupancy/tolerance semantics.
 No GPU cutting or discrete-pose substitution was introduced.
 
-## End-to-end pocket demo
+## First pass: end-to-end pocket demo
 
 The same 325-segment pocket job, stock, tool assembly and history/export settings
 were used before and after. Each repetition starts with fresh stock in a fresh
@@ -76,6 +76,63 @@ measured process peak RSS is about 9.93 MB. At 25 µm descriptors+pool capacity 
 9,011,968 bytes and peak RSS about 27.0 MB. Scratch is additional and reported as
 `cut_scratch_capacity_bytes` in job reports. It is proportional to the candidate
 block box, not the number of voxels, but can grow for large-world operations.
+
+## Second pass: vertical sweeps, shared XY work and height export
+
+The next pass uses the first-pass commit `dbf1e6f` as its baseline. Same host,
+compiler, single material worker, geometry and output settings as above. Five
+measured repetitions follow one warm-up at 100/25 µm; three at 250/50 µm.
+
+| Spacing | First-pass cutting | Second-pass cutting | First-pass CLI wall | Second-pass CLI wall |
+|---|---:|---:|---:|---:|
+| 250 µm | 1.05 ms | 0.49 ms | 27.19 ms | 26.08 ms |
+| 100 µm | 4.54 ms | 2.43 ms | 60.99 ms | 50.72 ms |
+| 50 µm | 18.20 ms | 10.77 ms | 192.98 ms | 148.58 ms |
+| 25 µm | 93.78 ms | 60.65 ms | 301.17 ms | 117.08 ms |
+
+At 25 µm this is another **1.55× in cutting and 2.57× in CLI wall time**.
+Cutting ranges are 92.75–100.30 ms before and 60.14–60.89 ms after; wall ranges
+are 278.18–319.47 ms and 115.76–117.65 ms. The export phase drops from
+153.08 to 4.52 ms median. As before, 25 µm disables OBJ generation in both
+versions; other rows include it. Rendering/video encoding remain excluded.
+
+Changes:
+
+- Pure vertical +Z flat-tool translations now reuse radial column tests. The
+  axial test preserves the scalar time-interval divisions and expression order,
+  including reversed and tiny moves. Ramps and tilted tools retain the general
+  path; a finite-cylinder sweep is still not replaced by a capsule.
+- Eligible horizontal/vertical operations cache XY classification and lazily
+  compute the 64-bit radial mask once per XY block column, reusing it across Z
+  blocks. Capacity is reserved before mutation; columns are reset each operation.
+- The PPM exporter scans blocks from above and resolves up to 64 XY columns
+  together with occupancy bit operations. It retains the exact previous pixel
+  values, including empty columns, partial blocks and cavities. No surface mesh
+  or smoothing is involved.
+
+The intermediate vertical/export-only variant measured 69.98 ms cutting and
+128.04 ms CLI wall at 25 µm; XY caching brings those to the final table values.
+Raw `pass2-*.json` files retain all samples and artifact hashes. Peak RSS is
+27,115,520 bytes at 25 µm versus 27,066,368 before. Classification plus XY cache
+capacity is 24,338 bytes versus 14,850 before; at 100 µm it is 1,424 versus 384.
+Grid descriptors/pool and history size are unchanged. XY cache memory scales
+with the operation's XY block rectangle, and remains allocated for reuse until
+`Changes.deinit`.
+
+All material/history files and PPMs match the baseline byte-for-byte at all four
+resolutions; OBJ files also match where enabled. Debug and ReleaseFast each pass
+41 test groups. The ten-scenario differential suite, resume/import/mesh checks,
+34 Lean model results, axiom audits, 20,480-record bridge and negative controls
+pass. The bridge now also exercises eligible pure vertical SIMD cases. Formal
+claims remain about the documented models, not universal floating-point behavior.
+
+Reproduce with the same commands below, using `dbf1e6f` for the second-pass
+baseline worktree. The first-pass microbenchmark figures below are historical measurements,
+separate from the end-to-end gains in this table. The second-pass rerun retained
+in `pass2-predicate-kernel.json` measures 9.77 billion stationary and 6.83 billion
+continuous-sweep tests/s with eight SIMD workers (1.219/0.836 billion/s with one).
+These rates remain broadly at the previous level; the main gains here come from
+avoiding repeated tests and export work, not higher per-test throughput.
 
 ## Predicate throughput, separately from machining
 

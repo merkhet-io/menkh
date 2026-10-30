@@ -35,7 +35,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Surface export | Implemented, validated | Greedy voxel-boundary OBJ quads, outward orientation, independently checked oriented volume and unit-edge closure; nonmanifold contacts reported |
 | Surface reconstruction / subvoxel truth | Unsupported | No Hermite samples, SDF material grid, resampling, or geometric smoothing. Normal averaging affects lighting only |
 | Sparse top level | Measured inspection prototype | Immutable two-level tile snapshot with occupancy queries; mutable engine remains dense, comparison includes sparse and full 4096³ scenes |
-| CPU SIMD cutting | Implemented, restricted | f64 XY masks for constant-Z +Z flat sweeps; scalar fallback and voxel-exact differential tests. [Measurements](CPU-PERFORMANCE.md) |
+| CPU SIMD cutting | Implemented, restricted | f64 XY masks shared across Z blocks for constant-Z or pure vertical +Z flat sweeps; scalar fallback and voxel-exact differential tests. [Measurements](CPU-PERFORMANCE.md) |
 | CPU workers / GPU cutting | Unsupported in material updates | One deterministic cutting worker; eight-worker read-only predicate benchmark is diagnostic only |
 | Kinematics, controller, thermal/force simulation | Outside product boundary | No collision against moving machine components, G-code execution, feeds/speeds planning, or physical cutting forces |
 

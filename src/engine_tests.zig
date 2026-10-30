@@ -359,7 +359,7 @@ test "fast Z masks and tight bounds agree with scalar across edges origins dilat
     for (0..70) |step| {
         const z = random.float(f64) * 5 - 1;
         const start = e.V{ random.float(f64) * 7 - 4, random.float(f64) * 6 - 1, z };
-        const end = if (step % 5 == 0) start else e.V{ random.float(f64) * 7 - 4, random.float(f64) * 6 - 1, z + (if (step % 4 == 0) random.float(f64) - 0.5 else @as(f64, 0)) };
+        const end = if (step % 10 == 0) e.V{ start[0], start[1], z + random.float(f64) * 3 - 1.5 } else if (step % 5 == 0) start else e.V{ random.float(f64) * 7 - 4, random.float(f64) * 6 - 1, z + (if (step % 4 == 0) random.float(f64) - 0.5 else @as(f64, 0)) };
         const shape = e.Shape{ .sweep = .{ .tool = .{ .radius = 0.05 + random.float(f64), .length = 0.03 + random.float(f64) * 4 }, .a = .{ .position = start }, .b = .{ .position = end }, .dilation_mm = if (step % 3 == 0) 0.13 else 0 } };
         // Mask oracle does no block classification or candidate clipping.
         for (0..fast.blocks.len) |i| {
@@ -416,7 +416,7 @@ test "SIMD prepared Z sweep matches scalar at tangencies axial caps and tiny mot
             for (0..8) |lane| try std.testing.expectEqual(sweep.flatContains(.{ points[0][lane], points[1][lane], points[2][lane] }, 0), got[lane]);
         }
     }
-    try std.testing.expect(e.FlatZ.init(.{ .tool = .{ .radius = 1, .length = 2 }, .a = .{ .position = .{ 0, 0, 0 } }, .b = .{ .position = .{ 0, 0, 1 } } }) == null);
+    try std.testing.expect(e.FlatZ.init(.{ .tool = .{ .radius = 1, .length = 2 }, .a = .{ .position = .{ 0, 0, 0 } }, .b = .{ .position = .{ 1, 0, 1 } } }) == null);
 }
 
 fn allocationFlat(alloc: std.mem.Allocator) !void {
@@ -432,4 +432,30 @@ fn allocationFlat(alloc: std.mem.Allocator) !void {
 }
 test "optimized flat sweep allocation failures leave material intact" {
     try std.testing.checkAllAllocationFailures(a, allocationFlat, .{});
+}
+
+test "vertical sweep specialization matches scalar masks and cap rounding" {
+    const bounds = e.Bounds{ .lo = .{ -1.13, -0.37, -2.29 }, .hi = .{ 3.12, 4.38, 4.21 } };
+    var g = try e.stock(a, bounds, 0.25, &.{.{ .box = bounds }});
+    defer g.deinit();
+    for ([_]f64{ -3.7, -1e-12, 1e-15, 0, 2.17 }) |dz| {
+        const sweep = e.Sweep{ .tool = .{ .radius = 0.7, .length = 2.3 }, .a = .{ .position = .{ 1.13, 0.37, 0.29 } }, .b = .{ .position = .{ 1.13, 0.37, 0.29 + dz } } };
+        const shape = e.Shape{ .sweep = sweep };
+        const kernel = e.FlatZ.init(sweep).?;
+        for (0..g.blocks.len) |i| {
+            const b = g.blockCoords(i);
+            try std.testing.expectEqualSlices(u64, &e.mask(g, b, shape, true, g.bits(i)), &e.mask(g, b, shape, false, g.bits(i)));
+        }
+        for ([_]f64{ -e.core.tolerance, 0, 2.3, 2.3 + e.core.tolerance, dz - e.core.tolerance, dz + 2.3 + e.core.tolerance }) |z| {
+            var points: [3]e.FlatZ.F = undefined;
+            for (0..8) |lane| {
+                const delta = (@as(f64, @floatFromInt(lane)) - 3.5) * 1e-15;
+                points[0][lane] = 1.13;
+                points[1][lane] = 0.37 + sweep.tool.radius + e.core.tolerance + delta;
+                points[2][lane] = 0.29 + z + delta;
+            }
+            const got = kernel.contains8(points);
+            for (0..8) |lane| try std.testing.expectEqual(sweep.flatContains(.{ points[0][lane], points[1][lane], points[2][lane] }, 0), got[lane]);
+        }
+    }
 }

@@ -72,15 +72,34 @@ pub fn ppm(a: std.mem.Allocator, g: core.Grid, dir: std.fs.Dir) !void {
     const pixels = try std.math.mul(usize, g.n[0], g.n[1]);
     const rgb = try a.alloc(u8, try std.math.mul(usize, pixels, 3));
     defer a.free(rgb);
-    for (0..g.n[1]) |y| for (0..g.n[0]) |x| {
-        var z = g.n[2];
-        while (z > 0 and !g.occupied(.{ x, y, z - 1 })) {
-            const b = [3]usize{ x / 8, y / 8, (z - 1) / 8 };
-            if (g.blocks[g.blockIndex(b)] == core.empty) z = b[2] * 8 else z -= 1;
+    @memset(rgb, 0);
+    // Resolve 64 XY columns together. Each block descriptor is visited once
+    // per column tile; each occupied layer resolves all its topmost bits.
+    for (0..g.nb[1]) |by| for (0..g.nb[0]) |bx| {
+        var unresolved = g.validBits(.{ bx, by, 0 })[0];
+        var bz = g.nb[2];
+        while (bz > 0 and unresolved != 0) {
+            bz -= 1;
+            const b = [3]usize{ bx, by, bz };
+            const index = g.blockIndex(b);
+            if (g.blocks[index] == core.empty) continue;
+            const bits = g.bits(index);
+            var z = g.extent(b)[2];
+            while (z > 0 and unresolved != 0) {
+                z -= 1;
+                var hits = bits[z] & unresolved;
+                unresolved &= ~hits;
+                const value: u8 = @intFromFloat(255 * @as(f64, @floatFromInt(bz * 8 + z + 1)) / @as(f64, @floatFromInt(g.n[2])));
+                while (hits != 0) {
+                    const bit = @ctz(hits);
+                    hits &= hits - 1;
+                    const x = bx * 8 + bit % 8;
+                    const y = by * 8 + bit / 8;
+                    const pixel = ((g.n[1] - 1 - y) * g.n[0] + x) * 3;
+                    @memset(rgb[pixel..][0..3], value);
+                }
+            }
         }
-        const value: u8 = @intFromFloat(255 * @as(f64, @floatFromInt(z)) / @as(f64, @floatFromInt(g.n[2])));
-        const index = ((g.n[1] - 1 - y) * g.n[0] + x) * 3;
-        @memset(rgb[index..][0..3], value);
     };
     var file = try dir.createFile("height.ppm", .{});
     defer file.close();
