@@ -96,3 +96,23 @@ tolerance, remaining occupancy and `connectivity: 6`. Each region contains
 and first Z/Y/X run. No regions are silently filtered. Job reports include
 `timing.defects_ns` separately from aggregate statistics. State and history binary
 formats are unchanged. See [inspection semantics](DEFECT-INSPECTOR.md).
+
+## CLI voxel override
+
+`menkh job JOB.json --voxel MM` overrides `voxel_mm` before stock/target/fixture
+initialization and validation. Geometry and motion tolerance are unchanged.
+Reports include `input_voxel_mm`, nullable `voxel_override_mm`, and the effective
+`voxel_mm`. Saved-state sources must match the effective spacing; no resampling
+is performed. Invalid/nonfinite/nonpositive values fail.
+
+`inspect-defects JOB STATE OUT_DIR` uses the spacing in `JOB` and has no voxel
+override option. To reinspect a state generated with `job --voxel`, supply a job
+copy whose `voxel_mm` matches that effective spacing; the original job JSON is
+unchanged.
+
+Default drill mesh manifests now include `voxel_history: "voxel-animation.json"`.
+The sibling records the exact same cuts as reversible block deltas. Windows
+accepts this explicit single-filename reference and validates spacing, initial/
+final counts and frame counts. Absolute/traversal paths and nested redirects are
+rejected. Mesh-only historical manifests must be regenerated; existing macOS
+mesh playback is unchanged.

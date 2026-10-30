@@ -93,6 +93,21 @@ class History {
         root = path.parent_path();
         const auto text = read(path, 64 << 20);
         auto j = Json::parse(text);
+        if (j.at("format") == "menkh-quads-v1") {
+            require(j.contains("voxel_history"),
+                    "Legacy drill mesh animation has no voxel history. Regenerate with a current menkh drill, or use drill --grid 256 and open voxel-animation.json.");
+            const auto name = j.at("voxel_history").get<std::string>();
+            require(!name.empty() && name != "." && name != ".." &&
+                        name.find_first_of("/\\:") == std::string::npos,
+                    "Invalid voxel history filename");
+            const auto legacy = std::move(j);
+            j = Json::parse(read(root / fs::u8path(name), 64 << 20));
+            require(j.at("voxel_mm") == legacy.at("voxel_mm") &&
+                        legacy.at("frames").size() == j.at("frames").size() + 1 &&
+                        legacy.at("frames").front().at("occupied") == j.at("initial_occupied") &&
+                        legacy.at("frames").back().at("occupied") == j.at("final_occupied"),
+                    "Drill mesh and voxel history disagree");
+        }
         require(j.at("format") == "menkh-voxel-history-v1", "Unsupported history format");
         require(j.at("grid").size() == 3 && j.at("block_grid").size() == 3, "Invalid dimensions");
         size_t count = 1;

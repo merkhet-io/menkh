@@ -13,7 +13,7 @@ Start the native demonstration:
 Run without the viewer:
 
 ```sh
-./zig build job -Doptimize=ReleaseFast -- examples/general.json --out out/general
+./zig build job -Doptimize=ReleaseFast -- examples/general.json --voxel 0.1 --out out/general
 ./zig build test --summary all
 ./zig build test -Doptimize=ReleaseFast --summary all
 python3 scripts/validate-engine.py
@@ -216,3 +216,11 @@ using repository-local Zig 0.15.2, not MSVC. A separate [Windows D3D12 viewer](v
 `menkh inspect-state FILE` reports boundary voxels separately from material volume.
 The 25 µm pocket video ends with **2,819,284 surface voxels**, versus 170,711,351
 occupied volume voxels. See [definitions, raw counts and comparison limits](docs/INSPECTION-COUNTS.md).
+
+Jobs accept `--voxel MM` to override the JSON spacing for that run. Stock, target
+and fixtures all use the override; saved states must already have that spacing
+(`GridMismatch` otherwise). The input JSON is never rewritten.
+
+The default `drill` command also emits `voxel-animation.json`. Its `animation.json`
+continues to open the mesh animation on macOS and now routes the Windows viewer
+to the matching voxel history. Regenerate older mesh-only outputs once.

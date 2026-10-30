@@ -30,6 +30,8 @@ jobs:
           ./zig build -Doptimize=ReleaseFast
           ./zig build test --summary all
           ./zig build test -Doptimize=ReleaseFast --summary all
+      - name: Job CLI voxel overrides
+        run: python3 scripts/test-job-options.py
       - name: Geometry proofs, axiom audit, and Zig differential tests
         run: ./scripts/verify-formal.sh
       - name: Imported finishing mesh oracles
@@ -79,6 +81,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Viewer batch build failed' }
           cmd /c "viewer\windows\build.bat --project" 2>&1 | Tee-Object out/windows-viewer-project.log
           if ($LASTEXITCODE -ne 0) { throw 'Viewer project build failed' }
+      - name: Default drill animation opens in Windows viewer
+        shell: pwsh
+        run: |
+          ./zig-out/bin/menkh.exe drill --out out/windows-drill
+          if ($LASTEXITCODE -ne 0) { throw 'Drill generation failed' }
+          python scripts/test-drill-viewer.py --exe out/windows-viewer/menkh-viewer.exe --history out/windows-drill/animation.json --viewer
+          if ($LASTEXITCODE -ne 0) { throw 'Drill compatibility failed' }
+          ./out/windows-viewer/menkh-viewer.exe out/windows-drill/animation.json --warp --debug --smoke out/windows-drill-render
+          if ($LASTEXITCODE -ne 0) { throw 'Drill rendering failed' }
       - name: Reject malformed viewer histories
         shell: pwsh
         run: python scripts/test-viewer-history.py --exe out/windows-viewer/menkh-viewer.exe --history out/windows-pocket/voxel-animation.json --viewer
