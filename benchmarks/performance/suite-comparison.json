@@ -1,0 +1,2130 @@
+{
+  "baseline": {
+    "summary": {
+      "groove": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.195791,
+            "median": 0.1965,
+            "max": 0.197167
+          },
+          "total_ms": {
+            "min": 1.078958,
+            "median": 1.171584,
+            "max": 1.207917
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2506752,
+          "history_bytes": 1216
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.067792,
+            "median": 0.068875,
+            "max": 0.074791
+          },
+          "total_ms": {
+            "min": 1.001333,
+            "median": 1.004583,
+            "max": 1.517084
+          },
+          "grid_bytes": 1280,
+          "peak_rss_bytes": 2506752,
+          "history_bytes": 1216
+        }
+      },
+      "ball-finishing": {
+        "scalar": {
+          "cut_ms": {
+            "min": 59.717959,
+            "median": 60.054333,
+            "max": 61.105543
+          },
+          "total_ms": {
+            "min": 61.9455,
+            "median": 62.487958,
+            "max": 63.430958
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2621440,
+          "history_bytes": 6680
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 15.708876,
+            "median": 15.76825,
+            "max": 15.82496
+          },
+          "total_ms": {
+            "min": 17.411333,
+            "median": 17.611959,
+            "max": 17.681542
+          },
+          "grid_bytes": 2304,
+          "peak_rss_bytes": 2621440,
+          "history_bytes": 6680
+        }
+      },
+      "deep-thin-wall": {
+        "scalar": {
+          "cut_ms": {
+            "min": 1.101541,
+            "median": 1.108125,
+            "max": 1.140085
+          },
+          "total_ms": {
+            "min": 2.59425,
+            "median": 2.637667,
+            "max": 2.800125
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2605056,
+          "history_bytes": 17536
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.672582,
+            "median": 0.672666,
+            "max": 0.694541
+          },
+          "total_ms": {
+            "min": 2.133042,
+            "median": 2.214875,
+            "max": 2.343583
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2605056,
+          "history_bytes": 17536
+        }
+      },
+      "tilted": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.263625,
+            "median": 0.264459,
+            "max": 0.28175
+          },
+          "total_ms": {
+            "min": 3.254834,
+            "median": 3.323958,
+            "max": 3.397
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2621440,
+          "history_bytes": 2660
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.182708,
+            "median": 0.184,
+            "max": 0.185208
+          },
+          "total_ms": {
+            "min": 3.079666,
+            "median": 3.110084,
+            "max": 3.323916
+          },
+          "grid_bytes": 2816,
+          "peak_rss_bytes": 2621440,
+          "history_bytes": 2660
+        }
+      },
+      "long-overlap": {
+        "scalar": {
+          "cut_ms": {
+            "min": 33.921125,
+            "median": 33.985374,
+            "max": 33.988089
+          },
+          "total_ms": {
+            "min": 39.518625,
+            "median": 39.910417,
+            "max": 40.024417
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 6455296,
+          "history_bytes": 1216
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 7.528407,
+            "median": 7.548571,
+            "max": 7.619123
+          },
+          "total_ms": {
+            "min": 13.048792,
+            "median": 13.220542,
+            "max": 13.267208
+          },
+          "grid_bytes": 1280,
+          "peak_rss_bytes": 6455296,
+          "history_bytes": 1216
+        }
+      },
+      "sparse-world": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.013375,
+            "median": 0.013875,
+            "max": 0.014584
+          },
+          "total_ms": {
+            "min": 1.963459,
+            "median": 2.013042,
+            "max": 2.039459
+          },
+          "grid_bytes": 32576,
+          "peak_rss_bytes": 2605056,
+          "history_bytes": 560
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.01275,
+            "median": 0.014333,
+            "max": 0.015292
+          },
+          "total_ms": {
+            "min": 1.749625,
+            "median": 2.018291,
+            "max": 2.110291
+          },
+          "grid_bytes": 32576,
+          "peak_rss_bytes": 2605056,
+          "history_bytes": 560
+        }
+      },
+      "imported-cavity": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.0,
+            "median": 0.0,
+            "max": 0.0
+          },
+          "total_ms": {
+            "min": 2.324916,
+            "median": 2.360708,
+            "max": 2.460625
+          },
+          "grid_bytes": 832,
+          "peak_rss_bytes": 2457600,
+          "history_bytes": 0
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.0,
+            "median": 0.0,
+            "max": 0.0
+          },
+          "total_ms": {
+            "min": 2.316916,
+            "median": 2.368041,
+            "max": 2.404291
+          },
+          "grid_bytes": 832,
+          "peak_rss_bytes": 2457600,
+          "history_bytes": 0
+        }
+      },
+      "imported-concave-rotated": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.0,
+            "median": 0.0,
+            "max": 0.0
+          },
+          "total_ms": {
+            "min": 1.47575,
+            "median": 1.527625,
+            "max": 1.627834
+          },
+          "grid_bytes": 832,
+          "peak_rss_bytes": 2441216,
+          "history_bytes": 0
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.0,
+            "median": 0.0,
+            "max": 0.0
+          },
+          "total_ms": {
+            "min": 1.43525,
+            "median": 1.478417,
+            "max": 1.517917
+          },
+          "grid_bytes": 832,
+          "peak_rss_bytes": 2441216,
+          "history_bytes": 0
+        }
+      },
+      "turning-envelope": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.172625,
+            "median": 0.173499,
+            "max": 0.1745
+          },
+          "total_ms": {
+            "min": 1.233125,
+            "median": 1.271125,
+            "max": 1.353417
+          },
+          "grid_bytes": 3328,
+          "peak_rss_bytes": 2539520,
+          "history_bytes": 4416
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.154458,
+            "median": 0.155125,
+            "max": 0.156291
+          },
+          "total_ms": {
+            "min": 1.132541,
+            "median": 1.2195,
+            "max": 1.2995
+          },
+          "grid_bytes": 3328,
+          "peak_rss_bytes": 2539520,
+          "history_bytes": 4416
+        }
+      },
+      "helix": {
+        "scalar": {
+          "cut_ms": {
+            "min": 54.037709,
+            "median": 54.171,
+            "max": 54.24
+          },
+          "total_ms": {
+            "min": 55.695083,
+            "median": 55.846125,
+            "max": 55.867625
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2539520,
+          "history_bytes": 2736
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 28.418708,
+            "median": 28.487542,
+            "max": 28.597625
+          },
+          "total_ms": {
+            "min": 30.037458,
+            "median": 30.19775,
+            "max": 30.204
+          },
+          "grid_bytes": 2560,
+          "peak_rss_bytes": 2539520,
+          "history_bytes": 2736
+        }
+      }
+    },
+    "accuracy": [
+      {
+        "voxel_mm": 0.25,
+        "occupied": 782,
+        "volume_mm3": 12.218749999999996,
+        "analytic_mm3": 12.248889638367794,
+        "error_mm3": -0.030139638367797872,
+        "max_sampled_vertex_deviation_mm": 0.20642903909702115,
+        "occupancy_boundary_cell_diagonal_bound_mm": 0.21650635094610965
+      },
+      {
+        "voxel_mm": 0.1,
+        "occupied": 12246,
+        "volume_mm3": 12.24599999999997,
+        "analytic_mm3": 12.248889638367794,
+        "error_mm3": -0.0028896383678240767,
+        "max_sampled_vertex_deviation_mm": 0.08467476051328027,
+        "occupancy_boundary_cell_diagonal_bound_mm": 0.08660254037844387
+      },
+      {
+        "voxel_mm": 0.05,
+        "occupied": 98007,
+        "volume_mm3": 12.250875000000061,
+        "analytic_mm3": 12.248889638367794,
+        "error_mm3": 0.0019853616322667023,
+        "max_sampled_vertex_deviation_mm": 0.04305804366291022,
+        "occupancy_boundary_cell_diagonal_bound_mm": 0.04330127018922193
+      },
+      {
+        "voxel_mm": 0.025,
+        "occupied": 784047,
+        "volume_mm3": 12.250734374999928,
+        "analytic_mm3": 12.248889638367794,
+        "error_mm3": 0.0018447366321332481,
+        "max_sampled_vertex_deviation_mm": 0.0216025626871843,
+        "occupancy_boundary_cell_diagonal_bound_mm": 0.021650635094610966
+      }
+    ],
+    "raw": {
+      "groove": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 211250,
+            "collision_ns": 750,
+            "total_ns": 1284834,
+            "remaining": 29936,
+            "peak_rss_bytes": 2490368
+          },
+          {
+            "warmup": false,
+            "cut_ns": 195791,
+            "collision_ns": 459,
+            "total_ns": 1207917,
+            "remaining": 29936,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 197167,
+            "collision_ns": 666,
+            "total_ns": 1171584,
+            "remaining": 29936,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 196500,
+            "collision_ns": 792,
+            "total_ns": 1078958,
+            "remaining": 29936,
+            "peak_rss_bytes": 2506752
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 68084,
+            "collision_ns": 416,
+            "total_ns": 1058208,
+            "remaining": 29936,
+            "peak_rss_bytes": 2490368
+          },
+          {
+            "warmup": false,
+            "cut_ns": 67792,
+            "collision_ns": 1041,
+            "total_ns": 1001333,
+            "remaining": 29936,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 74791,
+            "collision_ns": 709,
+            "total_ns": 1517084,
+            "remaining": 29936,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 68875,
+            "collision_ns": 667,
+            "total_ns": 1004583,
+            "remaining": 29936,
+            "peak_rss_bytes": 2506752
+          }
+        ]
+      },
+      "ball-finishing": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 64387668,
+            "collision_ns": 2416,
+            "total_ns": 67259500,
+            "remaining": 21778,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 59717959,
+            "collision_ns": 2624,
+            "total_ns": 61945500,
+            "remaining": 21778,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 60054333,
+            "collision_ns": 2167,
+            "total_ns": 62487958,
+            "remaining": 21778,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 61105543,
+            "collision_ns": 1958,
+            "total_ns": 63430958,
+            "remaining": 21778,
+            "peak_rss_bytes": 2621440
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 15750456,
+            "collision_ns": 1543,
+            "total_ns": 17794709,
+            "remaining": 21778,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 15824960,
+            "collision_ns": 1415,
+            "total_ns": 17611959,
+            "remaining": 21778,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 15768250,
+            "collision_ns": 1293,
+            "total_ns": 17681542,
+            "remaining": 21778,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 15708876,
+            "collision_ns": 1040,
+            "total_ns": 17411333,
+            "remaining": 21778,
+            "peak_rss_bytes": 2621440
+          }
+        ]
+      },
+      "deep-thin-wall": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 1098917,
+            "collision_ns": 1041,
+            "total_ns": 2905291,
+            "remaining": 10872,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 1101541,
+            "collision_ns": 1126,
+            "total_ns": 2637667,
+            "remaining": 10872,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 1108125,
+            "collision_ns": 916,
+            "total_ns": 2594250,
+            "remaining": 10872,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 1140085,
+            "collision_ns": 1250,
+            "total_ns": 2800125,
+            "remaining": 10872,
+            "peak_rss_bytes": 2605056
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 698500,
+            "collision_ns": 9459,
+            "total_ns": 2462000,
+            "remaining": 10872,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 672582,
+            "collision_ns": 1041,
+            "total_ns": 2343583,
+            "remaining": 10872,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 672666,
+            "collision_ns": 960,
+            "total_ns": 2133042,
+            "remaining": 10872,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 694541,
+            "collision_ns": 709,
+            "total_ns": 2214875,
+            "remaining": 10872,
+            "peak_rss_bytes": 2605056
+          }
+        ]
+      },
+      "tilted": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 266458,
+            "collision_ns": 584,
+            "total_ns": 3285792,
+            "remaining": 27564,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 263625,
+            "collision_ns": 625,
+            "total_ns": 3254834,
+            "remaining": 27564,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 281750,
+            "collision_ns": 667,
+            "total_ns": 3397000,
+            "remaining": 27564,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 264459,
+            "collision_ns": 750,
+            "total_ns": 3323958,
+            "remaining": 27564,
+            "peak_rss_bytes": 2621440
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 186750,
+            "collision_ns": 542,
+            "total_ns": 3376666,
+            "remaining": 27564,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 184000,
+            "collision_ns": 625,
+            "total_ns": 3079666,
+            "remaining": 27564,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 185208,
+            "collision_ns": 833,
+            "total_ns": 3110084,
+            "remaining": 27564,
+            "peak_rss_bytes": 2621440
+          },
+          {
+            "warmup": false,
+            "cut_ns": 182708,
+            "collision_ns": 667,
+            "total_ns": 3323916,
+            "remaining": 27564,
+            "peak_rss_bytes": 2621440
+          }
+        ]
+      },
+      "long-overlap": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 33762294,
+            "collision_ns": 12534,
+            "total_ns": 43451958,
+            "remaining": 29936,
+            "peak_rss_bytes": 6438912
+          },
+          {
+            "warmup": false,
+            "cut_ns": 33988089,
+            "collision_ns": 12078,
+            "total_ns": 40024417,
+            "remaining": 29936,
+            "peak_rss_bytes": 6455296
+          },
+          {
+            "warmup": false,
+            "cut_ns": 33985374,
+            "collision_ns": 13046,
+            "total_ns": 39910417,
+            "remaining": 29936,
+            "peak_rss_bytes": 6455296
+          },
+          {
+            "warmup": false,
+            "cut_ns": 33921125,
+            "collision_ns": 14087,
+            "total_ns": 39518625,
+            "remaining": 29936,
+            "peak_rss_bytes": 6455296
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 7615921,
+            "collision_ns": 12573,
+            "total_ns": 16577834,
+            "remaining": 29936,
+            "peak_rss_bytes": 6455296
+          },
+          {
+            "warmup": false,
+            "cut_ns": 7528407,
+            "collision_ns": 12715,
+            "total_ns": 13220542,
+            "remaining": 29936,
+            "peak_rss_bytes": 6455296
+          },
+          {
+            "warmup": false,
+            "cut_ns": 7548571,
+            "collision_ns": 11677,
+            "total_ns": 13048792,
+            "remaining": 29936,
+            "peak_rss_bytes": 6455296
+          },
+          {
+            "warmup": false,
+            "cut_ns": 7619123,
+            "collision_ns": 13254,
+            "total_ns": 13267208,
+            "remaining": 29936,
+            "peak_rss_bytes": 6455296
+          }
+        ]
+      },
+      "sparse-world": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 13792,
+            "collision_ns": 792,
+            "total_ns": 2146750,
+            "remaining": 681,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 14584,
+            "collision_ns": 625,
+            "total_ns": 1963459,
+            "remaining": 681,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 13375,
+            "collision_ns": 625,
+            "total_ns": 2013042,
+            "remaining": 681,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 13875,
+            "collision_ns": 417,
+            "total_ns": 2039459,
+            "remaining": 681,
+            "peak_rss_bytes": 2605056
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 14833,
+            "collision_ns": 500,
+            "total_ns": 2089625,
+            "remaining": 681,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 12750,
+            "collision_ns": 584,
+            "total_ns": 2018291,
+            "remaining": 681,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 15292,
+            "collision_ns": 375,
+            "total_ns": 2110291,
+            "remaining": 681,
+            "peak_rss_bytes": 2605056
+          },
+          {
+            "warmup": false,
+            "cut_ns": 14333,
+            "collision_ns": 500,
+            "total_ns": 1749625,
+            "remaining": 681,
+            "peak_rss_bytes": 2588672
+          }
+        ]
+      },
+      "imported-cavity": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2470625,
+            "remaining": 1664,
+            "peak_rss_bytes": 2457600
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2360708,
+            "remaining": 1664,
+            "peak_rss_bytes": 2457600
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2460625,
+            "remaining": 1664,
+            "peak_rss_bytes": 2457600
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2324916,
+            "remaining": 1664,
+            "peak_rss_bytes": 2457600
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2521292,
+            "remaining": 1664,
+            "peak_rss_bytes": 2457600
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2316916,
+            "remaining": 1664,
+            "peak_rss_bytes": 2457600
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2404291,
+            "remaining": 1664,
+            "peak_rss_bytes": 2457600
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2368041,
+            "remaining": 1664,
+            "peak_rss_bytes": 2457600
+          }
+        ]
+      },
+      "imported-concave-rotated": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1734292,
+            "remaining": 640,
+            "peak_rss_bytes": 2441216
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1627834,
+            "remaining": 640,
+            "peak_rss_bytes": 2441216
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1527625,
+            "remaining": 640,
+            "peak_rss_bytes": 2441216
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1475750,
+            "remaining": 640,
+            "peak_rss_bytes": 2441216
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1581625,
+            "remaining": 640,
+            "peak_rss_bytes": 2441216
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1517917,
+            "remaining": 640,
+            "peak_rss_bytes": 2441216
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1478417,
+            "remaining": 640,
+            "peak_rss_bytes": 2441216
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1435250,
+            "remaining": 640,
+            "peak_rss_bytes": 2441216
+          }
+        ]
+      },
+      "turning-envelope": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 169833,
+            "collision_ns": 209,
+            "total_ns": 1378917,
+            "remaining": 7744,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 174500,
+            "collision_ns": 375,
+            "total_ns": 1271125,
+            "remaining": 7744,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 173499,
+            "collision_ns": 500,
+            "total_ns": 1353417,
+            "remaining": 7744,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 172625,
+            "collision_ns": 292,
+            "total_ns": 1233125,
+            "remaining": 7744,
+            "peak_rss_bytes": 2539520
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 154167,
+            "collision_ns": 250,
+            "total_ns": 1280292,
+            "remaining": 7744,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 154458,
+            "collision_ns": 334,
+            "total_ns": 1219500,
+            "remaining": 7744,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 155125,
+            "collision_ns": 209,
+            "total_ns": 1299500,
+            "remaining": 7744,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 156291,
+            "collision_ns": 250,
+            "total_ns": 1132541,
+            "remaining": 7744,
+            "peak_rss_bytes": 2539520
+          }
+        ]
+      },
+      "helix": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 53765417,
+            "collision_ns": 2583,
+            "total_ns": 55495375,
+            "remaining": 28455,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 54037709,
+            "collision_ns": 2500,
+            "total_ns": 55695083,
+            "remaining": 28455,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 54171000,
+            "collision_ns": 2291,
+            "total_ns": 55867625,
+            "remaining": 28455,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 54240000,
+            "collision_ns": 2375,
+            "total_ns": 55846125,
+            "remaining": 28455,
+            "peak_rss_bytes": 2539520
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 28428250,
+            "collision_ns": 2375,
+            "total_ns": 30133125,
+            "remaining": 28455,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 28597625,
+            "collision_ns": 3500,
+            "total_ns": 30204000,
+            "remaining": 28455,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 28418708,
+            "collision_ns": 2458,
+            "total_ns": 30037458,
+            "remaining": 28455,
+            "peak_rss_bytes": 2539520
+          },
+          {
+            "warmup": false,
+            "cut_ns": 28487542,
+            "collision_ns": 3500,
+            "total_ns": 30197750,
+            "remaining": 28455,
+            "peak_rss_bytes": 2539520
+          }
+        ]
+      }
+    }
+  },
+  "optimized": {
+    "summary": {
+      "groove": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.20025,
+            "median": 0.204416,
+            "max": 0.207375
+          },
+          "total_ms": {
+            "min": 1.092583,
+            "median": 1.095292,
+            "max": 1.142
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2457600,
+          "history_bytes": 1216
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.007583,
+            "median": 0.008291,
+            "max": 0.008583
+          },
+          "total_ms": {
+            "min": 0.940917,
+            "median": 0.950417,
+            "max": 0.976833
+          },
+          "grid_bytes": 1280,
+          "peak_rss_bytes": 2473984,
+          "history_bytes": 1216
+        }
+      },
+      "ball-finishing": {
+        "scalar": {
+          "cut_ms": {
+            "min": 59.721375,
+            "median": 60.139334,
+            "max": 60.316416
+          },
+          "total_ms": {
+            "min": 61.850875,
+            "median": 62.384208,
+            "max": 62.714458
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2572288,
+          "history_bytes": 6680
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 15.535666,
+            "median": 15.561708,
+            "max": 15.62025
+          },
+          "total_ms": {
+            "min": 17.200417,
+            "median": 17.318875,
+            "max": 17.339542
+          },
+          "grid_bytes": 2304,
+          "peak_rss_bytes": 2588672,
+          "history_bytes": 6680
+        }
+      },
+      "deep-thin-wall": {
+        "scalar": {
+          "cut_ms": {
+            "min": 1.112209,
+            "median": 1.119,
+            "max": 1.126168
+          },
+          "total_ms": {
+            "min": 2.602959,
+            "median": 2.661459,
+            "max": 2.719792
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2555904,
+          "history_bytes": 17536
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.029791,
+            "median": 0.029832,
+            "max": 0.031293
+          },
+          "total_ms": {
+            "min": 1.494458,
+            "median": 1.525667,
+            "max": 1.527875
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2572288,
+          "history_bytes": 17536
+        }
+      },
+      "tilted": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.261,
+            "median": 0.263959,
+            "max": 0.2655
+          },
+          "total_ms": {
+            "min": 3.108958,
+            "median": 3.117375,
+            "max": 3.246625
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2572288,
+          "history_bytes": 2660
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.182875,
+            "median": 0.185625,
+            "max": 0.186084
+          },
+          "total_ms": {
+            "min": 3.026667,
+            "median": 3.074459,
+            "max": 3.121083
+          },
+          "grid_bytes": 2816,
+          "peak_rss_bytes": 2588672,
+          "history_bytes": 2660
+        }
+      },
+      "long-overlap": {
+        "scalar": {
+          "cut_ms": {
+            "min": 34.51933,
+            "median": 34.63263,
+            "max": 34.661666
+          },
+          "total_ms": {
+            "min": 39.915958,
+            "median": 40.287959,
+            "max": 40.631875
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 6406144,
+          "history_bytes": 1216
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.247956,
+            "median": 0.255219,
+            "max": 0.261839
+          },
+          "total_ms": {
+            "min": 6.033041,
+            "median": 6.068584,
+            "max": 6.450792
+          },
+          "grid_bytes": 1280,
+          "peak_rss_bytes": 6422528,
+          "history_bytes": 1216
+        }
+      },
+      "sparse-world": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.01525,
+            "median": 0.015584,
+            "max": 0.0175
+          },
+          "total_ms": {
+            "min": 1.79,
+            "median": 1.930208,
+            "max": 1.979791
+          },
+          "grid_bytes": 32576,
+          "peak_rss_bytes": 2555904,
+          "history_bytes": 560
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.005459,
+            "median": 0.006209,
+            "max": 0.006666
+          },
+          "total_ms": {
+            "min": 1.776625,
+            "median": 1.990542,
+            "max": 2.031833
+          },
+          "grid_bytes": 32576,
+          "peak_rss_bytes": 2572288,
+          "history_bytes": 560
+        }
+      },
+      "imported-cavity": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.0,
+            "median": 0.0,
+            "max": 0.0
+          },
+          "total_ms": {
+            "min": 2.322875,
+            "median": 2.341166,
+            "max": 2.354041
+          },
+          "grid_bytes": 832,
+          "peak_rss_bytes": 2408448,
+          "history_bytes": 0
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.0,
+            "median": 0.0,
+            "max": 0.0
+          },
+          "total_ms": {
+            "min": 2.256458,
+            "median": 2.282333,
+            "max": 2.313917
+          },
+          "grid_bytes": 832,
+          "peak_rss_bytes": 2408448,
+          "history_bytes": 0
+        }
+      },
+      "imported-concave-rotated": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.0,
+            "median": 0.0,
+            "max": 0.0
+          },
+          "total_ms": {
+            "min": 1.515792,
+            "median": 1.518125,
+            "max": 1.518917
+          },
+          "grid_bytes": 832,
+          "peak_rss_bytes": 2408448,
+          "history_bytes": 0
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.0,
+            "median": 0.0,
+            "max": 0.0
+          },
+          "total_ms": {
+            "min": 1.450667,
+            "median": 1.50525,
+            "max": 1.5135
+          },
+          "grid_bytes": 832,
+          "peak_rss_bytes": 2408448,
+          "history_bytes": 0
+        }
+      },
+      "turning-envelope": {
+        "scalar": {
+          "cut_ms": {
+            "min": 0.173625,
+            "median": 0.174042,
+            "max": 0.181917
+          },
+          "total_ms": {
+            "min": 1.16375,
+            "median": 1.166667,
+            "max": 1.250708
+          },
+          "grid_bytes": 3328,
+          "peak_rss_bytes": 2490368,
+          "history_bytes": 4416
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 0.148709,
+            "median": 0.152666,
+            "max": 0.153125
+          },
+          "total_ms": {
+            "min": 1.1565,
+            "median": 1.165958,
+            "max": 1.236792
+          },
+          "grid_bytes": 3328,
+          "peak_rss_bytes": 2506752,
+          "history_bytes": 4416
+        }
+      },
+      "helix": {
+        "scalar": {
+          "cut_ms": {
+            "min": 53.558,
+            "median": 53.572917,
+            "max": 53.776
+          },
+          "total_ms": {
+            "min": 55.082041,
+            "median": 55.1515,
+            "max": 55.3825
+          },
+          "grid_bytes": 4352,
+          "peak_rss_bytes": 2490368,
+          "history_bytes": 2736
+        },
+        "optimized": {
+          "cut_ms": {
+            "min": 28.19475,
+            "median": 28.21575,
+            "max": 28.369208
+          },
+          "total_ms": {
+            "min": 29.716708,
+            "median": 29.734709,
+            "max": 29.933542
+          },
+          "grid_bytes": 2560,
+          "peak_rss_bytes": 2506752,
+          "history_bytes": 2736
+        }
+      }
+    },
+    "accuracy": [
+      {
+        "voxel_mm": 0.25,
+        "occupied": 782,
+        "volume_mm3": 12.218749999999996,
+        "analytic_mm3": 12.248889638367794,
+        "error_mm3": -0.030139638367797872,
+        "max_sampled_vertex_deviation_mm": 0.20642903909702115,
+        "occupancy_boundary_cell_diagonal_bound_mm": 0.21650635094610965
+      },
+      {
+        "voxel_mm": 0.1,
+        "occupied": 12246,
+        "volume_mm3": 12.24599999999997,
+        "analytic_mm3": 12.248889638367794,
+        "error_mm3": -0.0028896383678240767,
+        "max_sampled_vertex_deviation_mm": 0.08467476051328027,
+        "occupancy_boundary_cell_diagonal_bound_mm": 0.08660254037844387
+      },
+      {
+        "voxel_mm": 0.05,
+        "occupied": 98007,
+        "volume_mm3": 12.250875000000061,
+        "analytic_mm3": 12.248889638367794,
+        "error_mm3": 0.0019853616322667023,
+        "max_sampled_vertex_deviation_mm": 0.04305804366291022,
+        "occupancy_boundary_cell_diagonal_bound_mm": 0.04330127018922193
+      },
+      {
+        "voxel_mm": 0.025,
+        "occupied": 784047,
+        "volume_mm3": 12.250734374999928,
+        "analytic_mm3": 12.248889638367794,
+        "error_mm3": 0.0018447366321332481,
+        "max_sampled_vertex_deviation_mm": 0.0216025626871843,
+        "occupancy_boundary_cell_diagonal_bound_mm": 0.021650635094610966
+      }
+    ],
+    "raw": {
+      "groove": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 203417,
+            "collision_ns": 708,
+            "total_ns": 1294542,
+            "remaining": 29936,
+            "peak_rss_bytes": 2457600
+          },
+          {
+            "warmup": false,
+            "cut_ns": 207375,
+            "collision_ns": 958,
+            "total_ns": 1092583,
+            "remaining": 29936,
+            "peak_rss_bytes": 2457600
+          },
+          {
+            "warmup": false,
+            "cut_ns": 204416,
+            "collision_ns": 667,
+            "total_ns": 1142000,
+            "remaining": 29936,
+            "peak_rss_bytes": 2457600
+          },
+          {
+            "warmup": false,
+            "cut_ns": 200250,
+            "collision_ns": 584,
+            "total_ns": 1095292,
+            "remaining": 29936,
+            "peak_rss_bytes": 2457600
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 7917,
+            "collision_ns": 625,
+            "total_ns": 979833,
+            "remaining": 29936,
+            "peak_rss_bytes": 2473984
+          },
+          {
+            "warmup": false,
+            "cut_ns": 7583,
+            "collision_ns": 417,
+            "total_ns": 976833,
+            "remaining": 29936,
+            "peak_rss_bytes": 2473984
+          },
+          {
+            "warmup": false,
+            "cut_ns": 8583,
+            "collision_ns": 625,
+            "total_ns": 940917,
+            "remaining": 29936,
+            "peak_rss_bytes": 2473984
+          },
+          {
+            "warmup": false,
+            "cut_ns": 8291,
+            "collision_ns": 875,
+            "total_ns": 950417,
+            "remaining": 29936,
+            "peak_rss_bytes": 2473984
+          }
+        ]
+      },
+      "ball-finishing": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 59936958,
+            "collision_ns": 2251,
+            "total_ns": 62489500,
+            "remaining": 21778,
+            "peak_rss_bytes": 2555904
+          },
+          {
+            "warmup": false,
+            "cut_ns": 59721375,
+            "collision_ns": 2792,
+            "total_ns": 61850875,
+            "remaining": 21778,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 60316416,
+            "collision_ns": 2375,
+            "total_ns": 62714458,
+            "remaining": 21778,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 60139334,
+            "collision_ns": 2250,
+            "total_ns": 62384208,
+            "remaining": 21778,
+            "peak_rss_bytes": 2572288
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 15789376,
+            "collision_ns": 1249,
+            "total_ns": 17784958,
+            "remaining": 21778,
+            "peak_rss_bytes": 2588672
+          },
+          {
+            "warmup": false,
+            "cut_ns": 15561708,
+            "collision_ns": 1332,
+            "total_ns": 17339542,
+            "remaining": 21778,
+            "peak_rss_bytes": 2588672
+          },
+          {
+            "warmup": false,
+            "cut_ns": 15535666,
+            "collision_ns": 1000,
+            "total_ns": 17200417,
+            "remaining": 21778,
+            "peak_rss_bytes": 2588672
+          },
+          {
+            "warmup": false,
+            "cut_ns": 15620250,
+            "collision_ns": 1210,
+            "total_ns": 17318875,
+            "remaining": 21778,
+            "peak_rss_bytes": 2588672
+          }
+        ]
+      },
+      "deep-thin-wall": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 1123127,
+            "collision_ns": 1000,
+            "total_ns": 2876500,
+            "remaining": 10872,
+            "peak_rss_bytes": 2555904
+          },
+          {
+            "warmup": false,
+            "cut_ns": 1119000,
+            "collision_ns": 916,
+            "total_ns": 2719792,
+            "remaining": 10872,
+            "peak_rss_bytes": 2555904
+          },
+          {
+            "warmup": false,
+            "cut_ns": 1126168,
+            "collision_ns": 1166,
+            "total_ns": 2602959,
+            "remaining": 10872,
+            "peak_rss_bytes": 2555904
+          },
+          {
+            "warmup": false,
+            "cut_ns": 1112209,
+            "collision_ns": 1167,
+            "total_ns": 2661459,
+            "remaining": 10872,
+            "peak_rss_bytes": 2555904
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 28375,
+            "collision_ns": 916,
+            "total_ns": 1863791,
+            "remaining": 10872,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 31293,
+            "collision_ns": 1082,
+            "total_ns": 1527875,
+            "remaining": 10872,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 29832,
+            "collision_ns": 750,
+            "total_ns": 1494458,
+            "remaining": 10872,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 29791,
+            "collision_ns": 877,
+            "total_ns": 1525667,
+            "remaining": 10872,
+            "peak_rss_bytes": 2572288
+          }
+        ]
+      },
+      "tilted": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 264083,
+            "collision_ns": 667,
+            "total_ns": 3250667,
+            "remaining": 27564,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 263959,
+            "collision_ns": 791,
+            "total_ns": 3246625,
+            "remaining": 27564,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 261000,
+            "collision_ns": 875,
+            "total_ns": 3117375,
+            "remaining": 27564,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 265500,
+            "collision_ns": 1000,
+            "total_ns": 3108958,
+            "remaining": 27564,
+            "peak_rss_bytes": 2572288
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 184375,
+            "collision_ns": 500,
+            "total_ns": 3186791,
+            "remaining": 27564,
+            "peak_rss_bytes": 2588672
+          },
+          {
+            "warmup": false,
+            "cut_ns": 185625,
+            "collision_ns": 708,
+            "total_ns": 3074459,
+            "remaining": 27564,
+            "peak_rss_bytes": 2588672
+          },
+          {
+            "warmup": false,
+            "cut_ns": 182875,
+            "collision_ns": 958,
+            "total_ns": 3121083,
+            "remaining": 27564,
+            "peak_rss_bytes": 2588672
+          },
+          {
+            "warmup": false,
+            "cut_ns": 186084,
+            "collision_ns": 666,
+            "total_ns": 3026667,
+            "remaining": 27564,
+            "peak_rss_bytes": 2588672
+          }
+        ]
+      },
+      "long-overlap": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 34569034,
+            "collision_ns": 12720,
+            "total_ns": 43959833,
+            "remaining": 29936,
+            "peak_rss_bytes": 6406144
+          },
+          {
+            "warmup": false,
+            "cut_ns": 34661666,
+            "collision_ns": 13044,
+            "total_ns": 40631875,
+            "remaining": 29936,
+            "peak_rss_bytes": 6406144
+          },
+          {
+            "warmup": false,
+            "cut_ns": 34519330,
+            "collision_ns": 12925,
+            "total_ns": 39915958,
+            "remaining": 29936,
+            "peak_rss_bytes": 6406144
+          },
+          {
+            "warmup": false,
+            "cut_ns": 34632630,
+            "collision_ns": 14326,
+            "total_ns": 40287959,
+            "remaining": 29936,
+            "peak_rss_bytes": 6406144
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 268757,
+            "collision_ns": 13121,
+            "total_ns": 9970750,
+            "remaining": 29936,
+            "peak_rss_bytes": 6422528
+          },
+          {
+            "warmup": false,
+            "cut_ns": 247956,
+            "collision_ns": 11964,
+            "total_ns": 6450792,
+            "remaining": 29936,
+            "peak_rss_bytes": 6422528
+          },
+          {
+            "warmup": false,
+            "cut_ns": 261839,
+            "collision_ns": 11980,
+            "total_ns": 6068584,
+            "remaining": 29936,
+            "peak_rss_bytes": 6422528
+          },
+          {
+            "warmup": false,
+            "cut_ns": 255219,
+            "collision_ns": 12697,
+            "total_ns": 6033041,
+            "remaining": 29936,
+            "peak_rss_bytes": 6422528
+          }
+        ]
+      },
+      "sparse-world": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 18500,
+            "collision_ns": 583,
+            "total_ns": 2068916,
+            "remaining": 681,
+            "peak_rss_bytes": 2555904
+          },
+          {
+            "warmup": false,
+            "cut_ns": 15584,
+            "collision_ns": 458,
+            "total_ns": 1979791,
+            "remaining": 681,
+            "peak_rss_bytes": 2555904
+          },
+          {
+            "warmup": false,
+            "cut_ns": 15250,
+            "collision_ns": 500,
+            "total_ns": 1790000,
+            "remaining": 681,
+            "peak_rss_bytes": 2555904
+          },
+          {
+            "warmup": false,
+            "cut_ns": 17500,
+            "collision_ns": 417,
+            "total_ns": 1930208,
+            "remaining": 681,
+            "peak_rss_bytes": 2555904
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 5750,
+            "collision_ns": 333,
+            "total_ns": 2146375,
+            "remaining": 681,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 5459,
+            "collision_ns": 583,
+            "total_ns": 1776625,
+            "remaining": 681,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 6209,
+            "collision_ns": 500,
+            "total_ns": 1990542,
+            "remaining": 681,
+            "peak_rss_bytes": 2572288
+          },
+          {
+            "warmup": false,
+            "cut_ns": 6666,
+            "collision_ns": 667,
+            "total_ns": 2031833,
+            "remaining": 681,
+            "peak_rss_bytes": 2572288
+          }
+        ]
+      },
+      "imported-cavity": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2420708,
+            "remaining": 1664,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2354041,
+            "remaining": 1664,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2322875,
+            "remaining": 1664,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2341166,
+            "remaining": 1664,
+            "peak_rss_bytes": 2408448
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2339459,
+            "remaining": 1664,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2313917,
+            "remaining": 1664,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2282333,
+            "remaining": 1664,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 2256458,
+            "remaining": 1664,
+            "peak_rss_bytes": 2408448
+          }
+        ]
+      },
+      "imported-concave-rotated": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1600875,
+            "remaining": 640,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1515792,
+            "remaining": 640,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1518125,
+            "remaining": 640,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1518917,
+            "remaining": 640,
+            "peak_rss_bytes": 2408448
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1553500,
+            "remaining": 640,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1505250,
+            "remaining": 640,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1450667,
+            "remaining": 640,
+            "peak_rss_bytes": 2408448
+          },
+          {
+            "warmup": false,
+            "cut_ns": 0,
+            "collision_ns": 0,
+            "total_ns": 1513500,
+            "remaining": 640,
+            "peak_rss_bytes": 2408448
+          }
+        ]
+      },
+      "turning-envelope": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 172708,
+            "collision_ns": 167,
+            "total_ns": 1372167,
+            "remaining": 7744,
+            "peak_rss_bytes": 2490368
+          },
+          {
+            "warmup": false,
+            "cut_ns": 174042,
+            "collision_ns": 292,
+            "total_ns": 1250708,
+            "remaining": 7744,
+            "peak_rss_bytes": 2490368
+          },
+          {
+            "warmup": false,
+            "cut_ns": 181917,
+            "collision_ns": 209,
+            "total_ns": 1166667,
+            "remaining": 7744,
+            "peak_rss_bytes": 2490368
+          },
+          {
+            "warmup": false,
+            "cut_ns": 173625,
+            "collision_ns": 166,
+            "total_ns": 1163750,
+            "remaining": 7744,
+            "peak_rss_bytes": 2490368
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 154458,
+            "collision_ns": 209,
+            "total_ns": 1298000,
+            "remaining": 7744,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 153125,
+            "collision_ns": 166,
+            "total_ns": 1156500,
+            "remaining": 7744,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 152666,
+            "collision_ns": 292,
+            "total_ns": 1165958,
+            "remaining": 7744,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 148709,
+            "collision_ns": 333,
+            "total_ns": 1236792,
+            "remaining": 7744,
+            "peak_rss_bytes": 2506752
+          }
+        ]
+      },
+      "helix": {
+        "scalar": [
+          {
+            "warmup": true,
+            "cut_ns": 53859041,
+            "collision_ns": 2667,
+            "total_ns": 55575792,
+            "remaining": 28455,
+            "peak_rss_bytes": 2490368
+          },
+          {
+            "warmup": false,
+            "cut_ns": 53776000,
+            "collision_ns": 2833,
+            "total_ns": 55382500,
+            "remaining": 28455,
+            "peak_rss_bytes": 2490368
+          },
+          {
+            "warmup": false,
+            "cut_ns": 53572917,
+            "collision_ns": 2875,
+            "total_ns": 55151500,
+            "remaining": 28455,
+            "peak_rss_bytes": 2490368
+          },
+          {
+            "warmup": false,
+            "cut_ns": 53558000,
+            "collision_ns": 2833,
+            "total_ns": 55082041,
+            "remaining": 28455,
+            "peak_rss_bytes": 2490368
+          }
+        ],
+        "optimized": [
+          {
+            "warmup": true,
+            "cut_ns": 28246708,
+            "collision_ns": 2959,
+            "total_ns": 29952083,
+            "remaining": 28455,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 28194750,
+            "collision_ns": 2667,
+            "total_ns": 29716708,
+            "remaining": 28455,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 28369208,
+            "collision_ns": 2792,
+            "total_ns": 29933542,
+            "remaining": 28455,
+            "peak_rss_bytes": 2506752
+          },
+          {
+            "warmup": false,
+            "cut_ns": 28215750,
+            "collision_ns": 2750,
+            "total_ns": 29734709,
+            "remaining": 28455,
+            "peak_rss_bytes": 2506752
+          }
+        ]
+      }
+    }
+  }
+}

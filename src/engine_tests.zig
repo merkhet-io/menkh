@@ -343,3 +343,93 @@ test "candidate ranges include absolute predicate tolerance even below tolerance
         try std.testing.expectEqual(e.norm(p) <= 1.1e-10, g.occupied(.{ x, y, z }));
     };
 }
+
+test "fast Z masks and tight bounds agree with scalar across edges origins dilation and sparse occupancy" {
+    var random_state = std.Random.DefaultPrng.init(0xabe871);
+    const random = random_state.random();
+    const bounds = e.Bounds{ .lo = .{ -2.31, 0.17, -0.43 }, .hi = .{ 2.44, 4.42, 2.82 } };
+    var fast = try e.stock(a, bounds, 0.25, &.{.{ .box = bounds }});
+    defer fast.deinit();
+    var slow = try e.stock(a, bounds, 0.25, &.{.{ .box = bounds }});
+    defer slow.deinit();
+    var fc: e.Changes = .{};
+    defer fc.deinit(a);
+    var sc: e.Changes = .{};
+    defer sc.deinit(a);
+    for (0..70) |step| {
+        const z = random.float(f64) * 5 - 1;
+        const start = e.V{ random.float(f64) * 7 - 4, random.float(f64) * 6 - 1, z };
+        const end = if (step % 5 == 0) start else e.V{ random.float(f64) * 7 - 4, random.float(f64) * 6 - 1, z + (if (step % 4 == 0) random.float(f64) - 0.5 else @as(f64, 0)) };
+        const shape = e.Shape{ .sweep = .{ .tool = .{ .radius = 0.05 + random.float(f64), .length = 0.03 + random.float(f64) * 4 }, .a = .{ .position = start }, .b = .{ .position = end }, .dilation_mm = if (step % 3 == 0) 0.13 else 0 } };
+        // Mask oracle does no block classification or candidate clipping.
+        for (0..fast.blocks.len) |i| {
+            const coords = fast.blockCoords(i);
+            try std.testing.expectEqualSlices(u64, &e.mask(fast, coords, shape, true, fast.bits(i)), &e.mask(fast, coords, shape, false, fast.bits(i)));
+        }
+        const contact = try inspect.collision(fast, shape);
+        const oracle = try inspect.collisionReference(fast, shape);
+        try std.testing.expectEqualDeep(oracle, contact);
+        try e.subtract(&fast, shape, &fc, false);
+        try e.subtract(&slow, shape, &sc, true);
+        try std.testing.expectEqual(fc.removed, sc.removed);
+        for (0..fast.blocks.len) |i| try std.testing.expectEqualSlices(u64, &slow.bits(i), &fast.bits(i));
+    }
+}
+
+test "fast collision exact extrema and counts for full partial disconnected and empty contacts" {
+    const b = e.Bounds{ .lo = .{ -1.31, -0.17, -0.43 }, .hi = .{ 3.44, 4.08, 2.82 } };
+    var g = try e.stock(a, b, 0.25, &.{.{ .box = b }});
+    defer g.deinit();
+    // Arbitrary sparse words stress all three extrema and descriptor types.
+    var rng = std.Random.DefaultPrng.init(6617);
+    for (0..g.blocks.len) |i| {
+        if (i % 3 == 0) continue;
+        var bits = g.bits(i);
+        for (&bits) |*w| w.* &= rng.random().int(u64);
+        g.blocks[i] = @intCast(g.pool.items.len);
+        try g.pool.append(a, bits);
+    }
+    const shapes = [_]e.Shape{
+        .{ .primitive = .{ .box = b } },
+        .{ .primitive = .{ .sphere = .{ .center = .{ 0, 0, 0 }, .radius = 1.17 } } },
+        .{ .primitive = .{ .halfspace = .{ .normal = .{ 0.6, 0, 0.8 }, .offset = 0.13 } } },
+        .{ .sweep = .{ .tool = .{ .radius = 0.7, .length = 2 }, .a = .{ .position = .{ -1, 1, 1 }, .axis = .{ 0.6, 0, 0.8 } }, .b = .{ .position = .{ 3, 2, -0.3 }, .axis = .{ 0.6, 0, 0.8 } } } },
+        .{ .sweep = .{ .tool = .{ .kind = .ball, .radius = 0.7, .length = 2 }, .a = .{ .position = .{ -1, 1, 1 } }, .b = .{ .position = .{ 3, 2, -0.3 } } } },
+        .{ .sweep = .{ .tool = .{ .radius = 2, .length = 7 }, .a = .{ .position = .{ 0, 0, 3 } }, .b = .{ .position = .{ 1, 1, 4 } } } },
+    };
+    for (shapes) |shape| try std.testing.expectEqualDeep(try inspect.collisionReference(g, shape), try inspect.collision(g, shape));
+}
+
+test "SIMD prepared Z sweep matches scalar at tangencies axial caps and tiny motions" {
+    for ([_]f64{ 0, 1e-15, -1e-12, 0.65, -2.3 }) |dx| {
+        const sweep = e.Sweep{ .tool = .{ .radius = 0.7, .length = 2.3 }, .a = .{ .position = .{ 1.13, -0.37, 0.29 } }, .b = .{ .position = .{ 1.13 + dx, -0.37, 0.29 } } };
+        const kernel = e.FlatZ.init(sweep).?;
+        for ([_]f64{ -e.core.tolerance, 0, 2.3, 2.3 + e.core.tolerance }) |z| {
+            var points: [3]e.FlatZ.F = undefined;
+            for (0..8) |lane| {
+                const delta = (@as(f64, @floatFromInt(lane)) - 3.5) * 1e-15;
+                points[0][lane] = sweep.a.position[0];
+                points[1][lane] = sweep.a.position[1] + sweep.tool.radius + e.core.tolerance + delta;
+                points[2][lane] = sweep.a.position[2] + z + delta;
+            }
+            const got = kernel.contains8(points);
+            for (0..8) |lane| try std.testing.expectEqual(sweep.flatContains(.{ points[0][lane], points[1][lane], points[2][lane] }, 0), got[lane]);
+        }
+    }
+    try std.testing.expect(e.FlatZ.init(.{ .tool = .{ .radius = 1, .length = 2 }, .a = .{ .position = .{ 0, 0, 0 } }, .b = .{ .position = .{ 0, 0, 1 } } }) == null);
+}
+
+fn allocationFlat(alloc: std.mem.Allocator) !void {
+    const b = e.Bounds{ .lo = .{ 0, 0, 0 }, .hi = .{ 4, 4, 4 } };
+    var g = try e.stock(alloc, b, 0.25, &.{.{ .box = b }});
+    defer g.deinit();
+    var changes: e.Changes = .{};
+    defer changes.deinit(alloc);
+    e.subtract(&g, .{ .sweep = .{ .tool = .{ .radius = 0.6, .length = 3 }, .a = .{ .position = .{ 1, 2, 2 } }, .b = .{ .position = .{ 3, 2, 2 } } } }, &changes, false) catch |err| {
+        try std.testing.expectEqual(@as(u64, 4096), g.stats().occupied);
+        return err;
+    };
+}
+test "optimized flat sweep allocation failures leave material intact" {
+    try std.testing.checkAllAllocationFailures(a, allocationFlat, .{});
+}

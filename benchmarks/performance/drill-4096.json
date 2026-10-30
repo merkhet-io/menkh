@@ -1,0 +1,94 @@
+{
+  "baseline": [
+    {
+      "warmup": true,
+      "cut_ns": 4161189121,
+      "total_ns": 4531031166,
+      "init_ns": 123910750,
+      "initial_occupied": 2159116288,
+      "final_occupied": 1333399870,
+      "descriptor_bytes": 536870912,
+      "pool_capacity_bytes": 51714560,
+      "peak_rss_bytes": 647659520
+    },
+    {
+      "warmup": false,
+      "cut_ns": 4142108127,
+      "total_ns": 4511738000,
+      "init_ns": 119637291,
+      "initial_occupied": 2159116288,
+      "final_occupied": 1333399870,
+      "descriptor_bytes": 536870912,
+      "pool_capacity_bytes": 51714560,
+      "peak_rss_bytes": 647659520
+    },
+    {
+      "warmup": false,
+      "cut_ns": 4220052342,
+      "total_ns": 4627464917,
+      "init_ns": 119733750,
+      "initial_occupied": 2159116288,
+      "final_occupied": 1333399870,
+      "descriptor_bytes": 536870912,
+      "pool_capacity_bytes": 51714560,
+      "peak_rss_bytes": 647659520
+    },
+    {
+      "warmup": false,
+      "cut_ns": 4264979455,
+      "total_ns": 4651722833,
+      "init_ns": 119583833,
+      "initial_occupied": 2159116288,
+      "final_occupied": 1333399870,
+      "descriptor_bytes": 536870912,
+      "pool_capacity_bytes": 51714560,
+      "peak_rss_bytes": 647659520
+    }
+  ],
+  "optimized": [
+    {
+      "warmup": true,
+      "cut_ns": 3866446820,
+      "total_ns": 4236452917,
+      "init_ns": 126653750,
+      "initial_occupied": 2159116288,
+      "final_occupied": 1333399870,
+      "descriptor_bytes": 536870912,
+      "pool_capacity_bytes": 51714560,
+      "peak_rss_bytes": 648413184
+    },
+    {
+      "warmup": false,
+      "cut_ns": 3874541576,
+      "total_ns": 4252857166,
+      "init_ns": 121722417,
+      "initial_occupied": 2159116288,
+      "final_occupied": 1333399870,
+      "descriptor_bytes": 536870912,
+      "pool_capacity_bytes": 51714560,
+      "peak_rss_bytes": 648413184
+    },
+    {
+      "warmup": false,
+      "cut_ns": 3852605671,
+      "total_ns": 4220612792,
+      "init_ns": 120792458,
+      "initial_occupied": 2159116288,
+      "final_occupied": 1333399870,
+      "descriptor_bytes": 536870912,
+      "pool_capacity_bytes": 51714560,
+      "peak_rss_bytes": 648413184
+    },
+    {
+      "warmup": false,
+      "cut_ns": 3842170377,
+      "total_ns": 4229837500,
+      "init_ns": 124297958,
+      "initial_occupied": 2159116288,
+      "final_occupied": 1333399870,
+      "descriptor_bytes": 536870912,
+      "pool_capacity_bytes": 51714560,
+      "peak_rss_bytes": 648413184
+    }
+  ]
+}

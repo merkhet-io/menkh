@@ -126,7 +126,7 @@ imports/toolchain and the adequacy of the formal statements remain trust boundar
 - 8,192 block/local address records.
 - 4,096 exact-rational sweep evaluations with varying point and translation
   coordinates on a quarter-millimetre lattice, including positive, negative and
-  zero axial velocities. These are vertical-tool cases, not tilted-frame tests.
+  zero axial velocities. Eligible constant-Z records also exercise the SIMD batch predicate. These are vertical-tool cases, not tilted-frame tests.
 
 The subtraction fixture calls the proved bit operation. The rational geometry
 oracle is a separately executable transcription; its embedding into the real
@@ -136,7 +136,7 @@ randomized and tilted-tool tests remain relevant independent evidence.
 
 Local validation passed all 34 named mathematical results,
 the axiom audits, all 20,480 bridge records in both Zig modes, and the original
-35 test groups in both modes. Negative controls rejected all three injected bugs.
+39 test groups in both modes. Negative controls rejected all three injected bugs.
 This work introduces no runtime engine changes or performance claims.
 
 Still outside this proof boundary: IEEE-754 rounding and compiler semantics;
