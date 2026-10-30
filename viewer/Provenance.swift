@@ -13,7 +13,9 @@ extension VoxelRenderer {
         guard FileManager.default.fileExists(atPath:path.path) else {return}
         let p=try JSONDecoder().decode(ProvenanceHeader.self,from:Data(contentsOf:path))
         guard p.format=="menkh-surface-provenance-v1",p.scope=="final_surface",p.grid==history.grid,p.origin_mm==(history.origin_mm ?? [0,0,0]),p.voxel_mm==history.voxel_mm,p.final_occupied==history.final_occupied,p.operations.map({$0.id})==history.frames.map({$0.stage}),p.record_bytes==16,p.initial_id==0,p.entries>=0,p.entries<=67108864,p.bytes==p.entries*16 else {throw MeshError.invalidOBJ("Provenance does not match history")}
-        let data=try Data(contentsOf:root.appendingPathComponent("surface-provenance.bin"),options:.mappedIfSafe)
+        let binary=root.appendingPathComponent("surface-provenance.bin")
+        guard try binary.resourceValues(forKeys:[.fileSizeKey]).fileSize==p.bytes else {throw MeshError.invalidOBJ("Invalid provenance buffer length")}
+        let data=try Data(contentsOf:binary,options:.mappedIfSafe)
         guard data.count==p.bytes else {throw MeshError.invalidOBJ("Invalid provenance buffer length")}
         var previous:UInt64?=nil
         try data.withUnsafeBytes { bytes in

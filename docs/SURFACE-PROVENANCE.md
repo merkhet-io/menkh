@@ -80,4 +80,5 @@ every volume voxel, but this is not a solution to the 2³²-face / 16 GB require
 ![25 µm pocket colored by exposing operation](provenance/pocket-operations.png)
 
 Original outer faces are gray; interior faces are colored by the operation that
-exposed them. Raw report and header are retained in `benchmarks/provenance`.
+exposed them. Measurements identify the isolated provenance increment before stacking it on
+the defect-inspector PR; they are not a new combined-branch benchmark. Raw report and header are retained in `benchmarks/provenance`.
