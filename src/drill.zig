@@ -96,6 +96,19 @@ pub fn run(a: std.mem.Allocator, h: f64, out: []const u8) !void {
     try std.fs.cwd().makePath(out);
     var dir = try std.fs.cwd().openDir(out, .{});
     defer dir.close();
+    try dir.writeFile(.{ .sub_path = "initial.blocks", .data = std.mem.sliceAsBytes(g.blocks) });
+    try dir.writeFile(.{ .sub_path = "initial.pool", .data = std.mem.sliceAsBytes(g.pool.items) });
+    const initial = g.stats().occupied;
+    const initial_slots = g.pool.items.len;
+    var changes: engine.Changes = .{};
+    defer changes.deinit(a);
+    const HistoryFrame = struct { file: []const u8, stage: []const u8, occupied: u64, changed_blocks: usize, delta_bytes: usize, tool: [3]f64 };
+    var history: std.ArrayList(HistoryFrame) = .empty;
+    defer {
+        for (history.items) |f| a.free(f.file);
+        history.deinit(a);
+    }
+    try history.ensureTotalCapacityPrecise(a, 2 * steps + facets);
     var frames: std.ArrayList(Frame) = .empty;
     defer {
         for (frames.items) |f| a.free(f.file);
@@ -106,19 +119,32 @@ pub fn run(a: std.mem.Allocator, h: f64, out: []const u8) !void {
     for (0..2) |flute| for (0..steps) |i| {
         const from = point(flute, @as(f64, @floatFromInt(i)) / steps);
         const to = point(flute, @as(f64, @floatFromInt(i + 1)) / steps);
-        try apply(&g, .{ .capsule = .{ .a = from, .b = to, .radius = cutter_radius } });
+        try engine.subtract(&g, try shape(.{ .capsule = .{ .a = from, .b = to, .radius = cutter_radius } }, .{ 0, 0, 0 }), &changes, false);
         frames.appendAssumeCapacity(try saveFrame(a, g, dir, frames.items.len, if (flute == 0) "Spannut 1 fräsen" else "Spannut 2 fräsen", to));
+        const frame = frames.items[frames.items.len - 1];
+        const delta = try std.fmt.allocPrint(a, "step-{d:0>4}.delta", .{history.items.len});
+        errdefer a.free(delta);
+        try dir.writeFile(.{ .sub_path = delta, .data = changes.bytes.items });
+        history.appendAssumeCapacity(.{ .file = delta, .stage = frame.stage, .occupied = frame.occupied, .changed_blocks = changes.blocks, .delta_bytes = changes.bytes.items.len, .tool = frame.tool });
     };
     for (0..facets) |i| {
         const angle = @as(f64, @floatFromInt(i)) / facets * 2 * std.math.pi;
-        try apply(&g, .{ .tip = angle });
+        try engine.subtract(&g, try shape(.{ .tip = angle }, .{ 0, 0, 0 }), &changes, false);
         frames.appendAssumeCapacity(try saveFrame(a, g, dir, frames.items.len, "Spitze facettieren", .{ 6 + 7 * @cos(angle), 6 + 7 * @sin(angle), 57 }));
+        const frame = frames.items[frames.items.len - 1];
+        const delta = try std.fmt.allocPrint(a, "step-{d:0>4}.delta", .{history.items.len});
+        errdefer a.free(delta);
+        try dir.writeFile(.{ .sub_path = delta, .data = changes.bytes.items });
+        history.appendAssumeCapacity(.{ .file = delta, .stage = frame.stage, .occupied = frame.occupied, .changed_blocks = changes.blocks, .delta_bytes = changes.bytes.items.len, .tool = frame.tool });
     }
     for (frames.items[1..], frames.items[0 .. frames.items.len - 1]) |next, previous| if (next.occupied > previous.occupied) return error.MaterialIncreased;
     var mesh = try surface.generate(a, g);
     defer mesh.deinit(a);
     try surface.obj(g, mesh.items, dir);
-    const manifest = try std.json.Stringify.valueAlloc(a, .{ .format = "menkh-quads-v1", .voxel_mm = h, .radius_mm = 6, .length_mm = 60, .cutter_radius_mm = cutter_radius, .fps = 12, .geometric_demo = true, .description = "Voxelabtrag: zwei helikale Nuten mit kugelförmigem Fräskopf, danach 32 ebene Spitzen-Facetten. Keine NC-/Schneidenfreigabe.", .generation_ns = timer.read(), .grid_bytes = g.stats().descriptor_bytes + g.stats().pool_bytes, .frames = frames.items }, .{ .whitespace = .indent_2 });
+    const voxel_manifest = try std.json.Stringify.valueAlloc(a, .{ .format = "menkh-voxel-history-v1", .grid = g.n, .block_grid = g.nb, .voxel_mm = g.h, .origin_mm = g.origin, .stock_min = g.origin, .stock_max = engine.add(g.origin, g.size), .initial_occupied = initial, .final_occupied = g.stats().occupied, .initial_pool_slots = initial_slots, .pool_slots = g.pool.items.len, .frames = history.items }, .{ .whitespace = .indent_2 });
+    defer a.free(voxel_manifest);
+    try dir.writeFile(.{ .sub_path = "voxel-animation.json", .data = voxel_manifest });
+    const manifest = try std.json.Stringify.valueAlloc(a, .{ .format = "menkh-quads-v1", .voxel_history = "voxel-animation.json", .voxel_mm = h, .radius_mm = 6, .length_mm = 60, .cutter_radius_mm = cutter_radius, .fps = 12, .geometric_demo = true, .description = "Voxelabtrag: zwei helikale Nuten mit kugelförmigem Fräskopf, danach 32 ebene Spitzen-Facetten. Keine NC-/Schneidenfreigabe.", .generation_ns = timer.read(), .grid_bytes = g.stats().descriptor_bytes + g.stats().pool_bytes, .frames = frames.items }, .{ .whitespace = .indent_2 });
     defer a.free(manifest);
     try dir.writeFile(.{ .sub_path = "animation.json", .data = manifest });
     std.debug.print("Drill demo: {d} frames, {d} occupied voxels, {d:.2} s, {s}/animation.json\n", .{ frames.items.len, g.stats().occupied, @as(f64, @floatFromInt(timer.read())) / 1e9, out });

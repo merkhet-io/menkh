@@ -114,7 +114,7 @@ fn execute() !void {
     const args = try std.process.argsAlloc(a);
     defer std.process.argsFree(a, args);
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help")) {
-        std.debug.print("menkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--out DIR] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
+        std.debug.print("menkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--voxel MM] [--out DIR] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
         return;
     }
     const command = args[1];
@@ -173,17 +173,25 @@ fn execute() !void {
         if (args.len < 3) return error.MissingJobFile;
         var output: []const u8 = "out/job";
         var ref = false;
+        var voxel_override: ?f64 = null;
         var j: usize = 3;
         while (j < args.len) : (j += 1) {
             if (std.mem.eql(u8, args[j], "--reference")) {
                 ref = true;
                 continue;
             }
-            if (!std.mem.eql(u8, args[j], "--out") or j + 1 >= args.len) return error.UnknownOption;
+            if (std.mem.eql(u8, args[j], "--voxel")) {
+                if (j + 1 >= args.len) return error.MissingArgument;
+                j += 1;
+                voxel_override = try std.fmt.parseFloat(f64, args[j]);
+                continue;
+            }
+            if (!std.mem.eql(u8, args[j], "--out")) return error.UnknownOption;
+            if (j + 1 >= args.len) return error.MissingArgument;
             j += 1;
             output = args[j];
         }
-        try @import("job.zig").run(a, args[2], output, ref);
+        try @import("job.zig").run(a, args[2], output, ref, voxel_override);
         return;
     }
     if (!std.mem.eql(u8, command, "demo") and !std.mem.eql(u8, command, "export") and !std.mem.eql(u8, command, "bench") and !std.mem.eql(u8, command, "drill")) return error.InvalidCommand;

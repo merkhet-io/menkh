@@ -107,3 +107,15 @@ The only vendored dependency is nlohmann/json **3.12.0**, MIT license in
 `aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63`.
 It is entirely outside the Zig simulation core. Upstream:
 https://github.com/nlohmann/json/releases/tag/v3.12.0
+
+## Default drill demo
+
+```powershell
+./zig-out/bin/menkh.exe drill --voxel 0.1 --out out/drill
+./out/windows-viewer/menkh-viewer.exe out/drill/animation.json
+```
+
+Current drill outputs include a matching voxel history; the Windows reader follows
+its explicit manifest reference. `out/drill/voxel-animation.json` also opens
+directly. Regenerate older mesh-only output with the current CLI. Rendering remains
+voxel-based; this does not add a mesh renderer or a spherical demo-tool display.
