@@ -673,6 +673,25 @@ fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, availabl
     if (!reference and s == .sweep) {
         if (FlatZ.init(s.sweep)) |flat| return flat.mask(g, b, available);
     }
+    // A path is a union. Reject segments once per block, then test only material
+    // not covered by earlier segments. This preserves the scalar union exactly.
+    if (!reference and s == .path) {
+        var result: core.Bits = @splat(0);
+        var remaining = available;
+        const box = blockBounds(g, b);
+        for (s.path) |segment| {
+            const part = Shape{ .sweep = segment };
+            const part_coverage = part.classify(box);
+            if (part_coverage == .outside) continue;
+            const removed = classifiedMask(g, b, part, false, remaining, part_coverage, work);
+            for (&result, &remaining, removed) |*out, *left, v| {
+                out.* |= v;
+                left.* &= ~v;
+            }
+            if (count(remaining) == 0) break;
+        }
+        return result;
+    }
     var bits: core.Bits = @splat(0);
     const e = g.extent(b);
     for (0..e[2]) |z| for (0..e[1]) |y| for (0..e[0]) |x| {
