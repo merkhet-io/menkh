@@ -17,7 +17,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Circular/helical motion | Implemented, restricted | Arbitrary planar basis and normal rise; fixed tool axis, bounded conservative chord and pose approximation; arc shank/holder and feed inputs explicitly rejected |
 | Simultaneous orientation change / 5-axis | Unsupported | Rejected, including nearly equal but distinct endpoint axes; no quaternion interpolation |
 | Cutting vs shank/holder geometry | Implemented, validated | Separate finite cylindrical noncutting components, offsets above cutting length |
-| Stock/fixture collisions | Implemented, restricted | Swept occupancy-center intersections, independent fixture stock, affected bounds and operation IDs; unresolved subvoxel clearance explicitly marked uncertain |
+| Stock/fixture collisions | Implemented, restricted | Swept center contacts plus conservative whole-cell separation; explicit not-checked/unresolved states, independent fixtures, operation IDs and candidate bounds; pre-operation stock conservatism remains |
 | Versioned JSON jobs | Implemented, validated | Strict Zig JSON parsing, units, tool/operation validation, stable IDs, operation history |
 | Resumable state | Implemented, validated | Little-endian checked format, checksums, slot/index/padding validation; same-grid resumption |
 | Reversible history | Implemented, validated | Transactional Zig replay tests; native general-job and full 4096³ forward/backward/forward replay |
@@ -39,7 +39,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | CPU workers / GPU cutting | Unsupported in material updates | One deterministic cutting worker; eight-worker read-only predicate benchmark is diagnostic only |
 | Kinematics, controller, thermal/force simulation | Outside product boundary | No collision against moving machine components, G-code execution, feeds/speeds planning, or physical cutting forces |
 
-The three largest gaps toward an industrial cutting SDK are robust simultaneous orientation-changing sweeps and richer tool assemblies; certified large-mesh/topology and clearance analysis; and scalable mutable storage plus long-running interactive integration. The viewer is evidence of inspectability, not evidence of feature parity.
+The immediate product gaps are external production-part qualification, actionable local 3D metrology/clearance, and a stable integration/resource contract. Broader orientation-changing sweeps and production mill-turn remain separate capability gaps; see the [product roadmap](PRODUCT-ROADMAP.md). The viewer is evidence of inspectability, not evidence of feature parity.
 
 ## Formal verification
 
@@ -58,6 +58,7 @@ The [imported finishing milestone](FINISHING-RESULTS.md) records a frozen long-j
 experiment, independent sampled contour evidence and checkpoint/replay results.
 Its input triangulation and toolpath allowance/scallops are separate from simulation error.
 
-[Scanline import validation](SCANLINE-IMPORT.md) adds 13 accepted 3D-transformed
-fixtures and records three pre-existing `SelfIntersectingSTL` rejections explicitly;
-those rejected fixtures are not claimed as supported.
+[Scanline import validation](SCANLINE-IMPORT.md) originally accepted 13 transformed
+fixtures and recorded three rejections. The [shared-topology fix](MILLING-ROBUSTNESS.md)
+now accepts all 16 with exact scalar and independent oracle comparisons. Genuine
+foldovers and crossings remain rejected.

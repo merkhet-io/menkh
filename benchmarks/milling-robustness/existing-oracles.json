@@ -1,0 +1,52 @@
+[
+  {
+    "case": "cavity",
+    "voxel_exact": true,
+    "independent_center_queries": 10625
+  },
+  {
+    "case": "cavity-rotated",
+    "voxel_exact": true,
+    "independent_center_queries": 10625
+  },
+  {
+    "case": "concave",
+    "voxel_exact": true,
+    "independent_center_queries": 10625
+  },
+  {
+    "case": "concave-rotated",
+    "voxel_exact": true,
+    "independent_center_queries": 10625
+  },
+  {
+    "case": "disconnected",
+    "voxel_exact": true,
+    "independent_center_queries": 10625
+  },
+  {
+    "case": "disconnected-rotated",
+    "voxel_exact": true,
+    "independent_center_queries": 10625
+  },
+  {
+    "case": "thin",
+    "voxel_exact": true,
+    "independent_center_queries": 2816
+  },
+  {
+    "case": "thin-rotated",
+    "voxel_exact": true,
+    "independent_center_queries": 2816
+  },
+  {
+    "case": "boundary",
+    "voxel_exact": true,
+    "independent_center_queries": 10625
+  },
+  {
+    "case": "boundary-rotated",
+    "voxel_exact": true,
+    "independent_center_queries": 10625
+  }
+]

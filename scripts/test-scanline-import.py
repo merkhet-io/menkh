@@ -52,11 +52,7 @@ for name,cells in cases.items():
             run=subprocess.run([str(suite.EXE),'job',str(jobfile),'--out',str(dest)]+(['--reference'] if reference else []),capture_output=True,text=True)
             outcomes.append(run)
             with (out/'run.log').open('a') as log: log.write(run.stdout+run.stderr)
-        if any(r.returncode for r in outcomes):
-            assert label in {'cavity-2','concave-2','thin-2'}, ('unexpected parser rejection',label)
-            assert all(r.returncode and 'SelfIntersectingSTL' in r.stderr for r in outcomes), label
-            results.append(dict(case=label,restricted='SelfIntersectingSTL in both optimized and reference parsing'))
-            continue
+        assert all(r.returncode==0 for r in outcomes), (label, [(r.returncode,r.stderr) for r in outcomes])
         fast=out/(label+'-fast');state=check.accuracy.State(fast/'final.menkh')
         assert check.digest(fast/'final.menkh')==check.digest(out/(label+'-reference/final.menkh'))
         checked=skipped=0
@@ -73,4 +69,4 @@ for name,cells in cases.items():
         results.append(dict(case=label,voxel_exact=True,independent_centers=checked,
                             ideal_plane_band_excluded=skipped,scanlines=timing['scanlines'],fallbacks=timing['scanline_fallbacks']))
 (out/'results.json').write_text(json.dumps(results,indent=2)+'\n')
-print(f'{sum("voxel_exact" in r for r in results)} transformed meshes validated; {sum("restricted" in r for r in results)} existing parser restrictions recorded')
+print(f'{len(results)} transformed meshes accepted and validated against scalar and independent oracles')

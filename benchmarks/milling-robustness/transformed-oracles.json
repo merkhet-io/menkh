@@ -1,0 +1,130 @@
+[
+  {
+    "case": "cavity-0",
+    "voxel_exact": true,
+    "independent_centers": 21952,
+    "ideal_plane_band_excluded": 0,
+    "scanlines": 44,
+    "fallbacks": 136
+  },
+  {
+    "case": "cavity-1",
+    "voxel_exact": true,
+    "independent_centers": 21948,
+    "ideal_plane_band_excluded": 4,
+    "scanlines": 341,
+    "fallbacks": 0
+  },
+  {
+    "case": "cavity-2",
+    "voxel_exact": true,
+    "independent_centers": 21950,
+    "ideal_plane_band_excluded": 2,
+    "scanlines": 289,
+    "fallbacks": 975
+  },
+  {
+    "case": "cavity-3",
+    "voxel_exact": true,
+    "independent_centers": 21952,
+    "ideal_plane_band_excluded": 0,
+    "scanlines": 44,
+    "fallbacks": 116
+  },
+  {
+    "case": "concave-0",
+    "voxel_exact": true,
+    "independent_centers": 21952,
+    "ideal_plane_band_excluded": 0,
+    "scanlines": 32,
+    "fallbacks": 72
+  },
+  {
+    "case": "concave-1",
+    "voxel_exact": true,
+    "independent_centers": 21948,
+    "ideal_plane_band_excluded": 4,
+    "scanlines": 258,
+    "fallbacks": 0
+  },
+  {
+    "case": "concave-2",
+    "voxel_exact": true,
+    "independent_centers": 21950,
+    "ideal_plane_band_excluded": 2,
+    "scanlines": 281,
+    "fallbacks": 530
+  },
+  {
+    "case": "concave-3",
+    "voxel_exact": true,
+    "independent_centers": 21952,
+    "ideal_plane_band_excluded": 0,
+    "scanlines": 52,
+    "fallbacks": 110
+  },
+  {
+    "case": "stacked-disconnected-0",
+    "voxel_exact": true,
+    "independent_centers": 21952,
+    "ideal_plane_band_excluded": 0,
+    "scanlines": 8,
+    "fallbacks": 28
+  },
+  {
+    "case": "stacked-disconnected-1",
+    "voxel_exact": true,
+    "independent_centers": 21948,
+    "ideal_plane_band_excluded": 4,
+    "scanlines": 84,
+    "fallbacks": 0
+  },
+  {
+    "case": "stacked-disconnected-2",
+    "voxel_exact": true,
+    "independent_centers": 21950,
+    "ideal_plane_band_excluded": 2,
+    "scanlines": 92,
+    "fallbacks": 195
+  },
+  {
+    "case": "stacked-disconnected-3",
+    "voxel_exact": true,
+    "independent_centers": 21952,
+    "ideal_plane_band_excluded": 0,
+    "scanlines": 12,
+    "fallbacks": 12
+  },
+  {
+    "case": "thin-0",
+    "voxel_exact": true,
+    "independent_centers": 21952,
+    "ideal_plane_band_excluded": 0,
+    "scanlines": 6,
+    "fallbacks": 0
+  },
+  {
+    "case": "thin-1",
+    "voxel_exact": true,
+    "independent_centers": 21950,
+    "ideal_plane_band_excluded": 2,
+    "scanlines": 124,
+    "fallbacks": 0
+  },
+  {
+    "case": "thin-2",
+    "voxel_exact": true,
+    "independent_centers": 21952,
+    "ideal_plane_band_excluded": 0,
+    "scanlines": 70,
+    "fallbacks": 8
+  },
+  {
+    "case": "thin-3",
+    "voxel_exact": true,
+    "independent_centers": 21952,
+    "ideal_plane_band_excluded": 0,
+    "scanlines": 6,
+    "fallbacks": 0
+  }
+]

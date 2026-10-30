@@ -1,0 +1,9 @@
+{
+  "resume_exact": true,
+  "compacted_resume_exact": true,
+  "occupancy_sha256": "6971519449ef91e2fc0ca7dbbade173feeaa6393a2f2daa3f6914d869517eab7",
+  "all_5199_deltas_byte_exact": true,
+  "history_manifest_byte_exact": true,
+  "checkpoint_bytes": 3800672,
+  "compacted_bytes": 2597344
+}

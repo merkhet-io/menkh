@@ -60,7 +60,57 @@ pub fn ray(g: c.Grid, start: e.V, direction: e.V, max_distance: f64) !?Hit {
     }
     return error.RayTraversalLimit;
 }
-pub const Contact = struct { occupied_centers: u64 = 0, region: ?e.Bounds = null, representation_clearance_uncertain: bool = true };
+pub const Clearance = enum { not_checked, occupied_center_contact, unresolved_voxel_contact, separated_voxel_geometry };
+pub const Contact = struct {
+    occupied_centers: u64 = 0,
+    region: ?e.Bounds = null,
+    representation_clearance_uncertain: bool = true,
+    clearance: Clearance = .not_checked,
+    first_unresolved_cell_bounds: ?e.Bounds = null,
+};
+// Center tests alone cannot exclude contact with a voxel's face or corner.
+// Conservative block/cell exclusion uses the whole represented voxel cubes.
+// This is geometric clearance from the represented, possibly dilated sweep,
+// not a clearance guarantee for the original CAD surface or real machine.
+fn disjointBounds(a: e.Bounds, b: e.Bounds) bool {
+    for (0..3) |j| if (a.hi[j] < b.lo[j] or b.hi[j] < a.lo[j]) return true;
+    return false;
+}
+fn finishContact(g: c.Grid, s: e.Shape, contact: Contact) Contact {
+    var r = contact;
+    if (r.occupied_centers != 0) {
+        r.clearance = .occupied_center_contact;
+        r.representation_clearance_uncertain = false;
+        return r;
+    }
+    const half = g.h / 2;
+    const swept_bounds = s.cuttingBounds().expanded(1e-8);
+    const range = e.clippedRange(g, s.cuttingBounds().expanded(half + 1e-8));
+    for (range.lo[2]..range.hi[2]) |z| for (range.lo[1]..range.hi[1]) |y| for (range.lo[0]..range.hi[0]) |x| {
+        const b = [3]usize{ x, y, z };
+        const i = g.blockIndex(b);
+        const block_bounds = e.blockBounds(g, b).expanded(half);
+        if (g.blocks[i] == c.empty or disjointBounds(block_bounds, swept_bounds) or s.classify(block_bounds) == .outside) continue;
+        const bits = g.bits(i);
+        for (bits, 0..) |word, zi| {
+            var remaining = word;
+            while (remaining != 0) {
+                const bit = @ctz(remaining);
+                remaining &= remaining - 1;
+                const p = e.add(g.origin, .{ g.center(x * 8 + bit % 8), g.center(y * 8 + bit / 8), g.center(z * 8 + zi) });
+                const cell = (e.Bounds{ .lo = p, .hi = p }).expanded(half);
+                if (!disjointBounds(cell, swept_bounds) and s.classify(cell) != .outside) {
+                    r.clearance = .unresolved_voxel_contact;
+                    r.first_unresolved_cell_bounds = cell;
+                    return r;
+                }
+            }
+        }
+    };
+    r.clearance = .separated_voxel_geometry;
+    r.representation_clearance_uncertain = false;
+    return r;
+}
 pub fn collision(g: c.Grid, s: e.Shape) !Contact {
     try s.validate();
     var result: Contact = .{};
@@ -102,7 +152,7 @@ pub fn collision(g: c.Grid, s: e.Shape) !Contact {
             }
         } else result.region = bb;
     };
-    return result;
+    return finishContact(g, s, result);
 }
 // Simple full-grid oracle retained independently of candidate bounds and masks.
 pub fn collisionReference(g: c.Grid, s: e.Shape) !Contact {
@@ -127,7 +177,7 @@ pub fn collisionReference(g: c.Grid, s: e.Shape) !Contact {
             }
         };
     }
-    return r;
+    return finishContact(g, s, r);
 }
 pub const Section = struct { origin: e.V, u: e.V, v: e.V, pixel_mm: f64, width: usize, height: usize };
 pub fn section(a: std.mem.Allocator, g: c.Grid, s: Section) ![]u8 {
