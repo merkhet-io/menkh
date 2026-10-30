@@ -1,9 +1,8 @@
-# Formal verification: Lean and Veil
+# Formal verification with Lean
 
 This is an initial verification layer, not certification of the Zig executable.
-It contains **23 named Lean results** about discrete material and real-arithmetic
-geometry, plus **50 Veil verification conditions** for two abstract transition
-systems. The proofs are checked by Lean; their relationship to production Zig
+It contains **34 named Lean results** about discrete material and real-arithmetic
+geometry and abstract history/pool contracts. The proofs are checked by Lean; their relationship to production Zig
 is reviewed and tested, not formally proved.
 
 ## Run it
@@ -12,12 +11,10 @@ Requires an existing `elan` installation, Python 3, and the project's Zig setup.
 No verification dependency is linked into the simulator or viewer.
 
 ```sh
-# First use: download missing pinned toolchains into .tools/elan, and local packages.
+# First use: download missing pinned toolchain into .tools/elan, and local packages.
 ./scripts/bootstrap-formal.sh
 # Geometry/discrete proofs, axiom audit, executable corpus, both Zig build modes:
 ./scripts/verify-formal.sh
-# Veil transition proofs, axiom audit, and negative controls:
-./scripts/verify-veil.sh
 # Existing tests remain independent of Lean:
 ./zig build test --summary all
 ./zig build test -Doptimize=ReleaseFast --summary all
@@ -25,17 +22,15 @@ No verification dependency is linked into the simulator or viewer.
 
 `formal-lake.sh` selects an already installed matching toolchain (repository-local
 first). It fails with an explicit setup instruction if missing. It does not
-silently install a global toolchain. Dependencies and both Lake manifests are
+silently install a global toolchain. Dependencies and the Lake manifest are
 pinned; `.lake` build/cache directories are ignored.
 
 - Mathematical model: Lean **4.24.0**, mathlib commit
   `f897ebcf72cd16f89ab4577d0c826cd14afaafc7` (v4.24.0).
-- Transition models: Lean **4.32.0**, Veil commit
-  `eb458cb602d3cf9a19d8f5d8af21edcf27775c8e` (2.0 pre-release).
 - Engine: Zig **0.15.2**. Local validation: Apple M5 Max, macOS, native aarch64.
 
-The separate Lake projects deliberately isolate Veil's newer toolchain and SMT
-libraries from the stable mathematical project.
+There is one Lean/mathlib project. No separate transition-system framework,
+SMT solver, Node dependency or second Lean version is required.
 
 ## What the Lean statements establish
 
@@ -46,6 +41,7 @@ See [`formal/Menkh`](../formal/Menkh) and the required-name list in
 |---|---:|---|
 | Discrete occupancy | 10 | Per-axis block/local round trip; unique XY bit index; logical boundary mask; full-to-mixed decoding; actual `BitVec 64` subtraction; finite population sum; subtraction semantics, monotonicity, idempotence; conditional accelerated/scalar equivalence |
 | Cylinder geometry | 9 | Clamp membership; radial minimum including zero radial velocity; continuous radial sweep; both axial-velocity signs; constant-Z capsule product; interval-based finite-cylinder sweep; complete sign-branch `flatContains_exact` |
+| History and pool | 11 | Removed-material provenance, partition/disjointness, undo/redo, stock containment, initial pool validity, preservation under bind/release/capture/checkpoint |
 | Block reasoning | 4 | Padded real-arithmetic candidate range; convex corner inclusion; one-sided distance bounds for exclusion and inclusion |
 
 `flatContains_exact` equates the real-arithmetic predicate with existence of a
@@ -76,71 +72,44 @@ Thus the originally proposed twelve principal obligations are **partially
 covered**, not twelve completed end-to-end implementation proofs. The strongest
 completed geometric result is the finite-cylinder predicate over real arithmetic.
 
-## Why Veil is in the process
+## History and pool contracts in ordinary Lean
 
-[Veil](https://veil.dev/docs/) is a Lean framework for transition-system safety
-properties, with SMT automation and optional Lean proof reconstruction. It is a
-fit for lifecycle invariants, while mathlib handles continuous geometry.
-Its upstream version is a pre-release, pinned here to avoid unreviewed upgrades.
+[`formal/Menkh/History.lean`](../formal/Menkh/History.lean) proves:
 
-Veil is primarily designed for distributed protocols. For Menkh its value is
-invariant automation and counterexamples for lifecycle models; it does not
-improve continuous geometry or floating-point proofs. The two small models here
-could also be proved in plain Lean. They are an isolated experiment, not a
-necessary foundation for the engine: Veil adds another Lean version, solver and
-framework build, and that maintenance cost needs to earn its place as the models
-grow. No claim that Veil is superior to plain Lean follows from these checks.
-The core proof/bridge command works without Veil, and neither is needed to build
-the simulator. Veil has its own CI job; no branch-protection requirement is set
-by this change.
+- Removed material was present before the cut.
+- Remaining and removed material form a disjoint partition of the original.
+- Restoring the removed set recovers the original occupancy; reapplying the cut
+  recovers the post-cut occupancy.
+- Cutting preserves containment in initial stock.
+- Pool initialization is valid, and bind/release/capture/checkpoint transitions
+  preserve exclusive slot ownership and remembered payload values.
 
-[`formal/veil/Cutting.lean`](../formal/veil/Cutting.lean) contains two models:
-
-1. **Cutting**: arbitrary voxel and operation types, immutable initial stock and
-   cutter membership, mutable material, a single reversible checkpoint, cut,
-   undo, redo, and rejected-operation transitions. Six invariants establish
-   stock containment, snapshot containment, removed-material provenance,
-   before/after partition, disjoint remaining/removed sets, and exact occupancy
-   restoration after undo. Five stages (initializer plus four actions), each
-   with six invariant conditions and a nonthrowing condition: **35 proofs**.
-2. **Pool**: arbitrary blocks, slots and payloads, live ownership and history
-   references. Bind, release, capture and checkpoint transitions preserve unique
-   ownership and the values of retained snapshots. Reuse is forbidden while a
-   slot is live or remembered. Five stages with two invariants and nonthrowing
-   conditions: **15 proofs**.
-
-The pool model specifies a safe reuse policy. It does not change the Zig allocator
-or prove its current history/compaction implementation. The cutting model retains
-one checkpoint, not the full on-disk history sequence. A reject transition is
-explicitly a no-op; this does not prove actual Zig allocation-failure atomicity.
-Undo can restore material, so cut monotonicity must not be claimed for all history
-transitions. Geometry is an uninterpreted relation in Veil, not an assumed
-geometrically correct cutter.
+Pool binding requires that the replacement slot is neither live nor retained
+by history. An explicit checkpoint forgets retained snapshots. These are
+mathematical contracts for a safe reuse policy; they do not change the Zig
+allocator or prove its implementation. The history proof concerns an occupancy
+delta, not the full on-disk history sequence, descriptor bytes or allocation
+failure. Undo can restore material, so monotonicity applies to cuts, not to all
+history transitions.
 
 ## Trust and CI gates
 
 `.github/workflows/verification.yml` runs on pull requests, pushes to main and
-`codex/**`, and manual dispatch:
+`codex/**`, and manual dispatch. The macOS Apple Silicon job runs the original
+Debug/ReleaseFast tests, Lean model build, axiom audit, oracle generation and Zig
+differential tests in both modes. The simulator's product scope remains macOS.
 
-- **macOS Apple Silicon**: original Debug/ReleaseFast tests, Lean model build,
-  axiom audit, oracle generation and Zig differential tests in both modes.
-- **Linux**: Veil build with SMT proof reconstruction, audit of all required
-  generated declarations, and deliberate-bug rejection checks. This runs only
-  the verification models; the simulator's product scope remains macOS.
+The audit permits only `propext`, `Classical.choice`, and `Quot.sound`. It checks
+transitive proof dependencies and fails on missing required results. This excludes
+`sorryAx`, native-decision axioms and custom axioms from the audited theorems.
+Auxiliary/generated theorems are also audited; their number is not presented as
+extra principal results.
 
-Both audits permit only `propext`, `Classical.choice`, and `Quot.sound`. They check
-transitive proof dependencies and fail on missing required results. This excludes
-`sorryAx`, trusted solver shortcuts, native-decision axioms and custom axioms from
-the audited theorems. Veil explicitly sets `veil.smt.trust false` and
-`veil.violationIsError true`, exports the results with `#gen_theorems`, then checks
-that all 50 expected proof declarations exist. Auxiliary/generated theorems are
-also audited; their number is not presented as extra principal results.
-
-Three negative controls must fail for the intended mathematical reason:
+Three negative controls must fail for the intended proof obligation:
 
 - Replace word subtraction AND with OR.
-- Make cutting add occupied cells.
-- Remove the guard preventing reuse of history-retained pool slots.
+- Replace undo's occupancy union with intersection.
+- Make pool binding overwrite every payload, including unrelated retained slots.
 
 These checks use temporary copies in `out/`, leave the source intact, and reject
 unexpected infrastructure failures instead of counting them as successful tests.
@@ -165,11 +134,9 @@ model is not proved. Its exact arithmetic can expose `f64` discrepancies on this
 finite corpus, but cannot establish a global rounding bound. Existing engine
 randomized and tilted-tool tests remain relevant independent evidence.
 
-Local validation passed all 23 named mathematical results, all 50 Veil conditions,
+Local validation passed all 34 named mathematical results,
 the axiom audits, all 20,480 bridge records in both Zig modes, and the original
 35 test groups in both modes. Negative controls rejected all three injected bugs.
-The initial hosted run also passed both jobs:
-[Verification run 41073513654](https://github.com/merkhet-io/menkh/actions/runs/41073513654).
 This work introduces no runtime engine changes or performance claims.
 
 Still outside this proof boundary: IEEE-754 rounding and compiler semantics;

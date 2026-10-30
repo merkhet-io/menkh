@@ -13,23 +13,23 @@ if stage == "core":
     bad = source.read_text().replace("b z &&& ~~~(mask z)", "b z ||| ~~~(mask z)")
     expected = "b mask : Bits"
     relative = "../out/negative-core.lean"
-elif stage in ("veil", "veil-pool"):
-    source = ROOT / "formal/veil/Cutting.lean"
-    bad = source.read_text().replace("occupied V := occupied V ∧ ¬ cuts op V", "occupied V := occupied V ∨ cuts op V")
-    expected = "remaining_within_stock"
-    if stage == "veil-pool":
-        bad = source.read_text().replace("  require ∀ P, ¬ remembered s P\n", "")
-        expected = "snapshot_stable"
-    relative = f"../../out/negative-{stage}.lean"
+elif stage == "history":
+    source = ROOT / "formal/Menkh/History.lean"
+    bad = source.read_text().replace("after i || delta i", "after i && delta i")
+    expected = "Type mismatch"
+    relative = "../out/negative-history.lean"
+elif stage == "pool":
+    source = ROOT / "formal/Menkh/History.lean"
+    bad = source.read_text().replace("fun t => if t = s then v else p.contents t", "fun _ => v")
+    expected = "change"
+    relative = "../out/negative-pool.lean"
 else:
-    raise SystemExit("Usage: test-proof-guards.py core|veil")
+    raise SystemExit("Usage: test-proof-guards.py core|history|pool")
 assert bad != source.read_text()
 output = ROOT / f"out/negative-{stage}.lean"
 output.parent.mkdir(exist_ok=True)
 output.write_text(bad)
-lake_stage = "core" if stage == "core" else "veil"
-setup = [] if stage == "core" else ["--setup", ".lake/build/ir/Cutting.setup.json"]
-result = subprocess.run([str(ROOT / "scripts/formal-lake.sh"), lake_stage, "env", "lean", *setup, relative],
+result = subprocess.run([str(ROOT / "scripts/formal-lake.sh"), "core", "env", "lean", relative],
                         cwd=ROOT, text=True, capture_output=True, timeout=180)
 log = result.stdout + result.stderr
 (ROOT / f"out/negative-{stage}.log").write_text(log)

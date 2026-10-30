@@ -4,8 +4,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 case "${1:-}" in
   core) PROJECT="$ROOT/formal" ;;
-  veil) PROJECT="$ROOT/formal/veil" ;;
-  *) echo 'Usage: formal-lake.sh core|veil [lake arguments]' >&2; exit 2 ;;
+  *) echo 'Usage: formal-lake.sh core [lake arguments]' >&2; exit 2 ;;
 esac
 shift
 TOOLCHAIN=$(cat "$PROJECT/lean-toolchain")

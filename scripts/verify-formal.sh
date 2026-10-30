@@ -10,3 +10,5 @@ mv out/formal-oracle.txt.tmp out/formal-oracle.txt
 ./zig build formal-test --summary all
 ./zig build formal-test -Doptimize=ReleaseFast --summary all
 python3 scripts/test-proof-guards.py core
+python3 scripts/test-proof-guards.py history
+python3 scripts/test-proof-guards.py pool

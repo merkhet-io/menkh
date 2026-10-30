@@ -31,19 +31,3 @@ jobs:
           ./zig build test -Doptimize=ReleaseFast --summary all
       - name: Geometry proofs, axiom audit, and Zig differential tests
         run: ./scripts/verify-formal.sh
-  veil-transitions:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: '24'
-      - uses: leanprover/lean-action@fe408643ea7367d8c0404a8be3975bb145f5fb64 # v1
-        with:
-          lake-package-directory: formal/veil
-          build: 'true'
-          test: 'false'
-          use-mathlib-cache: 'false'
-      - name: Veil invariant proofs and axiom audit
-        run: ./scripts/verify-veil.sh

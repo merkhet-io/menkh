@@ -42,4 +42,4 @@ The three largest gaps toward an industrial cutting SDK are robust simultaneous 
 
 ## Formal verification
 
-Implemented and locally validated: 23 named Lean results, 50 Veil transition verification conditions, axiom audits, and 20,480 Lean/Zig differential records. Restricted to the explicit models and hypotheses in [FORMAL-VERIFICATION.md](FORMAL-VERIFICATION.md). Full Zig refinement, floating-point correctness and certified geometric clearance remain unsupported.
+Implemented and locally validated: 34 named Lean results including history/pool contracts, axiom audits, and 20,480 Lean/Zig differential records. Restricted to the explicit models and hypotheses in [FORMAL-VERIFICATION.md](FORMAL-VERIFICATION.md). Full Zig refinement, floating-point correctness and certified geometric clearance remain unsupported.
