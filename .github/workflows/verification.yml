@@ -63,9 +63,9 @@ jobs:
       - name: Build native D3D12 viewer with MSVC
         shell: cmd
         run: |
-          call viewer\windows\build.bat
+          cmd /c viewer\windows\build.bat
           if errorlevel 1 exit /b 1
-          call viewer\windows\build.bat --project
+          cmd /c viewer\windows\build.bat --project
           if errorlevel 1 exit /b 1
       - name: Reject malformed viewer histories
         shell: pwsh

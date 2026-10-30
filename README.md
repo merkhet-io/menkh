@@ -179,7 +179,7 @@ Measured results for all four voxel sizes, including warm-up and seven repetitio
 ## Windows comparison build and surface counts
 
 The CLI and CPU benchmark now have an experimental [Windows x86-64 build](docs/WINDOWS.md),
-using repository-local Zig 0.15.2, not MSVC. The viewer remains macOS-only.
+using repository-local Zig 0.15.2, not MSVC. A separate [Windows D3D12 viewer](viewer/windows/README.md) provides native playback, camera controls and scrubbing with `build.bat` or a v145 `.vcxproj`; the Swift/Metal viewer remains available on macOS.
 `menkh inspect-state FILE` reports boundary voxels separately from material volume.
 The 25 µm pocket video ends with **2,819,284 surface voxels**, versus 170,711,351
 occupied volume voxels. See [definitions, raw counts and comparison limits](docs/INSPECTION-COUNTS.md).

@@ -1,7 +1,7 @@
 # Windows CLI and benchmark
 
 The Zig engine, CLI, checkpoint inspection and CPU predicate benchmark have an
-experimental Windows x86-64 build. The Swift/Metal viewer remains macOS-only.
+experimental Windows x86-64 build. The Swift/Metal viewer remains macOS-only; a separate [D3D12 viewer](../viewer/windows/README.md) now reads the same voxel history on Windows.
 MSVC does not compile the Zig sources; no Visual Studio version or C++ toolset is
 required. This is not a C++ port or an MSVC SDK integration. Visual Studio can be
 used as an editor and to launch the PowerShell commands.
@@ -37,5 +37,5 @@ memory readings. Cutting and storage formats do not depend on the platform modul
 Validation: the CLI and kernel benchmark were cross-compiled on macOS. The
 `windows-cli` GitHub Actions job builds and executes Debug/ReleaseFast tests and
 the 25 µm pocket plus exact remaining-material/surface-count checks. Consult its
-run result before treating Windows runtime validation as complete. No Windows
-viewer, Visual Studio project, MSVC-built library or C ABI is provided.
+run result before treating Windows runtime validation as complete. The engine has no MSVC-built library or C ABI. The separate D3D12 viewer has a
+`build.bat` and v145 `.vcxproj` and does not require Zig.
