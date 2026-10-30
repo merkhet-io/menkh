@@ -35,7 +35,7 @@ pub const Job = struct {
 fn read(a: std.mem.Allocator, path: []const u8) ![]u8 {
     return std.fs.cwd().readFileAlloc(a, path, 1024 * 1024 * 1024);
 }
-pub const InputTiming = struct { read_ns: u64 = 0, parse_bvh_ns: u64 = 0, voxelization_ns: u64 = 0, state_decode_ns: u64 = 0, parse_validate_ns: u64 = 0, bvh_ns: u64 = 0, intersection_validate_ns: u64 = 0, uniform_blocks: u64 = 0, point_queries: u64 = 0 };
+pub const InputTiming = struct { read_ns: u64 = 0, parse_bvh_ns: u64 = 0, voxelization_ns: u64 = 0, state_decode_ns: u64 = 0, parse_validate_ns: u64 = 0, bvh_ns: u64 = 0, intersection_validate_ns: u64 = 0, ray_cache_ns: u64 = 0, ray_cache_bytes: usize = 0, uniform_blocks: u64 = 0, point_queries: u64 = 0 };
 pub fn initialize(a: std.mem.Allocator, j: Job, s: Stock, timing: *InputTiming, reference: bool) !c.Grid {
     var timer = try std.time.Timer.start();
     const sources = @as(usize, @intFromBool(s.primitives.len > 0)) + @intFromBool(s.stl != null) + @intFromBool(s.state_file != null);
@@ -60,6 +60,8 @@ pub fn initialize(a: std.mem.Allocator, j: Job, s: Stock, timing: *InputTiming, 
         timing.parse_validate_ns += mesh.parse_validate_ns;
         timing.bvh_ns += mesh.bvh_ns;
         timing.intersection_validate_ns += mesh.intersection_validate_ns;
+        timing.ray_cache_ns += mesh.ray_cache_ns;
+        timing.ray_cache_bytes += mesh.rayCacheBytes();
         const g = try mesh.voxelizeMode(a, j.bounds, j.voxel_mm, reference);
         timing.uniform_blocks += mesh.uniform_blocks;
         timing.point_queries += mesh.point_queries;

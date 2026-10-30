@@ -40,7 +40,9 @@ segments at 25 µm, compares remaining material with the target, checks checkpoi
 and compacted-checkpoint resumption, and saves native Metal inspection images.
 The smoke run keeps the same geometry/path at 250 µm. See the [frozen protocol](docs/FINISHING-PROTOCOL.md),
 [implementation and reproduction](docs/FINISHING-ARCHITECTURE.md), and
-[measured results and accuracy limits](docs/FINISHING-RESULTS.md).
+[measured results and accuracy limits](docs/FINISHING-RESULTS.md). A
+[follow-up import optimization](docs/IMPORT-CACHE-RESULTS.md) completes the same
+25 µm job in 48.05 s median with 119.77 MB peak RSS on the M5 Max.
 
 ## CPU performance
 

@@ -2,6 +2,23 @@
 const std = @import("std");
 const e = @import("engine.zig");
 const c = @import("core.zig");
+const directions = [_]e.V{ .{ 1, 0.3713906763541037, 0.6947465906068658 }, .{ 0.238917, 1, 0.513791 }, .{ 0.817931, 0.129873, 1 } };
+const RayData = struct {
+    ab: e.V,
+    ac: e.V,
+    rays: [3]struct { cross: e.V, det: f64, parallel: bool },
+    fn init(t: Tri) RayData {
+        var data: RayData = undefined;
+        data.ab = e.sub(t.v[1], t.v[0]);
+        data.ac = e.sub(t.v[2], t.v[0]);
+        for (directions, 0..) |d, i| {
+            const cross = e.cross(d, data.ac);
+            const det = e.dot(data.ab, cross);
+            data.rays[i] = .{ .cross = cross, .det = det, .parallel = @abs(det) < 1e-14 * e.norm(data.ab) * e.norm(data.ac) * e.norm(d) };
+        }
+        return data;
+    }
+};
 const Tri = struct { v: [3]e.V, bounds: e.Bounds };
 const Node = struct { bounds: e.Bounds, start: usize, len: usize, left: usize = 0, right: usize = 0 };
 const Edge = struct { a: e.V, b: e.V, forward: bool };
@@ -23,6 +40,8 @@ fn sameV(a: e.V, b: e.V) bool {
 pub const Mesh = struct {
     allocator: std.mem.Allocator,
     triangles: []Tri,
+    ray_data: []RayData = &.{},
+    ray_cache_ns: u64 = 0,
     nodes: std.ArrayList(Node) = .empty,
     bounds: e.Bounds,
     parse_validate_ns: u64 = 0,
@@ -31,6 +50,7 @@ pub const Mesh = struct {
     uniform_blocks: u64 = 0,
     point_queries: u64 = 0,
     pub fn deinit(m: *Mesh) void {
+        m.allocator.free(m.ray_data);
         m.allocator.free(m.triangles);
         m.nodes.deinit(m.allocator);
     }
@@ -92,6 +112,11 @@ pub const Mesh = struct {
         m.bvh_ns = timer.lap();
         for (0..m.triangles.len) |index| try m.validateIntersections(index, 0);
         m.intersection_validate_ns = timer.lap();
+        // Cache after BVH reordering. No reciprocal substitution: retain the
+        // original divisions and tolerances, including edge/vertex retries.
+        m.ray_data = try a.alloc(RayData, n);
+        for (m.triangles, m.ray_data) |t, *data| data.* = RayData.init(t);
+        m.ray_cache_ns = timer.lap();
         return m;
     }
     fn overlap(a: e.Bounds, b: e.Bounds) bool {
@@ -210,17 +235,19 @@ pub const Mesh = struct {
         }
         return lo <= hi + 1e-10;
     }
-    fn hits(m: Mesh, id: usize, p: e.V, d: e.V) !usize {
+    fn hits(m: Mesh, id: usize, p: e.V, direction: usize, comptime cached: bool) !usize {
+        const d = directions[direction];
         const n = m.nodes.items[id];
         if (!intersects(n.bounds, p, d)) return 0;
-        if (n.len > 8) return try m.hits(n.left, p, d) + try m.hits(n.right, p, d);
+        if (n.len > 8) return try m.hits(n.left, p, direction, cached) + try m.hits(n.right, p, direction, cached);
         var result: usize = 0;
-        for (m.triangles[n.start..][0..n.len]) |t| {
-            const ab = e.sub(t.v[1], t.v[0]);
-            const ac = e.sub(t.v[2], t.v[0]);
-            const cross = e.cross(d, ac);
-            const det = e.dot(ab, cross);
-            if (@abs(det) < 1e-14 * e.norm(ab) * e.norm(ac) * e.norm(d)) continue;
+        for (m.triangles[n.start..][0..n.len], n.start..) |t, index| {
+            const ab = if (cached) m.ray_data[index].ab else e.sub(t.v[1], t.v[0]);
+            const ac = if (cached) m.ray_data[index].ac else e.sub(t.v[2], t.v[0]);
+            const cross = if (cached) m.ray_data[index].rays[direction].cross else e.cross(d, ac);
+            const det = if (cached) m.ray_data[index].rays[direction].det else e.dot(ab, cross);
+            const parallel = if (cached) m.ray_data[index].rays[direction].parallel else @abs(det) < 1e-14 * e.norm(ab) * e.norm(ac) * e.norm(d);
+            if (parallel) continue;
             const q = e.sub(p, t.v[0]);
             const u = e.dot(q, cross) / det;
             if (u < -1e-12 or u > 1 + 1e-12) continue;
@@ -235,13 +262,21 @@ pub const Mesh = struct {
         }
         return result;
     }
+    pub fn rayCacheBytes(m: Mesh) usize {
+        return m.ray_data.len * @sizeOf(RayData);
+    }
     pub fn contains(m: Mesh, p: e.V) !bool {
+        return m.containsMode(p, true);
+    }
+    pub fn containsReference(m: Mesh, p: e.V) !bool {
+        return m.containsMode(p, false);
+    }
+    fn containsMode(m: Mesh, p: e.V, comptime cached: bool) !bool {
         for (0..3) |j| if (p[j] < m.bounds.lo[j] - 1e-10 or p[j] > m.bounds.hi[j] + 1e-10) return false;
         // Retry edge/vertex hits with independent deterministic non-axis directions.
-        const directions = [_]e.V{ .{ 1, 0.3713906763541037, 0.6947465906068658 }, .{ 0.238917, 1, 0.513791 }, .{ 0.817931, 0.129873, 1 } };
         var answer: ?bool = null;
-        for (directions) |d| {
-            const hits_count = m.hits(0, p, d) catch |err| switch (err) {
+        for (0..directions.len) |direction| {
+            const hits_count = m.hits(0, p, direction, cached) catch |err| switch (err) {
                 error.PointOnBoundary => return true,
                 error.AmbiguousRay => continue,
                 else => return err,
@@ -327,7 +362,7 @@ pub const Mesh = struct {
             } else for (0..ex[2]) |z| for (0..ex[1]) |y| for (0..ex[0]) |x| {
                 const p = e.add(g.origin, .{ g.center(block[0] * 8 + x), g.center(block[1] * 8 + y), g.center(block[2] * 8 + z) });
                 m.point_queries += 1;
-                if (try m.contains(p)) bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
+                if (try m.containsReference(p)) bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
             };
             if (e.count(bits) == 0) continue;
             if (std.mem.eql(u64, &bits, &g.validBits(block))) d.* = c.full else {

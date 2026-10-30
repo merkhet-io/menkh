@@ -1,5 +1,9 @@
 # Imported ball-end finishing: measured results
 
+The original milestone measurements below are retained. A subsequent
+[triangle-cache optimization](IMPORT-CACHE-RESULTS.md) reduces the same job to
+48.05 s median, with identical occupancy and unchanged peak RSS.
+
 The complete 25 µm workflow succeeded on the Apple M5 Max: imported stock and
 target, 5,199 ball-end segments, target comparison, checkpoint/resume,
 compacted-checkpoint/resume, and native viewer inspection. Median process wall time
@@ -46,7 +50,7 @@ Measurements used Zig 0.15.2, ReleaseFast, one CPU worker, on an 18-core Apple M
 with 128 GB RAM, macOS 27.0.1 (26A434). The starting commit was `18f1151`.
 The protocol was committed as `ad970d3` before implementation. Measurements record
 that HEAD plus working-tree source hashes; measured production sources match the
-implementation commit `bb4eb29`. Subsequent test additions did not change the engine.
+implementation commit `bb4eb29` (rebased unchanged as `c5afbde` when preparing PR #9). Subsequent test additions did not change the engine.
 Exact hashes and raw records are in [benchmarks/finishing-v1](../benchmarks/finishing-v1/).
 Generated STL files and large state/history files are reproduced by the script rather
 than committed. No public geometry or third-party assets were used.

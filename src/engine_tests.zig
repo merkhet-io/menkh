@@ -534,3 +534,30 @@ test "ball split motion lattice and near tangent translated centers" {
         try std.testing.expect(@abs(s.distanceFast(p) - @min(left.distanceFast(p), right.distanceFast(p))) <= 2 * s.tolerance_mm + 1e-8);
     }
 }
+
+test "cached STL rays match uncached parity at translated faces edges and random points" {
+    const bytes = try cubeSTL(a);
+    defer a.free(bytes);
+    var random = std.Random.DefaultPrng.init(0x5241594341434845);
+    const r = random.random();
+    for ([_]f64{ 0.001, 1, 100 }) |scale| {
+        for ([_]e.V{ .{ 0, 0, 0 }, .{ 0.013, -0.017, 0.009 }, .{ 10000.013, -9999.983, 0.009 } }) |origin| {
+            var m = try mesh.Mesh.parse(a, bytes, scale, origin);
+            defer m.deinit();
+            try std.testing.expect(m.rayCacheBytes() > 0);
+            for (0..2000) |_| {
+                const local = e.V{ (r.float(f64) * 4 - 1) * scale, (r.float(f64) * 4 - 1) * scale, (r.float(f64) * 4 - 1) * scale };
+                const p = e.add(origin, local);
+                const expected = local[0] >= 0 and local[0] <= 2 * scale and local[1] >= 0 and local[1] <= 2 * scale and local[2] >= 0 and local[2] <= 2 * scale;
+                try std.testing.expectEqual(try m.containsReference(p), try m.contains(p));
+                try std.testing.expectEqual(expected, try m.contains(p));
+            }
+            // Exact faces, edges and vertices, plus either side of the existing
+            // boundary tolerance: preserve both classification and error behavior.
+            for ([_]e.V{ .{ 0, 0, 0 }, .{ 2, 2, 2 }, .{ 1, 0, 0 }, .{ 1, 1, 0 }, .{ 1, 1, 2 }, .{ -1e-8, 1, 1 }, .{ 1e-8, 1, 1 } }) |local| {
+                const p = e.add(origin, e.scale(local, scale));
+                try std.testing.expectEqual(m.containsReference(p), m.contains(p));
+            }
+        }
+    }
+}

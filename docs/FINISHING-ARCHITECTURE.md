@@ -46,6 +46,17 @@ This is bounded stack traversal inside a block (depth <= 9), not an octree stora
 replacement. Boundary blocks retain their valid-bit masks. Failed import destroys
 the unpublished grid; allocation failure does not publish partial stock.
 
+A follow-up caches triangle edge vectors and each of the three fixed ray directions'
+cross product, determinant and parallel-test result after BVH reordering. Queries
+retain the original divisions, tolerances, boundary handling and ambiguous-ray
+retries. The cache is immutable, allocated once per imported mesh and released
+with it; no allocation occurs in point queries. `containsReference` and reference
+voxelization recompute these quantities, preserving an uncached numerical oracle.
+Reports expose `ray_cache_ns` and `ray_cache_bytes` separately; auxiliary cache
+bytes are cumulative across imported auxiliary meshes, not a simultaneous peak.
+The reference currently allocates the same cache even though it does not use it.
+
+
 ## Ball sweeps
 
 The scalar implementation still enumerates exactly the original n+1 poses with
