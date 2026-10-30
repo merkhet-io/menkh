@@ -43,6 +43,8 @@ The smoke run keeps the same geometry/path at 250 µm. See the [frozen protocol]
 [measured results and accuracy limits](docs/FINISHING-RESULTS.md). A
 [follow-up import optimization](docs/IMPORT-CACHE-RESULTS.md) completes the same
 25 µm job in 48.05 s median with 119.77 MB peak RSS on the M5 Max.
+[Shared scanline classification](docs/SCANLINE-IMPORT.md) subsequently reduces it
+to **25.58 s**, with **119.82 MB** peak RSS and byte-identical material/history.
 
 ## CPU performance
 

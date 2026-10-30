@@ -57,6 +57,41 @@ bytes are cumulative across imported auxiliary meshes, not a simultaneous peak.
 The reference currently allocates the same cache even though it does not use it.
 
 
+## Shared scanline classification
+
+Optimized import traverses one XY block column at a time and reuses sorted vertical
+surface intersections across its Z blocks. The 15 × 15 possible subdivision-center
+XY indices address a small cache. Cache entries also compare the actual floating-point
+XY coordinates: an integer midpoint key alone does not guarantee identical rounding.
+Each event list is built by projected BVH traversal and triangle intersection, not
+by an assumption that the stock is a height field. Even/odd intervals preserve
+cavities and vertically disconnected components.
+
+The existing surface-AABB exclusion still decides when a connected region can be
+filled uniformly. Scanlines classify that region's sample, or a single voxel;
+whole boundary blocks are never classified from their midpoint alone. Reference
+voxelization continues to evaluate every center using uncached three-direction parity.
+
+Ambiguous barycentric edges/vertices, nearly parallel or ill-conditioned projections,
+odd intersection counts, close crossing pairs, and near-surface queries fall back
+to the existing classifier. No half-open edge rule or coincident-hit merging is
+introduced. Guards depend on coordinate magnitude and projection conditioning;
+these are conservative engineering guards, not an interval-arithmetic proof for
+all accepted floating-point inputs. The new algorithm is outside the Lean model.
+
+Event storage is preallocated and capped at 65,536 doubles (512 KiB). Exhaustion
+invalidates that cache entry and uses scalar parity; it never truncates geometry.
+There is no allocation per query. After import, a temporary bitfield buffer restores
+pool slots to descriptor order, preserving binary state and initial viewer-buffer
+layout. This happens before any history exists, so no retained delta references
+are invalidated. Allocation failure destroys the unpublished grid.
+
+Reports expose scanline construction count, fallback point queries and scratch bytes
+(including the canonical pool-order buffer). Scratch figures for auxiliary inputs
+are sums across imports, not simultaneous process peaks. The three-direction cache
+remains available for fallbacks. Transformed-cell tests separately record existing
+STL-parser rejections rather than treating them as validated voxelizations.
+
 ## Ball sweeps
 
 The scalar implementation still enumerates exactly the original n+1 poses with

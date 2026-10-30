@@ -1,0 +1,17 @@
+Build completed successfully (3092 jobs).
+Audited 34 named results and 70 total Menkh theorems: only propext, Classical.choice, Quot.sound allowed.
+
+Build Summary: 3/3 steps succeeded; 1/1 tests passed
+formal-test success
++- run test 1 passed 319ms MaxRSS:3M
+   +- compile test Debug aarch64-macos cached 42ms MaxRSS:31M
+
+
+Build Summary: 3/3 steps succeeded; 1/1 tests passed
+formal-test success
++- run test 1 passed 168ms MaxRSS:3M
+   +- compile test ReleaseFast aarch64-macos cached 41ms MaxRSS:31M
+
+core: deliberately broken implementation rejected by proof checks
+history: deliberately broken implementation rejected by proof checks
+pool: deliberately broken implementation rejected by proof checks

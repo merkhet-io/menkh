@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Paired whole-job comparison against a supplied pre-cache executable."""
+"""Paired whole-job comparison against a supplied earlier executable."""
 import argparse, gzip, hashlib, importlib.util, json, pathlib, statistics, subprocess
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('workflow', ROOT / 'scripts/finishing-workflow.py')
@@ -48,6 +48,9 @@ def main():
                          'cut_s': stat([sum(o['cut_ns'] for o in r['operations'])/1e9 for r in rows]),
                          'peak_rss_bytes': max(r['process_peak_rss_bytes'] for r in rows),
                          'stock_ray_cache_bytes': rows[0]['timing']['stock_input'].get('ray_cache_bytes', 0),
+                         'stock_scanlines': rows[0]['timing']['stock_input'].get('scanlines', 0),
+                         'stock_scanline_fallbacks': rows[0]['timing']['stock_input'].get('scanline_fallbacks', 0),
+                         'stock_scanline_scratch_bytes': rows[0]['timing']['stock_input'].get('scanline_scratch_bytes', 0),
                          'cache_build_s': stat([(r['timing']['stock_input'].get('ray_cache_ns',0)+r['timing']['auxiliary_input'].get('ray_cache_ns',0))/1e9 for r in rows])}
     workflow.write(out / 'summary.json', summary)
     print(json.dumps(summary, indent=2))

@@ -33,7 +33,9 @@ jobs:
       - name: Geometry proofs, axiom audit, and Zig differential tests
         run: ./scripts/verify-formal.sh
       - name: Imported finishing mesh oracles
-        run: python3 scripts/test-finishing-import.py
+        run: |
+          python3 scripts/test-finishing-import.py
+          python3 scripts/test-scanline-import.py
   windows-cli:
     runs-on: windows-2025
     timeout-minutes: 20

@@ -37,6 +37,96 @@ fn lessEdge(_: void, a: Edge, b: Edge) bool {
 fn sameV(a: e.V, b: e.V) bool {
     return std.mem.eql(f64, &a, &b);
 }
+// One block column's 15 x 15 possible XY subdivision midpoints. Event storage
+// is bounded and allocated before traversal; overflow means parity fallback.
+const ScanCache = struct {
+    const Line = struct { ready: bool = false, usable: bool = false, x: f64 = 0, y: f64 = 0, start: usize = 0, len: usize = 0, guard: f64 = 1e-10 };
+    lines: [225]Line = @splat(.{}),
+    events: []f64,
+    used: usize = 0,
+    fn reset(s: *ScanCache) void {
+        s.lines = @splat(.{});
+        s.used = 0;
+    }
+    fn projectedOverlap(b: e.Bounds, p: e.V) bool {
+        for (0..2) |j| {
+            const guard = 1e-10 + 256 * std.math.floatEps(f64) * @max(1, @max(@abs(p[j]), @max(@abs(b.lo[j]), @abs(b.hi[j]))));
+            if (p[j] < b.lo[j] - guard or p[j] > b.hi[j] + guard) return false;
+        }
+        return true;
+    }
+    fn collect(s: *ScanCache, m: Mesh, id: usize, p: e.V, guard: *f64) bool {
+        const node = m.nodes.items[id];
+        if (!projectedOverlap(node.bounds, p)) return true;
+        if (node.len > 8) return s.collect(m, node.left, p, guard) and s.collect(m, node.right, p, guard);
+        for (m.triangles[node.start..][0..node.len], node.start..) |t, index| {
+            if (!projectedOverlap(t.bounds, p)) continue;
+            const ab = m.ray_data[index].ab;
+            const ac = m.ray_data[index].ac;
+            const cross = e.V{ -ac[1], ac[0], 0 };
+            const det = e.dot(ab, cross);
+            const product = e.norm(ab) * e.norm(ac);
+            // Includes vertical faces, tiny projected triangles and ill-conditioned
+            // rays. Do not invent an edge tie-break or silently discard these.
+            if (@abs(det) <= 1e-6 * product) return false;
+            const q = e.V{ p[0] - t.v[0][0], p[1] - t.v[0][1], 0 };
+            const condition = product / @abs(det);
+            const magnitude = @max(1, @max(e.norm(p), @max(e.norm(t.v[0]), @max(e.norm(ab), e.norm(ac)))));
+            const spatial_guard = 1e-10 + 256 * std.math.floatEps(f64) * magnitude * (1 + condition);
+            const bary_guard = @max(1e-10, spatial_guard / @min(e.norm(ab), e.norm(ac)) * (1 + condition));
+            if (bary_guard >= 0.01) return false;
+            const u = e.dot(q, cross) / det;
+            const cr = e.cross(q, ab);
+            const v = cr[2] / det;
+            if (u < -bary_guard or v < -bary_guard or u + v > 1 + bary_guard) continue;
+            if (u <= bary_guard or v <= bary_guard or 1 - u - v <= bary_guard) return false;
+            const z = t.v[0][2] + e.dot(ac, cr) / det;
+            if (!std.math.isFinite(z) or s.used == s.events.len) return false;
+            guard.* = @max(guard.*, spatial_guard);
+            s.events[s.used] = z;
+            s.used += 1;
+        }
+        return true;
+    }
+    fn contains(s: *ScanCache, m: *Mesh, p: e.V, key: usize) !bool {
+        m.point_queries += 1;
+        for (0..3) |j| if (p[j] < m.bounds.lo[j] - 1e-10 or p[j] > m.bounds.hi[j] + 1e-10) return false;
+        const line = &s.lines[key];
+        // Equal integer midpoint indices can round differently for different
+        // subdivision endpoints: never reuse intersections at different XY bits.
+        if (!line.ready or line.x != p[0] or line.y != p[1]) {
+            const start = s.used;
+            line.* = .{ .ready = true, .x = p[0], .y = p[1], .start = start };
+            m.scanlines += 1;
+            line.usable = s.collect(m.*, 0, p, &line.guard) and (s.used - start) % 2 == 0;
+            if (line.usable) {
+                line.len = s.used - start;
+                std.mem.sort(f64, s.events[start..s.used], {}, std.sort.asc(f64));
+                // Coincident or nearly coincident crossings are not resolved by
+                // merging: the established classifier handles that ambiguity.
+                for (@min(1, line.len)..line.len) |i| if (s.events[start + i] - s.events[start + i - 1] <= 2 * line.guard) {
+                    line.usable = false;
+                    break;
+                };
+            }
+            if (!line.usable) s.used = start;
+        }
+        if (line.usable) {
+            const events = s.events[line.start..][0..line.len];
+            var lo: usize = 0;
+            var hi = events.len;
+            while (lo < hi) {
+                const mid = lo + (hi - lo) / 2;
+                if (events[mid] < p[2]) lo = mid + 1 else hi = mid;
+            }
+            const near = (lo < events.len and @abs(events[lo] - p[2]) <= line.guard) or (lo > 0 and @abs(events[lo - 1] - p[2]) <= line.guard);
+            if (!near) return (events.len - lo) % 2 == 1;
+        }
+        m.scanline_fallbacks += 1;
+        return m.contains(p);
+    }
+};
+
 pub const Mesh = struct {
     allocator: std.mem.Allocator,
     triangles: []Tri,
@@ -49,6 +139,9 @@ pub const Mesh = struct {
     intersection_validate_ns: u64 = 0,
     uniform_blocks: u64 = 0,
     point_queries: u64 = 0,
+    scanlines: u64 = 0,
+    scanline_fallbacks: u64 = 0,
+    scanline_scratch_bytes: usize = 0,
     pub fn deinit(m: *Mesh) void {
         m.allocator.free(m.ray_data);
         m.allocator.free(m.triangles);
@@ -299,7 +392,7 @@ pub const Mesh = struct {
         for (m.triangles[n.start..][0..n.len]) |t| if (overlap(t.bounds, b)) return true;
         return false;
     }
-    fn fillRegion(m: *Mesh, g: c.Grid, block: [3]usize, lo: [3]usize, hi: [3]usize, bits: *c.Bits) !void {
+    fn fillRegion(m: *Mesh, g: c.Grid, block: [3]usize, lo: [3]usize, hi: [3]usize, bits: *c.Bits, cache: *ScanCache) !void {
         var bb: e.Bounds = undefined;
         var longest: usize = 0;
         for (0..3) |j| {
@@ -308,8 +401,8 @@ pub const Mesh = struct {
             if (hi[j] - lo[j] > hi[longest] - lo[longest]) longest = j;
         }
         if (hi[longest] - lo[longest] == 1 or !m.surfaceOverlap(0, bb)) {
-            m.point_queries += 1;
-            if (try m.contains(e.scale(e.add(bb.lo, bb.hi), 0.5))) {
+            const key = (lo[1] + hi[1] - 1) * 15 + lo[0] + hi[0] - 1;
+            if (try cache.contains(m, e.scale(e.add(bb.lo, bb.hi), 0.5), key)) {
                 for (lo[2]..hi[2]) |z| for (lo[1]..hi[1]) |y| for (lo[0]..hi[0]) |x| {
                     bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
                 };
@@ -320,8 +413,8 @@ pub const Mesh = struct {
         var right = lo;
         left[longest] = (lo[longest] + hi[longest]) / 2;
         right[longest] = left[longest];
-        try m.fillRegion(g, block, lo, left, bits);
-        try m.fillRegion(g, block, right, hi, bits);
+        try m.fillRegion(g, block, lo, left, bits, cache);
+        try m.fillRegion(g, block, right, hi, bits, cache);
     }
     pub fn voxelize(m: *Mesh, a: std.mem.Allocator, b: e.Bounds, h: f64) !c.Grid {
         return m.voxelizeMode(a, b, h, false);
@@ -329,47 +422,93 @@ pub const Mesh = struct {
     pub fn voxelizeMode(m: *Mesh, a: std.mem.Allocator, b: e.Bounds, h: f64, reference: bool) !c.Grid {
         m.uniform_blocks = 0;
         m.point_queries = 0;
+        m.scanlines = 0;
+        m.scanline_fallbacks = 0;
+        m.scanline_scratch_bytes = 0;
         try b.validate();
         var g = try c.Grid.init(a, e.sub(b.hi, b.lo), h);
         errdefer g.deinit();
         g.origin = b.lo;
         g.material_bounds = .{ m.bounds.lo, m.bounds.hi };
         @memset(g.blocks, c.empty);
-        for (g.blocks, 0..) |*d, i| {
-            const block = g.blockCoords(i);
-            const bb = e.blockBounds(g, block);
-            var outside = false;
-            for (0..3) |j| if (bb.hi[j] < m.bounds.lo[j] or bb.lo[j] > m.bounds.hi[j]) {
-                outside = true;
-            };
-            if (outside) continue;
-            if (!reference and !m.surfaceOverlap(0, bb)) {
-                m.point_queries += 1;
-                m.uniform_blocks += 1;
-                if (try m.contains(e.scale(e.add(bb.lo, bb.hi), 0.5))) {
-                    const valid = g.validBits(block);
-                    if (e.count(valid) == 512) d.* = c.full else {
-                        try g.pool.append(a, valid);
-                        d.* = @intCast(g.pool.items.len - 1);
+        const event_capacity = if (reference) 0 else @min(65536, try std.math.mul(usize, m.triangles.len, 225));
+        const events = try a.alloc(f64, event_capacity);
+        defer a.free(events);
+        var cache = ScanCache{ .events = events };
+        m.scanline_scratch_bytes = events.len * @sizeOf(f64) + @sizeOf(ScanCache);
+        // Z-contiguous traversal reuses XY scanlines through the whole column.
+        for (0..g.nb[1]) |by| for (0..g.nb[0]) |bx| {
+            cache.reset();
+            for (0..g.nb[2]) |bz| {
+                const block = [3]usize{ bx, by, bz };
+                const d = &g.blocks[g.blockIndex(block)];
+                const bb = e.blockBounds(g, block);
+                var outside = false;
+                for (0..3) |j| if (bb.hi[j] < m.bounds.lo[j] or bb.lo[j] > m.bounds.hi[j]) {
+                    outside = true;
+                };
+                if (outside) continue;
+                if (!reference and !m.surfaceOverlap(0, bb)) {
+                    m.uniform_blocks += 1;
+                    const ex = g.extent(block);
+                    const key = (ex[1] - 1) * 15 + ex[0] - 1;
+                    if (try cache.contains(m, e.scale(e.add(bb.lo, bb.hi), 0.5), key)) {
+                        const valid = g.validBits(block);
+                        if (e.count(valid) == 512) d.* = c.full else {
+                            try g.pool.append(a, valid);
+                            d.* = @intCast(g.pool.items.len - 1);
+                        }
                     }
+                    continue;
                 }
-                continue;
+                var bits: c.Bits = @splat(0);
+                const ex = g.extent(block);
+                if (!reference) {
+                    try m.fillRegion(g, block, .{ 0, 0, 0 }, ex, &bits, &cache);
+                } else for (0..ex[2]) |z| for (0..ex[1]) |y| for (0..ex[0]) |x| {
+                    const p = e.add(g.origin, .{ g.center(block[0] * 8 + x), g.center(block[1] * 8 + y), g.center(block[2] * 8 + z) });
+                    m.point_queries += 1;
+                    if (try m.containsReference(p)) bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
+                };
+                if (e.count(bits) == 0) continue;
+                if (std.mem.eql(u64, &bits, &g.validBits(block))) d.* = c.full else {
+                    try g.pool.append(a, bits);
+                    d.* = @intCast(g.pool.items.len - 1);
+                }
             }
-            var bits: c.Bits = @splat(0);
-            const ex = g.extent(block);
-            if (!reference) {
-                try m.fillRegion(g, block, .{ 0, 0, 0 }, ex, &bits);
-            } else for (0..ex[2]) |z| for (0..ex[1]) |y| for (0..ex[0]) |x| {
-                const p = e.add(g.origin, .{ g.center(block[0] * 8 + x), g.center(block[1] * 8 + y), g.center(block[2] * 8 + z) });
-                m.point_queries += 1;
-                if (try m.containsReference(p)) bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
-            };
-            if (e.count(bits) == 0) continue;
-            if (std.mem.eql(u64, &bits, &g.validBits(block))) d.* = c.full else {
-                try g.pool.append(a, bits);
-                d.* = @intCast(g.pool.items.len - 1);
-            }
-        }
+        };
+        // Import has not published any history. Restore canonical block-order
+        // pool numbering so states and initial viewer buffers remain byte-exact.
+        const ordered = try a.alloc(c.Bits, g.pool.items.len);
+        defer a.free(ordered);
+        m.scanline_scratch_bytes += ordered.len * @sizeOf(c.Bits);
+        var slot: u32 = 0;
+        for (g.blocks) |*d| if (d.* < c.full) {
+            ordered[slot] = g.pool.items[d.*];
+            d.* = slot;
+            slot += 1;
+        };
+        @memcpy(g.pool.items, ordered);
         return g;
     }
 };
+
+test "scanline event capacity exhaustion falls back instead of truncating intersections" {
+    // A single boundary triangle suffices to exercise event-buffer exhaustion;
+    // production meshes still pass the independent watertight parser first.
+    var ts = [_]Tri{.{ .v = .{ .{ 0, 0, 2 }, .{ 1, 0, 2 }, .{ 0, 1, 2 } }, .bounds = .{ .lo = .{ 0, 0, 2 }, .hi = .{ 1, 1, 2 } } }};
+    var data = [_]RayData{RayData.init(ts[0])};
+    var nodes = [_]Node{.{ .bounds = ts[0].bounds, .start = 0, .len = 1 }};
+    var m = Mesh{ .allocator = std.testing.allocator, .triangles = &ts, .ray_data = &data, .bounds = ts[0].bounds, .nodes = .{ .items = &nodes, .capacity = 1 } };
+    var none: [0]f64 = .{};
+    var cache = ScanCache{ .events = &none };
+    const p = e.V{ 0.2, 0.3, 2 };
+    try std.testing.expectEqual(try m.containsReference(p), try cache.contains(&m, p, 0));
+    try std.testing.expectEqual(@as(u64, 1), m.scanline_fallbacks);
+    try std.testing.expectEqual(@as(usize, 0), cache.used);
+    // An empty, unambiguous line must not attempt to sort a reversed range.
+    var room: [2]f64 = undefined;
+    cache = .{ .events = &room };
+    try std.testing.expect(!try cache.contains(&m, .{ 0.8, 0.8, 2 }, 1));
+    try std.testing.expectEqual(@as(usize, 0), cache.lines[1].len);
+}

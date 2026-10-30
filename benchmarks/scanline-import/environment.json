@@ -1,0 +1,32 @@
+{
+  "hardware": "Apple M5 Max, 18 CPU cores, 128 GB RAM; macOS 27.0.1 (26A434)",
+  "fixture_sha256": {
+    "out/scanline/paired/fixture/stock.stl": "2a6d2bd1d6a37e6acda8c074e37ef0602a6f1a44c8efc104517f2eda72afc857",
+    "out/scanline/paired/fixture/target.stl": "408b4632bf4bbcf4c8c8bf65fad2938d97f811b29ff69ecd152c3e02865042b1"
+  },
+  "transformed_fixture_sha256": {
+    "cavity-0.stl": "0479c7c24841e8b74d6d69592920fabde0b25d5c874c6d22bcff5640a0c16301",
+    "cavity-1.stl": "129c6002986cbb53eed519ba3327352919fe7ae904f4428f85bf234b61ffa932",
+    "cavity-2.stl": "79f67a3de79688b3a3b82b019deabd29b32e80674d03e256ca615cba20ec5152",
+    "cavity-3.stl": "3e8bac750370c0baa125e02c5c8f3dd244ad4bc43a94c84f2f1b7a8aa12345c8",
+    "concave-0.stl": "1c313eae5ac7435df4a08f2c67340fda2c772084e6bfe3e9a77df00458242698",
+    "concave-1.stl": "f2a4d2d7375fbc6bb12c7948988d73ff9966206ede652ceefc7a5420cdc43f43",
+    "concave-2.stl": "8e7bb16e972a9c53d7e9171dcc694112cfed0c02eaee4a6ed3ba3e58ff85d0ec",
+    "concave-3.stl": "b07607bea068250f476492d2e40ff3f70b00b1b9d17fb84bac8981c42ba66ef9",
+    "stacked-disconnected-0.stl": "d6d004e3a3451635e248e770bc7e4cd163f048312a71f773bfa28e968d8e971f",
+    "stacked-disconnected-1.stl": "fcd44d1ecdcd2147c1a6d8a3f6d2409de083841117987fff7a153549e307b72a",
+    "stacked-disconnected-2.stl": "3be4f5d5ac03f6522591fa2e6f4087e7431dbe0057f535772b16d8985ab1a369",
+    "stacked-disconnected-3.stl": "d5231696b6cce0dafbbdb8615fb3db0a489585a0e38d5b34dbd476ed99379984",
+    "thin-0.stl": "14dcff83377c6bd0f3270f977f47c12af6c6678ae63a16b8f82b15d9f91dcd7b",
+    "thin-1.stl": "f55a1dc8dda1c1abe81ec68ad554fc4c1b740516516d43a95012cc638885cd18",
+    "thin-2.stl": "b581e618f946741e0f2291d19de1e8b96e003c2bb6c617b575be24897656a963",
+    "thin-3.stl": "68252b692b96033f7a3b220f085eeead50aff4a73eebadccdbf521849e61ea12"
+  },
+  "validation_script_sha256": {
+    "scripts/test-scanline-import.py": "a749def8a1cfa37cfe8e471d479f63208c40cfafed5bfbafb67293359b2c3684",
+    "scripts/test-finishing-import.py": "b0a30499ec90be99e547254913acd7ad5285a961bb6b36768b6d61c0ab8e26e8",
+    "scripts/benchmark-import-cache.py": "f608f05efcfaf07e73d26b6b9f6c6ea9f973cd2bc899afd4165d6d6a77f3500f"
+  },
+  "viewer_binary_sha256": "5c618487a4298db388399699088d6843a4557d8f4a75efbd7490a61b88875491",
+  "note": "Working-tree source hashes identify the measured implementation; exploratory run excluded from paired timings. Existing parser restrictions reproduced using retained baseline executable."
+}
