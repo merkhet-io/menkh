@@ -1,0 +1,122 @@
+{
+  "issue": 11,
+  "hardware": "arm64",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "zig": "0.15.2",
+  "base_commit": "44282af63557a67ec6654cb22bc570a1e0bcb829",
+  "binary_sha256": "eaadabdd023e760dd21ae06bbe012e096e3af890363e533263de00ed31cc58e6",
+  "source_sha256": {
+    "src/core.zig": "b2194ad98966a6ce9d2fbdf9813e921dc982c1c19571d322508c7c1924116dcf",
+    "src/tiles.zig": "0386c3fc9248f26d3a59a3b9d1516aac0edb602148d3da4e769d2f2009df5050"
+  },
+  "probes": [
+    {
+      "grid": [
+        20000,
+        20000,
+        20000
+      ],
+      "small_stock_mm": [
+        1,
+        1,
+        1
+      ],
+      "status": "rejected",
+      "exit_code": 1,
+      "message": "menkh: GridTooLargeOrEmpty",
+      "measured_elapsed_seconds": 0.1893895829853136,
+      "calculated_dense_descriptor_bytes": 62500000000,
+      "calculated_dense_occupancy_bit_bytes": 1000000000000
+    },
+    {
+      "grid": [
+        65536,
+        65536,
+        65536
+      ],
+      "small_stock_mm": [
+        1,
+        1,
+        1
+      ],
+      "status": "rejected",
+      "exit_code": 1,
+      "message": "menkh: GridTooLargeOrEmpty",
+      "measured_elapsed_seconds": 0.0035774589923676103,
+      "calculated_dense_descriptor_bytes": 2199023255552,
+      "calculated_dense_occupancy_bit_bytes": 35184372088832
+    }
+  ],
+  "calculated_one_u32_per_2pow32_faces_bytes": 17179869184,
+  "note": "Capacity formulas are NOT measured allocations. A successful initialization alone does not demonstrate machining, 2^32 exposed faces, or a 16 GiB working set. No memory-budget enforcement is claimed by these probes.",
+  "immutable_snapshot_summary": {
+    "full-cube-4096": {
+      "dense_bytes": {
+        "median": 536870912.0,
+        "min": 536870912,
+        "max": 536870912
+      },
+      "tiled_bytes": {
+        "median": 537919488.0,
+        "min": 537919488,
+        "max": 537919488
+      },
+      "convert_ns": {
+        "median": 910831958.5,
+        "min": 907879583,
+        "max": 917439000
+      },
+      "dense_query_ns": {
+        "median": 11023291.5,
+        "min": 10916541,
+        "max": 12021542
+      },
+      "tiled_query_ns": {
+        "median": 18610375.5,
+        "min": 17520250,
+        "max": 34470709
+      },
+      "peak_rss_bytes": {
+        "median": 1076789248.0,
+        "min": 1076789248,
+        "max": 1076789248
+      }
+    },
+    "sparse-cylinder-4096": {
+      "dense_bytes": {
+        "median": 550143104.0,
+        "min": 550143104,
+        "max": 550143104
+      },
+      "tiled_bytes": {
+        "median": 33423360.0,
+        "min": 33423360,
+        "max": 33423360
+      },
+      "convert_ns": {
+        "median": 194847396.0,
+        "min": 191820917,
+        "max": 196075917
+      },
+      "dense_query_ns": {
+        "median": 11807395.5,
+        "min": 11777916,
+        "max": 11953875
+      },
+      "tiled_query_ns": {
+        "median": 6746125.0,
+        "min": 6356209,
+        "max": 6824250
+      },
+      "peak_rss_bytes": {
+        "median": 584220672.0,
+        "min": 584220672,
+        "max": 584220672
+      }
+    }
+  },
+  "build_mode": "ReleaseFast",
+  "workers": 1,
+  "hardware_model": "Apple M5 Max",
+  "build_metadata_note": "Actual binary mode/worker metadata queried with a tiny successful job; binary SHA matches measured run."
+}
