@@ -47,7 +47,11 @@ Hit cylinderHit(float3 ray,float4 part,float4 axial) {
 // Cell keys require 36 bits at 4096^3. SM5 uses two uint words, never float keys.
 uint exposure(int3 cell) {
     if(any(cell<0)||any(cell>=int3(dimensions.xyz))||filled(cell))return 0;
-    uint lo,hi;umulExtended(uint(cell.z)*dimensions.y+uint(cell.y),dimensions.x,lo,hi);
+    // SM5 has no HLSL umulExtended intrinsic. Each partial product fits uint:
+    // row < 2^24, dimensions.x <= 4096. Combine 16-bit limbs explicitly.
+    uint row=uint(cell.z)*dimensions.y+uint(cell.y);
+    uint lower=(row&65535u)*dimensions.x,upper=(row>>16)*dimensions.x;
+    uint lo=lower+(upper<<16),hi=(upper>>16)+uint(lo<lower);
     uint old=lo;lo+=uint(cell.x);hi+=uint(lo<old);
     uint left=0,right=flags.w;
     [loop] while(left<right){uint mid=left+(right-left)/2;uint l=provenance[mid*4],h=provenance[mid*4+1];if(h<hi||(h==hi&&l<lo))left=mid+1;else right=mid;}
