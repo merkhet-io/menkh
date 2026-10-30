@@ -5,7 +5,9 @@ struct Uniforms {
     uint4 grid;
     uint4 dimensions,blockDimensions;
     float4 shank,shankAxis,holder,holderAxis,cutter,cutterAxis;
+    uint4 provenance;
 };
+struct Exposure {ulong cell; uint operation,tool;};
 struct Hit { bool found; float t; float3 normal; int3 cell; };
 bool filled(int3 p,device const uint *blocks,device const uint *pool,uint3 n,uint3 nb) {
     if(any(p<0)||any(p>=int3(n)))return false;
@@ -66,7 +68,7 @@ Hit ballHit(float3 eye,float3 ray,float4 part,float4 axial) {
     if(lo<=hi && (!hit.found || lo<hit.t)){hit.found=true;hit.t=lo;float3 p=q+ray*lo;hit.normal=abs(dot(p,axial.xyz))<.001f?axial.xyz:normalize(p);}
     return hit;
 }
-float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device const uint *pool,device const uint *targetBlocks,device const uint *targetPool,device const uint *fixtureBlocks,device const uint *fixturePool) {
+float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device const uint *pool,device const uint *targetBlocks,device const uint *targetPool,device const uint *fixtureBlocks,device const uint *fixturePool,device const Exposure *exposures) {
     float2 uv=(pixel/u.settings.yz)*2-1;uv.y=-uv.y;uv.x*=u.settings.y/u.settings.z;
     float3 ray=normalize(u.forward.xyz+u.settings.w*(uv.x*u.right.xyz+uv.y*u.up.xyz));
     Hit hit=trace(u.eye.xyz,ray,u,blocks,pool);
@@ -95,13 +97,27 @@ float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device 
     float diffuse=max(0.0f,dot(normal,key));float fill=max(0.0f,dot(normal,-u.forward.xyz));
     float3 blue=float3(0.32,0.50,0.82);
     if(u.dimensions.w!=0) {if(missing)blue=float3(0.95,0.18,0.15);else if(!filled(hit.cell,targetBlocks,targetPool,u.dimensions.xyz,u.blockDimensions.xyz))blue=float3(0.98,0.8,0.12);}
+    if(u.provenance.y!=0 && !fixture && !missing) {
+        int3 neighbor=hit.cell+int3(hit.normal);
+        uint label=0;
+        float3 facePosition=u.eye.xyz+ray*hit.t;
+        float coordinate=dot(facePosition,abs(hit.normal));
+        if(abs(coordinate-round(coordinate))<0.01f && all(neighbor>=0) && all(neighbor<int3(u.dimensions.xyz)) && !filled(neighbor,blocks,pool,u.dimensions.xyz,u.blockDimensions.xyz)) {
+            ulong cell=(ulong(neighbor.z)*u.dimensions.y+uint(neighbor.y))*u.dimensions.x+uint(neighbor.x);
+            uint lo=0,hi=u.provenance.x;
+            while(lo<hi){uint mid=lo+(hi-lo)/2;if(exposures[mid].cell<cell)lo=mid+1;else hi=mid;}
+            if(lo<u.provenance.x && exposures[lo].cell==cell)label=u.provenance.y==1?exposures[lo].operation:exposures[lo].tool;
+        }
+        uint hash=label*2654435761u;hash^=hash>>16;
+        blue=label==0?float3(.58,.6,.63):float3(.25)+float3(float(hash&255u),float((hash>>8)&255u),float((hash>>16)&255u))*(.7/255.0);
+    }
     if(fixture)blue=float3(0.25,0.7,0.4);
     float light=0.46+0.32*diffuse+0.22*fill;
     float spec=pow(max(0.0f,dot(normal,normalize(key-ray))),48.0f)*0.10f;
     return blue*light+spec;
 }
-kernel void voxelImage(texture2d<float,access::write> image [[texture(0)]],device const uint *blocks [[buffer(0)]],device const uint *pool [[buffer(1)]],constant Uniforms &u [[buffer(2)]],device const uint *targetBlocks [[buffer(3)]],device const uint *targetPool [[buffer(4)]],device const uint *fixtureBlocks [[buffer(5)]],device const uint *fixturePool [[buffer(6)]],uint2 pixel [[thread_position_in_grid]]) {
+kernel void voxelImage(texture2d<float,access::write> image [[texture(0)]],device const uint *blocks [[buffer(0)]],device const uint *pool [[buffer(1)]],constant Uniforms &u [[buffer(2)]],device const uint *targetBlocks [[buffer(3)]],device const uint *targetPool [[buffer(4)]],device const uint *fixtureBlocks [[buffer(5)]],device const uint *fixturePool [[buffer(6)]],device const Exposure *exposures [[buffer(7)]],uint2 pixel [[thread_position_in_grid]]) {
     if(pixel.x>=image.get_width()||pixel.y>=image.get_height())return;
-    float3 color=(shade(float2(pixel)+float2(0.25,0.25),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool)+shade(float2(pixel)+float2(0.75,0.25),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool)+shade(float2(pixel)+float2(0.25,0.75),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool)+shade(float2(pixel)+float2(0.75,0.75),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool))*0.25f;
+    float3 color=(shade(float2(pixel)+float2(0.25,0.25),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool,exposures)+shade(float2(pixel)+float2(0.75,0.25),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool,exposures)+shade(float2(pixel)+float2(0.25,0.75),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool,exposures)+shade(float2(pixel)+float2(0.75,0.75),u,blocks,pool,targetBlocks,targetPool,fixtureBlocks,fixturePool,exposures))*0.25f;
     image.write(float4(color,1),pixel);
 }
