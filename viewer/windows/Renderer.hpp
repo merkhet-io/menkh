@@ -7,6 +7,8 @@
 #endif
 #include <windows.h>
 #include <d3d12.h>
+#include <d3d12sdklayers.h>
+#include <iostream>
 #include <dxgi1_6.h>
 #include <d3dcompiler.h>
 #include <wrl/client.h>
@@ -51,7 +53,8 @@ class Renderer {
     Buffer dataBuffer(size_t bytes){Buffer b;b.size=bytes;b.gpu=buffer(bytes,D3D12_HEAP_TYPE_DEFAULT,D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);b.upload=buffer(bytes,D3D12_HEAP_TYPE_UPLOAD,D3D12_RESOURCE_STATE_GENERIC_READ);D3D12_RANGE range{0,0};hr(b.upload->Map(0,&range,reinterpret_cast<void**>(&b.mapped)),"Map staging buffer");return b;}
     void transition(ID3D12Resource* r,D3D12_RESOURCE_STATES before,D3D12_RESOURCE_STATES after){D3D12_RESOURCE_BARRIER b{};b.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;b.Transition={r,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,before,after};commands->ResourceBarrier(1,&b);}
     void begin(){hr(allocator->Reset(),"Reset allocator");hr(commands->Reset(allocator.Get(),pipeline.Get()),"Reset commands");}
-    void submit(){hr(commands->Close(),"Close commands");ID3D12CommandList* lists[]={commands.Get()};queue->ExecuteCommandLists(1,lists);hr(queue->Signal(fence.Get(),++serial),"Signal fence");if(fence->GetCompletedValue()<serial){hr(fence->SetEventOnCompletion(serial,event),"Set fence event");require(WaitForSingleObject(event,60000)==WAIT_OBJECT_0,"GPU timed out");}hr(device->GetDeviceRemovedReason(),"D3D12 device status");}
+    void diagnostics(){ComPtr<ID3D12InfoQueue> messages;if(SUCCEEDED(device.As(&messages))){for(UINT64 i=0;i<messages->GetNumStoredMessagesAllowedByRetrievalFilter();i++){SIZE_T size=0;messages->GetMessage(i,nullptr,&size);std::vector<uint8_t> storage(size);auto* m=reinterpret_cast<D3D12_MESSAGE*>(storage.data());if(SUCCEEDED(messages->GetMessage(i,m,&size)))std::cerr<<"D3D12: "<<m->pDescription<<'\n';}messages->ClearStoredMessages();}}
+    void submit(){hr(commands->Close(),"Close commands");ID3D12CommandList* lists[]={commands.Get()};queue->ExecuteCommandLists(1,lists);hr(queue->Signal(fence.Get(),++serial),"Signal fence");if(fence->GetCompletedValue()<serial){hr(fence->SetEventOnCompletion(serial,event),"Set fence event");require(WaitForSingleObject(event,60000)==WAIT_OBJECT_0,"GPU timed out");}diagnostics();hr(device->GetDeviceRemovedReason(),"D3D12 device status");}
     void update(Buffer& b,const void* source,std::vector<size_t>& dirty,size_t stride){
         if(!initial&&dirty.empty())return;
         transition(b.gpu.Get(),D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,D3D12_RESOURCE_STATE_COPY_DEST);
@@ -94,6 +97,6 @@ public:
         else{D3D12_RESOURCE_BARRIER barrier{};barrier.Type=D3D12_RESOURCE_BARRIER_TYPE_UAV;barrier.UAV.pResource=output.Get();commands->ResourceBarrier(1,&barrier);}submit();if(swap)hr(swap->Present(1,0),"Present");
     }
     void snapshot(const fs::path& path){D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout{};UINT rows=0;UINT64 rowBytes=0,total=0;const auto desc=output->GetDesc();device->GetCopyableFootprints(&desc,0,1,0,&layout,&rows,&rowBytes,&total);auto dest=buffer(size_t(total),D3D12_HEAP_TYPE_READBACK,D3D12_RESOURCE_STATE_COPY_DEST);begin();transition(output.Get(),D3D12_RESOURCE_STATE_UNORDERED_ACCESS,D3D12_RESOURCE_STATE_COPY_SOURCE);D3D12_TEXTURE_COPY_LOCATION from{};from.pResource=output.Get();from.Type=D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;D3D12_TEXTURE_COPY_LOCATION to{};to.pResource=dest.Get();to.Type=D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;to.PlacedFootprint=layout;commands->CopyTextureRegion(&to,0,0,0,&from,nullptr);transition(output.Get(),D3D12_RESOURCE_STATE_COPY_SOURCE,D3D12_RESOURCE_STATE_UNORDERED_ACCESS);submit();
-        uint8_t* pixels=nullptr;D3D12_RANGE readRange{0,size_t(total)};hr(dest->Map(0,&readRange,reinterpret_cast<void**>(&pixels)),"Map image readback");std::ofstream f(path,std::ios::binary);f<<"P6\n"<<width<<' '<<height<<"\n255\n";for(uint32_t y=0;y<height;y++)for(uint32_t x=0;x<width;x++)f.write(reinterpret_cast<const char*>(pixels+layout.Offset+size_t(y)*layout.Footprint.RowPitch+x*4),3);dest->Unmap(0,nullptr);require(bool(f),"Cannot save snapshot");}
+        uint8_t* pixels=nullptr;D3D12_RANGE readRange{0,size_t(total)};const auto mapped=dest->Map(0,&readRange,reinterpret_cast<void**>(&pixels));if(FAILED(mapped)){diagnostics();hr(device->GetDeviceRemovedReason(),"Device removed during readback");}hr(mapped,"Map image readback");std::ofstream f(path,std::ios::binary);f<<"P6\n"<<width<<' '<<height<<"\n255\n";for(uint32_t y=0;y<height;y++)for(uint32_t x=0;x<width;x++)f.write(reinterpret_cast<const char*>(pixels+layout.Offset+size_t(y)*layout.Footprint.RowPitch+x*4),3);dest->Unmap(0,nullptr);require(bool(f),"Cannot save snapshot");}
 };
 }
