@@ -1,6 +1,8 @@
 # menkh — voxel-based material removal on Apple Silicon
 
-Menkh now runs general geometric machining jobs, beyond the original groove and drill demos: primitive or binary-STL stock, fixed-orientation flat/ball/bull/taper cutters, bounded helical motion, resumable checkpoints, fixture/holder checks, target comparison, sections, and limited turning envelopes.
+Menkh is a voxel-based geometric cutting simulator for macOS on Apple Silicon, with a **Zig CPU engine**, a **native Swift/Metal viewer**, and **Lean proofs of core mathematical models**.
+
+It consumes stock geometry, tools and motion to calculate the material remaining in a workpiece. General jobs support primitive or binary-STL stock, fixed-orientation flat/ball/bull/taper cutters, bounded helical motion, reversible cutting history, resumable checkpoints, fixture/holder checks, target comparison, cross-sections and limited turning envelopes.
 
 Start the native demonstration:
 
@@ -20,13 +22,35 @@ python3 scripts/benchmark-engine.py
 
 See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contracts](docs/ENGINE.md), [job/state/STL formats](docs/FORMATS.md), and [measured validation report](docs/ENGINE-VALIDATION.md). The matrix distinguishes tested behavior from restrictions; this is not a claim of ModuleWorks compatibility or feature parity. All material removal stays on the CPU. General jobs reject simultaneous orientation changes.
 
-Formal verification now has a [Lean proof and CI workflow](docs/FORMAL-VERIFICATION.md): real-arithmetic cylinder sweeps, discrete occupancy, and abstract cutting/history/pool invariants. These are model proofs with differential Zig tests, not verification of the compiled simulator.
-
 [Watch the inspected pocket-milling video](docs/general-demo.mp4) (31 seconds).
 
 ![Pocket milling with visible cutter](docs/pocket-demo.png)
 
 The default demo now uses 325 real cutting increments at 100 µm, rather than the eight-operation diagnostic fixture. Target coloring stays opt-in. The original multi-capability/collision example remains at `examples/general.json`.
+
+## Formal verification with Lean
+
+**34 named, machine-checked Lean results** cover the mathematical models behind material removal and storage. They establish that:
+
+- A finite-cylinder sweep predicate matches continuous straight tool motion at fixed orientation, in local tool coordinates and real arithmetic.
+- Subtraction cannot add material and is idempotent; bitwise subtraction matches the occupancy rule.
+- Remaining and removed voxels form a disjoint partition; restoring the removed set recovers the original occupancy.
+- Abstract pool updates preserve exclusive ownership and retained history payloads under explicit slot-reuse preconditions.
+
+Additional results justify convex-corner and distance-based block reasoning under stated hypotheses. They do not prove every production classifier branch correct.
+
+CI checks the proofs and their axiom dependencies, runs the existing Zig tests, and compares **20,480 deterministic Lean-generated records** against Zig in Debug and ReleaseFast. Negative controls ensure deliberately broken subtraction, undo and pool updates fail verification.
+
+These are **model proofs plus implementation tests**, not formal verification of the compiled Zig engine. Floating-point rounding, tool-frame normalization, full binary history and surface reconstruction remain outside the proof boundary. Voxel spacing is not a guaranteed maximum surface error.
+
+```sh
+./scripts/bootstrap-formal.sh  # Existing elan required; missing toolchain stays in .tools/
+./scripts/verify-formal.sh     # Proofs, axiom audit, Zig bridge tests and negative controls
+```
+
+Lean is separate from the engine and viewer builds. See the [theorem inventory, assumptions and reproduction details](docs/FORMAL-VERIFICATION.md).
+
+## Original demos and measurements
 
 The sections below retain the original reproducible demos. Historical benchmark numbers describe their original checkpoint; current engine measurements are in the validation report.
 
