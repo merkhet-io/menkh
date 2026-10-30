@@ -122,17 +122,35 @@ class Viewer: NSViewController {
 class Delegate: NSObject, NSApplicationDelegate {
     var window: NSWindow?
     var controller: Viewer?
+    var jobRunner:JobRunner?
+    var calculatedJob=false
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
+            if CommandLine.arguments.dropFirst().first == "--help" {
+                print("menkh-viewer [JOB_OR_HISTORY.json | MESH.obj] [--engine PATH] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--snapshot FILE.png]\nJobs run in the background and open at the final state. Relative resources default to the job directory.")
+                NSApp.terminate(nil);return
+            }
             var file: URL
             if CommandLine.arguments.count > 1 { file = URL(fileURLWithPath:CommandLine.arguments[1]) }
             else {
-                let panel = NSOpenPanel(); panel.title = "Voxeloberfläche öffnen (menkh OBJ)"; panel.allowsMultipleSelection = false
+                let panel = NSOpenPanel(); panel.title = "Open a Menkh job, recorded history or OBJ"; panel.allowsMultipleSelection = false
                 guard panel.runModal() == .OK, let selected = panel.url else { NSApp.terminate(nil); return }
                 file = selected
             }
             if file.pathExtension == "json" {
                 let header = try JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any]
+                if header?["version"] != nil && header?["format"] == nil {
+                    let runner=JobRunner();jobRunner=runner
+                    try runner.start(file) { [weak self] result in
+                        guard let self=self else {return}
+                        do {
+                            self.calculatedJob=true
+                            if CommandLine.arguments.contains("--run-only") {print("Calculation complete: \(result.path)");exit(0)}
+                            try self.openVoxels(result)
+                        } catch {fputs("viewer: \(error)\n",stderr);exit(1)}
+                    }
+                    return
+                }
                 if header?["format"] as? String == "menkh-voxel-history-v1" { try openVoxels(file) } else { try openDrill(file) }; return
             }
             let start = Date()
@@ -158,7 +176,16 @@ class Delegate: NSObject, NSApplicationDelegate {
                 return event
             }
             print("Loaded \(triangles) triangles in \(loadSeconds) s")
-        } catch { fputs("viewer: \(error)\n",stderr); exit(1) }
+        } catch {
+            fputs("viewer: \(error)\n",stderr)
+            let args=CommandLine.arguments
+            if !args.contains("--run-only") && !args.contains("--snapshot") && !args.contains("--cancel-after-ms") {let alert=NSAlert();alert.messageText="Cannot open calculation";alert.informativeText=String(describing:error);alert.runModal()}
+            exit(1)
+        }
+    }
+    func applicationShouldTerminate(_ sender:NSApplication)->NSApplication.TerminateReply {
+        if let runner=jobRunner,runner.isRunning {runner.quitRequested=true;runner.cancel();return .terminateLater}
+        return .terminateNow
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 }

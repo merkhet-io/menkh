@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bundle a built viewer and one existing voxel history; no build or simulation."""
+"""Bundle a viewer/history and optionally the engine plus a self-contained job."""
 import argparse
 import json
 from pathlib import Path
@@ -11,11 +11,24 @@ def main():
     parser.add_argument('--binary-dir', type=Path, required=True)
     parser.add_argument('--history', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--engine', type=Path, help='Bundle menkh.exe for viewer-owned calculation')
+    parser.add_argument('--job', type=Path, help='Bundle a self-contained primitive job and calculate-demo.bat')
     args = parser.parse_args()
     history = json.loads(args.history.read_text())
     if history.get('format') != 'menkh-voxel-history-v1':
         parser.error('Expected menkh-voxel-history-v1')
     files = [(args.binary_dir / name, name) for name in ('menkh-viewer.exe', 'Voxel.hlsl')]
+    if args.job and not args.engine:
+        parser.error('--job requires --engine')
+    if args.engine:
+        files.append((args.engine, 'menkh.exe'))
+    if args.job:
+        job = json.loads(args.job.read_text())
+        if job.get('version') != 1:
+            parser.error('Expected a version-1 job')
+        if any(source and ('stl' in source or 'state_file' in source) for source in (job.get('stock'), job.get('target'), job.get('fixtures'))):
+            parser.error('Bundled job must be self-contained; external STL/state assets are not packaged automatically')
+        files.append((args.job, 'demo/job.json'))
     files.append((args.history, 'demo/voxel-animation.json'))
     names = {'initial.blocks', 'initial.pool'}
     names.update(frame['file'] for frame in history['frames'])
@@ -31,6 +44,18 @@ def main():
         for source, destination in files:
             archive.write(source, destination)
         archive.writestr('open-demo.bat', '@echo off\r\n"%~dp0menkh-viewer.exe" "%~dp0demo\\voxel-animation.json"\r\nif errorlevel 1 pause\r\n')
+        if args.job:
+            archive.writestr('calculate-demo.bat', '@echo off\r\n"%~dp0menkh-viewer.exe" "%~dp0demo\\job.json"\r\nif errorlevel 1 pause\r\n')
+        if args.engine:
+            archive.writestr('CALCULATION.txt', '''The engine is bundled as menkh.exe. No Zig/compiler installation is needed.
+Double-click menkh-viewer.exe and select a job JSON to calculate and inspect it.
+If included, calculate-demo.bat opens the bundled job directly.
+Progress and Cancel are shown during calculation; successful results open at the final frame.
+Results/logs are retained in %LOCALAPPDATA%\\Menkh\\runs. Existing output is never overwritten.
+Relative STL/state paths are resolved from the job directory; --working-dir overrides this.
+The viewer runs a supervised background process, not an in-process library. Only completed
+results are loaded; incremental simulation-time viewing is not implemented.
+''')
         archive.writestr('README.txt', '''Menkh Windows D3D12 viewer
 Extract the entire ZIP, then double-click open-demo.bat.
 Requires Windows x64 and a D3D12 graphics adapter. No Zig or Visual Studio needed.
@@ -38,13 +63,14 @@ Requires Windows x64 and a D3D12 graphics adapter. No Zig or Visual Studio neede
 Left drag: orbit. Right drag: pan. Wheel: zoom. R: reset.
 Space: play/pause. Slider: scrub. Left/Right: step. Home/End: first/last.
 B: background. T: tool visibility. A: antialiasing. [ / ]: Z section.
-Playback is recorded geometry, not live simulation or physical machining time.
+Playback is recorded geometry, not physical machining time.
+If CALCULATION.txt is included, this package also runs jobs from the viewer.
 
 Software rendering for troubleshooting (slower):
 menkh-viewer.exe demo\\voxel-animation.json --warp
 
 Source, build instructions, dependencies and limits:
-https://github.com/merkhet-io/menkh/tree/codex/windows-d3d12-viewer/viewer/windows
+https://github.com/merkhet-io/menkh/tree/main/viewer/windows
 ''')
         archive.write(Path(__file__).resolve().parent.parent / 'viewer/windows/vendor/LICENSE.json', 'LICENSE.json.txt')
     print(f'{args.out}: {args.out.stat().st_size:,} bytes, {len(history["frames"])} recorded operations')

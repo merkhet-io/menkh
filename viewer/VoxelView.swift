@@ -271,6 +271,7 @@ final class VoxelController:NSViewController {
 extension Delegate {
     func openVoxels(_ file:URL) throws {
         let loadStart=CFAbsoluteTimeGetCurrent();let renderer=try VoxelRenderer(file);let loadSeconds=CFAbsoluteTimeGetCurrent()-loadStart;let seekStart=CFAbsoluteTimeGetCurrent();let args=CommandLine.arguments
+        if calculatedJob && !args.contains("--frame") {try renderer.seek(renderer.history.frames.count)}
         if let i=args.firstIndex(of:"--frame"),i+1<args.count,let frame=Int(args[i+1]) {try renderer.seek(frame)}
         let seekSeconds=CFAbsoluteTimeGetCurrent()-seekStart
         if let i=args.firstIndex(of:"--section-axis"),i+1<args.count,let axis=["x","y","z"].firstIndex(of:args[i+1]) {renderer.sectionAxis=axis}
