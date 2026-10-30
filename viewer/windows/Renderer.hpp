@@ -166,10 +166,7 @@ class Renderer {
             messages->ClearStoredMessages();
         }
     }
-    void submit() {
-        hr(commands->Close(), "Close commands");
-        ID3D12CommandList *lists[] = {commands.Get()};
-        queue->ExecuteCommandLists(1, lists);
+    void waitForQueue() {
         hr(queue->Signal(fence.Get(), ++serial), "Signal fence");
         if (fence->GetCompletedValue() < serial) {
             hr(fence->SetEventOnCompletion(serial, event), "Set fence event");
@@ -177,6 +174,12 @@ class Renderer {
         }
         diagnostics();
         hr(device->GetDeviceRemovedReason(), "D3D12 device status");
+    }
+    void submit() {
+        hr(commands->Close(), "Close commands");
+        ID3D12CommandList *lists[] = {commands.Get()};
+        queue->ExecuteCommandLists(1, lists);
+        waitForQueue();
     }
     void update(Buffer &b, const void *source, std::vector<size_t> &dirty, size_t stride) {
         if (!initial && dirty.empty())
@@ -306,11 +309,24 @@ class Renderer {
         hr(constants->Map(0, &noRead, reinterpret_cast<void **>(&constantData)), "Map constants");
     }
     ~Renderer() {
+        std::cerr << "D3D12 shutdown: swapchain\n";
         // DXGI may still own presentation work after the command fence completes.
         // Release the swapchain while its HWND and device/queue are still alive.
         swap.Reset();
+        std::cerr << "D3D12 shutdown: event\n";
         if (event)
             CloseHandle(event);
+        std::cerr << "D3D12 shutdown: resources\n";
+        constants.Reset();
+        blocks.upload.Reset(); blocks.gpu.Reset();
+        pool.upload.Reset(); pool.gpu.Reset();
+        output.Reset(); heap.Reset(); pipeline.Reset(); root.Reset();
+        commands.Reset(); allocator.Reset(); fence.Reset();
+        std::cerr << "D3D12 shutdown: queue\n";
+        queue.Reset();
+        std::cerr << "D3D12 shutdown: device\n";
+        device.Reset(); factory.Reset();
+        std::cerr << "D3D12 shutdown: complete\n";
     }
     ComPtr<ID3D12Resource> constants;
     uint8_t *constantData = nullptr;
@@ -393,8 +409,10 @@ class Renderer {
             commands->ResourceBarrier(1, &barrier);
         }
         submit();
-        if (swap)
+        if (swap) {
             hr(swap->Present(1, 0), "Present");
+            waitForQueue();
+        }
     }
     void snapshot(const fs::path &path) {
         D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout{};
