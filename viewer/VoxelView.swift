@@ -39,17 +39,24 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
     var smoothLighting=false;var darkBackground=false
     var lastCommand:MTLCommandBuffer?
     var lastGPUms:Double=0
-    init(_ file:URL) throws {
+    var drawCount=0
+    var lastDrawTime=0.0
+    var maximumDrawGapMS=0.0
+    init(_ file:URL, sharing previous:VoxelRenderer? = nil) throws {
         root=file.deletingLastPathComponent();let decoded=try JSONDecoder().decode(VoxelHistory.self,from:Data(contentsOf:file));history=decoded
 
         guard history.format=="menkh-voxel-history-v1",history.grid.count==3,history.block_grid.count==3,history.stock_min.count==3,history.stock_max.count==3,history.grid.allSatisfy({$0>=1 && $0<=4096}),zip(history.grid,history.block_grid).allSatisfy({($0.0+7)/8==$0.1}),history.pool_slots>=0,history.pool_slots<=history.block_grid.reduce(1,*),history.voxel_mm.isFinite,history.voxel_mm>0 else {throw MeshError.invalidOBJ("Invalid voxel history")}
         let first=history.live_sequence == nil ? 0:(history.first_operation ?? 0)
         guard first>=0,first<=Int(UInt32.max)-history.frames.count else {throw MeshError.invalidOBJ("Invalid global operation range")}
-        guard let device=MTLCreateSystemDefaultDevice(),let queue=device.makeCommandQueue() else {throw MeshError.noMetal};self.device=device;self.queue=queue
-        let shader=URL(fileURLWithPath:CommandLine.arguments[0]).deletingLastPathComponent().appendingPathComponent("Voxel.metal")
-        let options=MTLCompileOptions();options.mathMode = .safe
-        let library=try device.makeLibrary(source:String(contentsOf:shader,encoding:.utf8),options:options)
-        guard let function=library.makeFunction(name:"voxelImage") else {throw MeshError.noMetal};pipeline=try device.makeComputePipelineState(function:function)
+        if let previous {
+            device=previous.device;queue=previous.queue;pipeline=previous.pipeline
+        } else {
+            guard let device=MTLCreateSystemDefaultDevice(),let queue=device.makeCommandQueue() else {throw MeshError.noMetal};self.device=device;self.queue=queue
+            let shader=URL(fileURLWithPath:CommandLine.arguments[0]).deletingLastPathComponent().appendingPathComponent("Voxel.metal")
+            let options=MTLCompileOptions();options.mathMode = .safe
+            let library=try device.makeLibrary(source:String(contentsOf:shader,encoding:.utf8),options:options)
+            guard let function=library.makeFunction(name:"voxelImage") else {throw MeshError.noMetal};pipeline=try device.makeComputePipelineState(function:function)
+        }
         let size=history.block_grid.reduce(1,*)*4
         guard let blocks=device.makeBuffer(length:size,options:.storageModeShared),let pool=device.makeBuffer(length:max(64,history.pool_slots*64),options:.storageModeShared) else {throw MeshError.noMetal}
         self.blocks=blocks;self.pool=pool
@@ -150,6 +157,9 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
     }
     func draw(in view:MTKView) {
         guard let drawable=view.currentDrawable,let command=encode(drawable.texture) else {return}
+        let now=CFAbsoluteTimeGetCurrent()
+        if lastDrawTime>0 {maximumDrawGapMS=max(maximumDrawGapMS,(now-lastDrawTime)*1000)}
+        lastDrawTime=now;drawCount+=1
         command.present(drawable);command.commit();lastCommand=command
         // Single in-flight image guarantees CPU delta uploads cannot race GPU reads.
         command.waitUntilCompleted();lastGPUms=(command.gpuEndTime-command.gpuStartTime)*1000
@@ -176,6 +186,16 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
     }
 }
 final class VoxelMetalView:MTKView {
+    // Live inspection is capped in display pixels, independent of voxel spacing.
+    // Retina backing otherwise quadruples ray work at the same window size.
+    var livePixelBudget=false {didSet {autoResizeDrawable = !livePixelBudget;updateLiveSize()}}
+    func updateLiveSize() {
+        guard livePixelBudget,bounds.width>0,bounds.height>0 else {return}
+        let scale=min(1,min(1280/bounds.width,900/bounds.height))
+        let size=CGSize(width:max(1,(bounds.width*scale).rounded()),height:max(1,(bounds.height*scale).rounded()))
+        if drawableSize != size {drawableSize=size}
+    }
+    override func setFrameSize(_ size:NSSize) {super.setFrameSize(size);updateLiveSize()}
     var renderer:VoxelRenderer?
     override var acceptsFirstResponder:Bool {true}
     override func mouseDown(with event:NSEvent) {
@@ -196,7 +216,7 @@ final class VoxelMetalView:MTKView {
     func clamp(_ x:Float,_ low:Float,_ high:Float)->Float {min(high,max(low,x))}
 }
 final class VoxelController:NSViewController {
-    let renderer:VoxelRenderer;let metal:VoxelMetalView
+    var renderer:VoxelRenderer;let metal:VoxelMetalView
     let status=NSTextField(labelWithString:"");let slider=NSSlider(value:0,minValue:0,maxValue:224,target:nil,action:nil)
     var findings=[Finding]()
     var visibleFindings=[Finding]()
@@ -209,6 +229,11 @@ final class VoxelController:NSViewController {
     let fixtureControl=NSButton(checkboxWithTitle:"Fixtures",target:nil,action:nil)
     let holderControl=NSButton(checkboxWithTitle:"Tool assembly",target:nil,action:nil)
     let comparisonControl=NSButton(checkboxWithTitle:"Target: excess yellow / missing red",target:nil,action:nil)
+    let provenanceControl=NSPopUpButton()
+    var livePlaybackEnd:Int?
+    var livePlaybackStart=0
+    var livePlaybackBegan=0.0
+    var lastPlaybackTick=0.0
     let play=NSButton(title:"Pause",target:nil,action:nil);var playing=true;var timer:Timer?
     init(_ r:VoxelRenderer) {renderer=r;metal=VoxelMetalView(frame:.zero,device:r.device);super.init(nibName:nil,bundle:nil)}
     required init?(coder:NSCoder) {fatalError("No storyboard")}
@@ -233,7 +258,7 @@ final class VoxelController:NSViewController {
         let holder=holderControl;holder.target=self;holder.action=#selector(holder(_:));holder.state = renderer.showHolder ? .on:.off
         let buttons=NSStackView(views:[play,restart,reset,lighting,background]);buttons.spacing=12
         let axes=axesControl;axes.addItems(withTitles:["Section X","Section Y","Section Z"]);axes.selectItem(at:renderer.sectionAxis);axes.target=self;axes.action=#selector(sectionAxis(_:))
-        let provenance=NSPopUpButton();provenance.addItems(withTitles:["Material color","Exposure operation","Exposure tool"]);provenance.selectItem(at:Int(renderer.provenanceMode));provenance.isEnabled=renderer.provenanceBuffer != nil;provenance.target=self;provenance.action=#selector(provenance(_:))
+        let provenance=provenanceControl;provenance.addItems(withTitles:["Material color","Exposure operation","Exposure tool"]);provenance.selectItem(at:Int(renderer.provenanceMode));provenance.isEnabled=renderer.provenanceBuffer != nil;provenance.target=self;provenance.action=#selector(provenance(_:))
         buttons.addArrangedSubview(provenance)
         let inspection=NSStackView(views:[stock,comparison,fixtures,holder,axes,section]);inspection.spacing=12
         do {findings=try renderer.loadFindings();filterFindings()}
@@ -246,11 +271,45 @@ final class VoxelController:NSViewController {
         NSLayoutConstraint.activate([top.leadingAnchor.constraint(equalTo:view.leadingAnchor,constant:22),top.topAnchor.constraint(equalTo:view.topAnchor,constant:20),bottom.leadingAnchor.constraint(equalTo:view.leadingAnchor,constant:22),bottom.trailingAnchor.constraint(equalTo:view.trailingAnchor,constant:-22),bottom.bottomAnchor.constraint(equalTo:view.bottomAnchor,constant:-22),slider.widthAnchor.constraint(equalTo:bottom.widthAnchor)])
         findingDetail.widthAnchor.constraint(equalTo:bottom.widthAnchor).isActive=true
         status.maximumNumberOfLines=2;status.widthAnchor.constraint(equalTo:bottom.widthAnchor).isActive=true
-        refresh();timer=Timer.scheduledTimer(withTimeInterval:1/12,repeats:true) { [weak self] _ in self?.tick() }
+        refresh();timer=Timer(timeInterval:1/60,repeats:true) { [weak self] _ in self?.tick() }
+        RunLoop.main.add(timer!,forMode:.common)
     }
-    func refresh() {status.stringValue=renderer.label;slider.doubleValue=Double(renderer.frame);play.title=playing ? "Pause":"Play"}
+    func refresh() {
+        let label=renderer.label
+        if status.stringValue != label {status.stringValue=label}
+        if slider.doubleValue != Double(renderer.frame) {slider.doubleValue=Double(renderer.frame)}
+        let title=playing ? "Pause":"Play";if play.title != title {play.title=title}
+    }
     func seek(_ n:Int) {do {try renderer.seek(n);refresh()}catch{playing=false;status.stringValue="Error: \(error)"}}
-    func tick() {if playing {if renderer.frame<renderer.history.frames.count {seek(renderer.frame+1)}else{playing=false}};refresh()}
+    // Swap only complete prepared states; preserve the drawable layer and controls.
+    func replaceLiveRenderer(_ next:VoxelRenderer, animate:Bool) throws {
+        let nextFindings=try next.loadFindings()
+        renderer.lastCommand?.waitUntilCompleted()
+        renderer=next;metal.renderer=next;metal.delegate=next
+        slider.maxValue=Double(next.history.frames.count)
+        comparisonControl.isEnabled=next.targetBlocks != nil
+        fixtureControl.isEnabled=next.fixtureBlocks != nil
+        provenanceControl.isEnabled=next.provenanceBuffer != nil
+        findings=nextFindings;filterFindings()
+        findingDetail.stringValue=""
+        playing=false
+        livePlaybackStart=next.frame;livePlaybackBegan=CFAbsoluteTimeGetCurrent()
+        livePlaybackEnd=animate ? next.history.frames.count:nil
+        refresh()
+    }
+    func tick() {
+        let now=CFAbsoluteTimeGetCurrent()
+        if let end=livePlaybackEnd {
+            let fraction=min(1,max(0,(now-livePlaybackBegan)/0.12))
+            let frame=livePlaybackStart+Int(Double(end-livePlaybackStart)*fraction)
+            if frame>renderer.frame {seek(frame)}
+            if fraction>=1 {livePlaybackEnd=nil}
+        } else if playing,now-lastPlaybackTick>=1/30 {
+            lastPlaybackTick=now
+            if renderer.frame<renderer.history.frames.count {seek(renderer.frame+1)}else{playing=false}
+        }
+        refresh()
+    }
     @objc func filterFindings() {
         let query=findingSearch.stringValue.lowercased()
         visibleFindings=findings.filter {query.isEmpty || $0.title.lowercased().contains(query)}
@@ -262,11 +321,11 @@ final class VoxelController:NSViewController {
         do {try renderer.focusFinding(visibleFindings[i]);findingDetail.stringValue=renderer.picked;sectionControl.doubleValue=Double(renderer.sectionFraction);axesControl.selectItem(at:renderer.sectionAxis);comparisonControl.state=renderer.compareTarget ? .on:.off;stockControl.state=renderer.showStock ? .on:.off;fixtureControl.state=renderer.showFixtures ? .on:.off;holderControl.state=renderer.showHolder ? .on:.off;refresh()}
         catch {findingDetail.stringValue="Cannot focus finding: \(error)"}
     }
-    @objc func toggle() {playing.toggle();refresh()}
-    @objc func restart() {playing=true;seek(0)}
-    @objc func scrub() {playing=false;seek(Int(slider.doubleValue.rounded()))}
+    @objc func toggle() {livePlaybackEnd=nil;playing.toggle();refresh()}
+    @objc func restart() {livePlaybackEnd=nil;playing=true;seek(0)}
+    @objc func scrub() {livePlaybackEnd=nil;playing=false;seek(Int(slider.doubleValue.rounded()))}
     @objc func resetCamera() {renderer.resetView()}
-    @objc func provenance(_ sender:NSPopUpButton) {playing=false;renderer.provenanceMode=UInt32(sender.indexOfSelectedItem);if renderer.provenanceMode != 0 && !renderer.provenanceAllFrames {seek(renderer.history.frames.count)};refresh()}
+    @objc func provenance(_ sender:NSPopUpButton) {livePlaybackEnd=nil;playing=false;renderer.provenanceMode=UInt32(sender.indexOfSelectedItem);if renderer.provenanceMode != 0 && !renderer.provenanceAllFrames {seek(renderer.history.frames.count)};refresh()}
     @objc func stock(_ sender:NSButton) {renderer.showStock=sender.state == .on}
     @objc func fixtures(_ sender:NSButton) {renderer.showFixtures=sender.state == .on}
     @objc func holder(_ sender:NSButton) {renderer.showHolder=sender.state == .on}

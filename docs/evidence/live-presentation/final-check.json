@@ -1,0 +1,11 @@
+{
+  "windows": 294,
+  "persistent_view": true,
+  "monotone_follow": true,
+  "final_state_sha256": "380734c1fa84fac35f9e048174954a29b77cdd6542a321e3293a8744755df47d",
+  "rendered_draws_before_last_window": 3766,
+  "load_prepare_ms_median": 18.3260440826416,
+  "per_window_max_draw_gap_ms_median": 17.580032348632812,
+  "max_draw_gap_ms": 60.94706058502197,
+  "note": "Draw callback gaps include preparation handoff, replay and optional evidence captures. Not presented-frame timing or FPS."
+}

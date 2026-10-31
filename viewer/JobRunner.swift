@@ -99,7 +99,7 @@ final class JobRunner:NSObject,NSWindowDelegate {
         timer=Timer.scheduledTimer(withTimeInterval:0.1,repeats:true) { [weak self] _ in self?.update() }
         if let delay=cancelDelay {DispatchQueue.main.asyncAfter(deadline:.now()+delay) { [weak self] in self?.cancel() }}
     }
-    @objc func toggleFollow() {if follow.state == .on {live?.window?.makeKeyAndOrderFront(nil)}}
+    @objc func toggleFollow() {live?.following=follow.state == .on;if follow.state == .on {live?.window?.makeKeyAndOrderFront(nil)}else{live?.controller?.livePlaybackEnd=nil}}
     @objc func toggleCalculation() {
         guard !finished,live != nil else {return}
         do {
@@ -191,13 +191,20 @@ final class LiveInspection {
     var lastLoad=Date.distantPast
     var savedSnapshot=false
     var verifiedHistory=false
+    var loading=false
+    var closed=false
+    var following=true
+    var loadError:Error?
+    let loader=DispatchQueue(label:"menkh.live-window-loader",qos:.userInitiated)
     init(output:URL) {self.output=output}
     func close() {
+        closed=true
         controller?.timer?.invalidate();controller?.metal.isPaused=true
         window?.close();window=nil;controller=nil;lease=nil
     }
     func update() throws {
-        guard Date().timeIntervalSince(lastLoad)>=0.5 else {return}
+        if let error=loadError {loadError=nil;throw error}
+        guard !closed,!loading,Date().timeIntervalSince(lastLoad)>=0.15 else {return}
         let root=output.appendingPathComponent("live")
         guard let data=try? Data(contentsOf:root.appendingPathComponent("latest.json")),
               let info=try JSONSerialization.jsonObject(with:data) as? [String:Any],
@@ -209,12 +216,33 @@ final class LiveInspection {
         let meta=try JSONSerialization.jsonObject(with:Data(contentsOf:file)) as? [String:Any]
         guard meta?["live_sequence"] as? Int == next else {return}
         let start=CFAbsoluteTimeGetCurrent()
-        let renderer=try VoxelRenderer(file)
+        let previous=controller?.renderer
+        loading=true
+        // One preparation at a time. The old drawable and lease stay alive while
+        // files, provenance and immutable assets are validated off the UI thread.
+        loader.async { [weak self] in
+            let result=Result {try VoxelRenderer(file,sharing:previous)}
+            let loaded=CFAbsoluteTimeGetCurrent()
+            DispatchQueue.main.async { [weak self] in
+                guard let self else {return}
+                defer {self.loading=false}
+                guard !self.closed,self.following else {return}
+                do {try self.present(try result.get(),held:held,info:info,next:next,first:first,completed:completed,start:start,loaded:loaded)}
+                catch {self.loadError=error}
+            }
+        }
+    }
+    func present(_ renderer:VoxelRenderer,held:LiveLease,info:[String:Any],next:Int,first:Int,completed:Int,start:Double,loaded:Double) throws {
+        let seekStart=CFAbsoluteTimeGetCurrent()
+        let previousDraws=controller?.renderer.drawCount ?? 0
+        let previousGap=controller?.renderer.maximumDrawGapMS ?? 0
         if controller == nil {renderer.provenanceMode=CommandLine.arguments.contains("--color-operation") ? 1:CommandLine.arguments.contains("--color-tool") ? 2:0;renderer.compareTarget=CommandLine.arguments.contains("--compare-target")}
-        let loaded=CFAbsoluteTimeGetCurrent()
-        try renderer.seek(renderer.history.frames.count)
+        let previousGlobal=controller.map {$0.renderer.operationOffset+$0.renderer.frame} ?? completed
+        let localStart=max(0,min(renderer.history.frames.count,previousGlobal-first))
+        try renderer.seek(localStart)
         let sought=CFAbsoluteTimeGetCurrent()
         if let old=controller?.renderer {
+            renderer.lastDrawTime=old.lastDrawTime
             renderer.yaw=old.yaw;renderer.elevation=old.elevation;renderer.roll=old.roll
             renderer.target=old.target;renderer.distance=old.distance
             renderer.sectionAxis=old.sectionAxis;renderer.sectionFraction=old.sectionFraction
@@ -222,19 +250,23 @@ final class LiveInspection {
             renderer.showStock=old.showStock;renderer.showHolder=old.showHolder
             renderer.provenanceMode=old.provenanceMode;renderer.compareTarget=old.compareTarget;renderer.showFixtures=old.showFixtures
         }
-        let nextController=VoxelController(renderer);nextController.playing=false
-        controller?.timer?.invalidate();controller?.metal.isPaused=true
         let firstWindow = window == nil
         if firstWindow {
+            let nextController=VoxelController(renderer);nextController.playing=false
             let w=NSWindow(contentRect:NSRect(x:0,y:0,width:1280,height:900),styleMask:[.titled,.closable,.miniaturizable,.resizable],backing:.buffered,defer:false)
             w.isReleasedWhenClosed=false;w.center();window=w
+            w.contentViewController=nextController;controller=nextController
+            nextController.metal.livePixelBudget = !CommandLine.arguments.contains("--live-native-resolution")
+            w.makeKeyAndOrderFront(nil)
+        } else {
+            let view=controller!.metal
+            try controller!.replaceLiveRenderer(renderer,animate:true)
+            precondition(controller!.metal === view && window!.contentViewController === controller!)
         }
-        window!.contentViewController=nextController
         window!.title="Menkh — LIVE · retained operations \(first)…\(completed) · uncheck Follow latest to seek"
-        if firstWindow {window!.makeKeyAndOrderFront(nil)}
-        controller=nextController;lease=held;sequence=next;lastLoad=Date()
+        lease=held;sequence=next;lastLoad=Date()
         var usage=rusage();getrusage(RUSAGE_SELF,&usage)
-        let record:[String:Any]=["process_peak_rss_bytes":usage.ru_maxrss,"sequence":next,"first_operation":first,"completed_operations":completed,"load_upload_ms":(loaded-start)*1000,"seek_ms":(sought-loaded)*1000,"gpu_material_bytes":renderer.blocks.length+renderer.pool.length,"gpu_provenance_bytes":renderer.provenanceBuffer?.length ?? 0,"gpu_asset_bytes":[renderer.targetBlocks,renderer.targetPool,renderer.fixtureBlocks,renderer.fixturePool].compactMap{$0}.reduce(0){$0+$1.length},"publication":info]
+        let record:[String:Any]=["process_peak_rss_bytes":usage.ru_maxrss,"sequence":next,"first_operation":first,"completed_operations":completed,"load_upload_ms":(loaded-start)*1000,"seek_ms":(sought-seekStart)*1000,"gpu_material_bytes":renderer.blocks.length+renderer.pool.length,"gpu_provenance_bytes":renderer.provenanceBuffer?.length ?? 0,"gpu_asset_bytes":[renderer.targetBlocks,renderer.targetPool,renderer.fixtureBlocks,renderer.fixturePool].compactMap{$0}.reduce(0){$0+$1.length},"publication":info,"drawable_width":controller!.metal.drawableSize.width,"drawable_height":controller!.metal.drawableSize.height,"persistent_view":!firstWindow,"previous_window_draws":previousDraws,"previous_window_max_draw_gap_ms":previousGap,"displayed_operation":renderer.operationOffset+renderer.frame]
         let line=try JSONSerialization.data(withJSONObject:record,options:[.sortedKeys])+Data([10])
         let log=output.appendingPathComponent("live-viewer.jsonl")
         if !FileManager.default.fileExists(atPath:log.path) {try Data().write(to:log)}
@@ -246,6 +278,7 @@ final class LiveInspection {
         }
         let snapshotOperation=Int(try JobRunner.argument("--live-snapshot-operation") ?? "1") ?? 1
         if !savedSnapshot,completed>=snapshotOperation,let path=try JobRunner.argument("--live-snapshot") {
+            controller?.livePlaybackEnd=nil;try renderer.seek(renderer.history.frames.count)
             let image=try renderer.image()
             guard let tiff=image.tiffRepresentation,let bitmap=NSBitmapImageRep(data:tiff),let png=bitmap.representation(using:.png,properties:[:]) else {throw MeshError.imageEncoding}
             try png.write(to:URL(fileURLWithPath:path));savedSnapshot=true

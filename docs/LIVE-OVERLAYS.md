@@ -152,3 +152,38 @@ Local Metal validation covers the independent oracle, captured windows and the
 25 µm live demo. Existing completed-history provenance, transport, engine tests
 and Lean/audit/bridge checks remain part of validation. The new pruning and
 publication algorithms are not claimed to be formally verified.
+
+## macOS live presentation
+
+The native live window retains its controls and Metal drawable layer across
+publications. A single background loader validates the next leased history and
+prepares buffers while the current state remains visible. The Metal pipeline and
+device are reused. Live rendering caps the drawable at 1280 × 900 display pixels
+with the window aspect ratio preserved, avoiding quadrupled ray work from Retina
+backing. Use `--live-native-resolution` to retain full backing resolution. This
+affects display sampling only; voxel occupancy, picking coordinates, exports and
+material metrics are unchanged. Camera and inspection modes are copied at handover, so camera
+input received during preparation is preserved. Both leases survive handover;
+holding Follow latest discards any in-flight prepared replacement.
+
+Following polls at a minimum 150 ms interval and plays available recorded states
+over a 120 ms catch-up interval, on a 60 Hz requested UI timer. Completed-history
+playback advances at up to 30 operations/second. These are presentation settings,
+not physical feed rates or achieved frame-rate guarantees. Material and exposure
+IDs always correspond to a recorded operation; no surface interpolation is used.
+If the producer has advanced beyond the retained range, playback must jump to its
+new base. Large individual cuts and expensive ray casting can still cause visible
+steps. The Windows presentation path is unchanged by this macOS fix.
+
+Validate a completed native run with:
+
+```sh
+python3 scripts/check-live-presentation.py --result out/new-live-run --reference out/reference-run
+```
+
+This checks stable view handover, monotone displayed operations, actual draws
+between updates, and exact final checkpoint bytes. Logged draw-callback gaps are
+diagnostics, not displayed-frame timing or interactive FPS.
+
+Actual presentation diagnostics, including unfavorable intermediate results, are
+in the [presentation evidence](evidence/live-presentation/README.md).
