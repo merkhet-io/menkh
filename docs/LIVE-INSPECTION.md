@@ -188,3 +188,5 @@ The Windows CI script `scripts/test-windows-live.py` drives actual controls for 
 DLL and subprocess runs and compares every observed material state with an
 independently decoded CLI archive. It exercises held-reader backpressure,
 pause/resume, keyboard seeking, cancellation and an injected history-write failure.
+See the [Windows native validation and measurements](evidence/windows-live/README.md)
+for the actual 25 µm run, screenshots and remaining UI latency limitations.
