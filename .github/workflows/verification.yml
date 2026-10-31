@@ -138,7 +138,7 @@ jobs:
         run: |
           python scripts/test-grinding.py
           if ($LASTEXITCODE -ne 0) { throw 'Rotary jobs failed' }
-          ./out/windows-viewer/menkh-viewer.exe out/grinding-test/crowned/voxel-animation.json --verify-history --warp --debug --frame 4 --snapshot out/windows-profile.ppm
+          ./out/windows-viewer/menkh-viewer.exe out/grinding-test/profile-visible/voxel-animation.json --verify-history --warp --debug --frame 4 --snapshot out/windows-profile.ppm
           if ($LASTEXITCODE -ne 0) { throw 'Profile history/render failed' }
           python scripts/test-provenance.py
           if ($LASTEXITCODE -ne 0) { throw 'Provenance oracle failed' }

@@ -58,3 +58,8 @@ for name,end in [('stationary',[0,0,0]),('tiny',[1e-12,0,0]),('axial',[0,0,.5]),
  reverse=copy.deepcopy(fixed);r=reverse['operations'][0]['rotary'];r['a'],r['b']=r['b'],r['a'];rev=run(name+'-reverse',reverse)
  assert cells(result/'final.menkh')==cells(rev/'final.menkh')
 print('Profile stationary, tiny, axial, diagonal and reversed motion passed')
+# Expose the profile cut at the stock boundary for a meaningful viewer snapshot.
+visible=copy.deepcopy(profile);visible['bounds']['hi'][2]=.5
+visible['stock']['primitives'][0]['box']=copy.deepcopy(visible['bounds'])
+result=run('profile-visible',visible);reference=run('profile-visible-reference',visible,True)
+assert cells(result/'final.menkh')==cells(reference/'final.menkh')
