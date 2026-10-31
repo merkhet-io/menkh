@@ -47,10 +47,11 @@ inline F4 four(Vec v, float w = 0) { return {v[0], v[1], v[2], w}; }
 struct Camera {
     Vec target{};
     float distance = 1, yaw = -.8f, elevation = .5f, section = 1;
+    uint32_t colorMode = 0; // 0 material, 1 exposing operation, 2 exposing tool
     bool dark = false, tool = true, antialias = true;
     void reset(const History &h) {
         target = mul(add(h.low, h.high), .5f);
-        distance = std::max(1.f, length(sub(h.high, h.low)) * 1.2f);
+        distance = std::max(1.f, length(sub(h.high, h.low)) * 1.5f);
         yaw = -.8f;
         elevation = .5f;
         section = 1;
@@ -77,7 +78,7 @@ struct Camera {
         v.settings = {h.h, float(width), float(height), .41421356f};
         v.dimensions = {h.n[0], h.n[1], h.n[2], 0};
         v.blockDimensions = {h.nb[0], h.nb[1], h.nb[2], 0};
-        v.flags = {uint32_t(dark), uint32_t(antialias), 0, 0};
+        v.flags = {uint32_t(dark), uint32_t(antialias), h.frame == h.steps.size() ? colorMode : 0, uint32_t(h.provenance.size()/4)};
         if (tool && h.frame) {
             const auto &s = h.steps[h.frame - 1];
             auto set = [&](Part p, F4 &radial, F4 &axial) {
@@ -111,7 +112,7 @@ class Renderer {
         uint8_t *mapped = nullptr;
         size_t size = 0;
     };
-    Buffer blocks, pool;
+    Buffer blocks, pool, provenance;
     uint32_t width = 0, height = 0;
     bool initial = true;
     std::wstring adapterLabel;
@@ -253,7 +254,7 @@ class Renderer {
         range.NumDescriptors = 1;
         D3D12_DESCRIPTOR_RANGE srvs{};
         srvs.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        srvs.NumDescriptors = 2;
+        srvs.NumDescriptors = 3;
         srvs.OffsetInDescriptorsFromTableStart = 1;
         D3D12_ROOT_PARAMETER params[3]{};
         params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -287,15 +288,16 @@ class Renderer {
            "Create compute pipeline");
         D3D12_DESCRIPTOR_HEAP_DESC hd{};
         hd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        hd.NumDescriptors = 3;
+        hd.NumDescriptors = 4;
         hd.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         hr(device->CreateDescriptorHeap(&hd, IID_PPV_ARGS(&heap)), "Create descriptor heap");
         blocks = dataBuffer(history.blocks.size() * 4);
         pool = dataBuffer(history.pool.size() * 8);
+        provenance = dataBuffer(std::max(size_t(4), history.provenance.size()) * 4);
         auto handle = heap->GetCPUDescriptorHandleForHeapStart();
         const auto increment =
             device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        for (const auto *b : {&blocks, &pool}) {
+        for (const auto *b : {&blocks, &pool, &provenance}) {
             handle.ptr += increment;
             D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
             srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
@@ -320,6 +322,7 @@ class Renderer {
         constants.Reset();
         blocks.upload.Reset(); blocks.gpu.Reset();
         pool.upload.Reset(); pool.gpu.Reset();
+        provenance.upload.Reset(); provenance.gpu.Reset();
         output.Reset(); heap.Reset(); pipeline.Reset(); root.Reset();
         commands.Reset(); allocator.Reset(); fence.Reset();
         std::cerr << "D3D12 shutdown: queue\n";
@@ -384,6 +387,11 @@ class Renderer {
         begin();
         update(blocks, h.blocks.data(), h.dirtyBlocks, 4);
         update(pool, h.pool.data(), h.dirtySlots, 64);
+        if (initial) {
+            const uint32_t zero[4]{};
+            std::vector<size_t> dirty;
+            update(provenance, h.provenance.empty() ? zero : h.provenance.data(), dirty, 4);
+        }
         initial = false;
         commands->SetComputeRootSignature(root.Get());
         ID3D12DescriptorHeap *heaps[] = {heap.Get()};

@@ -30,6 +30,12 @@ jobs:
           ./zig build -Doptimize=ReleaseFast
           ./zig build test --summary all
           ./zig build test -Doptimize=ReleaseFast --summary all
+      - name: Rotary-cylinder jobs and portable provenance reader
+        run: |
+          python3 scripts/test-grinding.py
+          xcrun clang++ -std=c++17 -O2 viewer/windows/history-test.cpp -o out/history-test
+          python3 scripts/test-provenance.py
+          python3 scripts/test-viewer-provenance.py --exe out/history-test
       - name: Job CLI voxel overrides
         run: python3 scripts/test-job-options.py
       - name: Independent final-surface provenance oracle
@@ -105,6 +111,17 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Viewer job lifecycle failed' }
           ./out/windows-viewer/menkh-viewer.exe examples/general.json --engine zig-out/bin/menkh.exe --job-output out/windows-job-render --warp --debug --smoke out/windows-job-render-images
           if ($LASTEXITCODE -ne 0) { throw 'Automatic job/result render failed' }
+      - name: Rotary-cylinder jobs and Windows provenance rendering
+        shell: pwsh
+        run: |
+          python scripts/test-grinding.py
+          if ($LASTEXITCODE -ne 0) { throw 'Rotary jobs failed' }
+          python scripts/test-provenance.py
+          if ($LASTEXITCODE -ne 0) { throw 'Provenance oracle failed' }
+          python scripts/test-viewer-provenance.py --exe out/windows-viewer/menkh-viewer.exe --viewer
+          if ($LASTEXITCODE -ne 0) { throw 'Provenance reader failed' }
+          ./out/windows-viewer/menkh-viewer.exe out/provenance-test/voxel-animation.json --color-operation --warp --debug --snapshot out/windows-provenance.ppm
+          if ($LASTEXITCODE -ne 0) { throw 'Provenance render failed' }
       - name: Reject malformed viewer histories
         shell: pwsh
         run: python scripts/test-viewer-history.py --exe out/windows-viewer/menkh-viewer.exe --history out/windows-pocket/voxel-animation.json --viewer
@@ -129,6 +146,7 @@ jobs:
             out/windows-viewer/Voxel.hlsl
             out/windows-viewer-smoke/
             out/windows-job-render-images/
+            out/windows-provenance.ppm
             out/windows-job-runner/
             out/windows-viewer-*.log
             out/menkh-windows-viewer-demo.zip

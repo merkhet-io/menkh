@@ -220,6 +220,17 @@ pub const Sweep = struct {
         return (if (s.exact()) @sqrt(@as(f64, 2)) * s.dilation_mm else s.dilation_mm) + (if (s.exact() or norm(sub(s.b.position, s.a.position)) == 0) @as(f64, 0) else norm(sub(s.b.position, s.a.position)) / (2 * @as(f64, @floatFromInt(s.samples()))));
     }
     pub fn bounds(s: Sweep) Bounds {
+        if (s.exact()) {
+            const offset = scale(s.a.axis, s.tool.length / 2);
+            var box = segmentBounds(add(s.a.position, offset), add(s.b.position, offset));
+            for (0..3) |k| {
+                const u = s.a.axis[k];
+                const extent = s.tool.radius * @sqrt(@max(0, 1 - u * u)) + s.tool.length / 2 * @abs(u) + s.errorBound() + core.tolerance + (1 + s.tool.radius + s.tool.length) * 1e-8;
+                box.lo[k] -= extent;
+                box.hi[k] += extent;
+            }
+            return box;
+        }
         const e = @sqrt(s.tool.radius * s.tool.radius + s.tool.length * s.tool.length) + s.errorBound();
         return segmentBounds(s.a.position, s.b.position).expanded(e);
     }
@@ -661,6 +672,25 @@ fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, availabl
     }
     if (!reference and s == .sweep) {
         if (FlatZ.init(s.sweep)) |flat| return flat.mask(g, b, available);
+    }
+    // A path is a union. Reject segments once per block, then test only material
+    // not covered by earlier segments. This preserves the scalar union exactly.
+    if (!reference and s == .path) {
+        var result: core.Bits = @splat(0);
+        var remaining = available;
+        const box = blockBounds(g, b);
+        for (s.path) |segment| {
+            const part = Shape{ .sweep = segment };
+            const part_coverage = part.classify(box);
+            if (part_coverage == .outside) continue;
+            const removed = classifiedMask(g, b, part, false, remaining, part_coverage, work);
+            for (&result, &remaining, removed) |*out, *left, v| {
+                out.* |= v;
+                left.* &= ~v;
+            }
+            if (count(remaining) == 0) break;
+        }
+        return result;
     }
     var bits: core.Bits = @splat(0);
     const e = g.extent(b);

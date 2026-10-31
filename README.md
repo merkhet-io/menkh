@@ -228,3 +228,12 @@ to the matching voxel history. Regenerate older mesh-only outputs once.
 Optional [final-surface exposure coloring](docs/SURFACE-PROVENANCE.md) identifies
 the operation that exposed each surviving voxel face. Enable `export_provenance`
 in a job and use `--color-operation` or `--color-tool` in the macOS viewer.
+
+## Current issue increments
+
+- [Cylinder-wheel grinding](docs/GRINDING.md): explicit XYZAC motion, continuous coverage with a declared conservative bound, and `./scripts/grinding-demo.sh`.
+- [Sparse mutation experiment](docs/SPARSE-MUTATION.md): cuts and retained roots in a 65,536³ virtual cube; separate from regular jobs, not the billion-face memory qualification.
+- Windows final-surface operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
+
+Viewer-owned calculation landed in #22. An embeddable engine library and live
+inspection are tracked separately in #23 and #24.

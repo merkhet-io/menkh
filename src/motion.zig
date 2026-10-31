@@ -65,3 +65,61 @@ pub const Turning = struct {
         return s;
     }
 };
+
+/// Tool-relative XYZAC, degrees, unwrapped angles. XYZ is the cylinder center.
+/// R = Rz(C) Rx(A); not machine joint coordinates or quaternion interpolation.
+pub const XYZAC = struct {
+    position: e.V,
+    a_deg: f64,
+    c_deg: f64,
+    pub fn axis(p: XYZAC) e.V {
+        const a = p.a_deg * (std.math.pi / 180.0);
+        const c = p.c_deg * (std.math.pi / 180.0);
+        return .{ @sin(c) * @sin(a), -@cos(c) * @sin(a), @cos(a) };
+    }
+    pub fn pose(p: XYZAC, width: f64) e.Pose {
+        const u = p.axis();
+        return .{ .position = e.sub(p.position, e.scale(u, width / 2)), .axis = u };
+    }
+    fn validate(p: XYZAC) !void {
+        try e.validV(p.position);
+        for ([_]f64{ p.a_deg, p.c_deg }) |v| if (!std.math.isFinite(v) or @abs(v) > 1e6) return error.InvalidRotaryAngle;
+    }
+};
+pub const RotaryLine = struct {
+    a: XYZAC,
+    b: XYZAC,
+    pub fn at(s: RotaryLine, t: f64) XYZAC {
+        return .{ .position = e.add(s.a.position, e.scale(e.sub(s.b.position, s.a.position), t)), .a_deg = s.a.a_deg + (s.b.a_deg - s.a.a_deg) * t, .c_deg = s.a.c_deg + (s.b.c_deg - s.a.c_deg) * t };
+    }
+};
+/// Each interval translates the complete cylinder at its midpoint orientation.
+/// Every material point moves <= rho*(|dA|+|dC|)/(2n) from that orientation.
+/// Radial+axial dilation contains this ball, and is contained in a sqrt(2)*d ball.
+/// Relative to the true moving solid, total over-removal <= (1+sqrt(2))*d.
+/// This bound is geometric, separate from voxel and floating-point tolerances.
+pub fn rotary(a: std.mem.Allocator, tool: e.Tool, input: RotaryLine, tolerance: f64) !Plan {
+    try tool.validate();
+    if (tool.kind != .flat) return error.RotaryRequiresCylinder;
+    try input.a.validate();
+    try input.b.validate();
+    if (!std.math.isFinite(tolerance) or tolerance <= 0) return error.InvalidMotionTolerance;
+    const angular = (@abs(input.b.a_deg - input.a.a_deg) + @abs(input.b.c_deg - input.a.c_deg)) * (std.math.pi / 180.0);
+    const rho = @sqrt(tool.radius * tool.radius + tool.length * tool.length / 4);
+    const factor = 1 + @sqrt(@as(f64, 2));
+    const count = @ceil(factor * rho * angular / (2 * tolerance));
+    if (!std.math.isFinite(count) or count > 100000) return error.MotionToleranceTooSmall;
+    const n: usize = @max(1, @as(usize, @intFromFloat(count)));
+    const dilation = rho * angular / (2 * @as(f64, @floatFromInt(n)));
+    const segments = try a.alloc(e.Sweep, n);
+    errdefer a.free(segments);
+    for (segments, 0..) |*s, i| {
+        const t0 = @as(f64, @floatFromInt(i)) / @as(f64, @floatFromInt(n));
+        const t1 = @as(f64, @floatFromInt(i + 1)) / @as(f64, @floatFromInt(n));
+        const axis = input.at((t0 + t1) / 2).axis();
+        const offset = e.scale(axis, tool.length / 2);
+        s.* = .{ .tool = tool, .a = .{ .position = e.sub(input.at(t0).position, offset), .axis = axis }, .b = .{ .position = e.sub(input.at(t1).position, offset), .axis = axis }, .tolerance_mm = tolerance, .dilation_mm = dilation };
+        try s.validate();
+    }
+    return .{ .segments = segments, .over_removal_bound_mm = factor * dilation, .chord_error_mm = 0 };
+}

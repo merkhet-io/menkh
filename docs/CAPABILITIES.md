@@ -16,7 +16,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Taper and idealized drill | Implemented, restricted | Truncated cone and full conical cutter; no flutes, chisel edge, relief, or production drill definition |
 | Fixed tilted orientation / 3+2 | Implemented, validated | Unit tool axis fixed within each operation; arbitrary straight translation |
 | Circular/helical motion | Implemented, restricted | Arbitrary planar basis and normal rise; fixed tool axis, bounded conservative chord and pose approximation; arc shank/holder and feed inputs explicitly rejected |
-| Simultaneous orientation change / 5-axis | Unsupported | Rejected, including nearly equal but distinct endpoint axes; no quaternion interpolation |
+| Simultaneous orientation change / 5-axis | Restricted cylinder-wheel increment | Explicit unwrapped XYZAC interpolation, continuous conservative coverage and per-operation bound; cylinder only, no machine kinematics or rotary shank/holder. [Contract](GRINDING.md) |
 | Cutting vs shank/holder geometry | Implemented, validated | Separate finite cylindrical noncutting components, offsets above cutting length |
 | Stock/fixture collisions | Implemented, restricted | Swept center contacts plus conservative whole-cell separation; explicit not-checked/unresolved states, independent fixtures, operation IDs and candidate bounds; pre-operation stock conservatism remains |
 | Versioned JSON jobs | Implemented, validated | Strict Zig JSON parsing, units, tool/operation validation, stable IDs, operation history |
@@ -31,13 +31,13 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Target excess and missing material | Implemented, validated | Exact bitwise comparison on the same grid; sampled surface distances separately reported for one analytic target primitive |
 | Turning | Implemented, restricted | Complete-revolution rectangular-insert envelopes for longitudinal/facing cuts, explicit spindle origin/axis; independently validated radial profiles |
 | Combined milling and turning | Experimental geometric composition | Same stock and tilted/translated spindle transforms tested; no spindle-angle evolution, turret, synchronization, or production mill-turn claim |
-| Final-surface exposure attribution | Implemented, restricted | Exact raster-history face IDs, operation/tool colors and picking on macOS; final frame only, initial/prehistory unknown, no rate/time heatmaps. [Evidence](SURFACE-PROVENANCE.md) |
+| Final-surface exposure attribution | Implemented, restricted | Exact raster-history face IDs, operation/tool colors on macOS and Windows, picking on macOS; final frame only, initial/prehistory unknown, no rate/time heatmaps. [Evidence](SURFACE-PROVENANCE.md) |
 | Direct Metal inspection | Implemented, validated | Rectangular grids/origins, history scrubbing, X/Y/Z sections, target colors, fixture and shank/holder visibility, occupied-point picking |
 | General tool rendering | Restricted | Flat and complete ball cutter, shank and holder shown at recorded poses; other general cutter shapes are not yet rendered. Legacy mesh drill animation retains its tool illustration |
 | Incremental GPU updates | Implemented | Changed descriptors/bits uploaded in shared buffers; CPU waits for prior GPU command; no whole-state upload each frame |
 | Surface export | Implemented, validated | Greedy voxel-boundary OBJ quads, outward orientation, independently checked oriented volume and unit-edge closure; nonmanifold contacts reported |
 | Surface reconstruction / subvoxel truth | Unsupported | No Hermite samples, SDF material grid, resampling, or geometric smoothing. Normal averaging affects lighting only |
-| Sparse top level | Measured inspection prototype | Immutable two-level tile snapshot with occupancy queries; mutable engine remains dense, comparison includes sparse and full 4096³ scenes |
+| Sparse top level | Experimental mutation backend | Persistent full/empty hierarchy supports cuts and retained roots through 65,536³; separate from dense jobs/viewer, no checkpoint or billion-face qualification. [Measurements](SPARSE-MUTATION.md) |
 | CPU SIMD cutting | Implemented, restricted | f64 XY masks shared across Z blocks for constant-Z or pure vertical +Z flat sweeps; scalar fallback and voxel-exact differential tests. [Measurements](CPU-PERFORMANCE.md) |
 | CPU workers / GPU cutting | Unsupported in material updates | One deterministic cutting worker; eight-worker read-only predicate benchmark is diagnostic only |
 | Kinematics, controller, thermal/force simulation | Outside product boundary | No collision against moving machine components, G-code execution, feeds/speeds planning, or physical cutting forces |

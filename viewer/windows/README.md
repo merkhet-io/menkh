@@ -119,3 +119,17 @@ Current drill outputs include a matching voxel history; the Windows reader follo
 its explicit manifest reference. `out/drill/voxel-animation.json` also opens
 directly. Regenerate older mesh-only output with the current CLI. Rendering remains
 voxel-based; this does not add a mesh renderer or a spherical demo-tool display.
+
+### Final-surface exposure colors
+
+Generate a job with `"export_provenance": true`, then open its history with
+`--color-operation` or `--color-tool`. Press **C** to cycle material, operation
+and tool colors; selecting exposure colors seeks to the final frame. Earlier
+frames display ordinary material and explicitly report that attribution is
+inactive. Initial/prehistory faces and section interiors remain neutral.
+
+The metadata reader validates grid/origin/spacing, operation IDs, sorted 64-bit
+cell keys and tool mappings. Rendering looks up the removed neighbor of the hit
+voxel face, not the last operation touching the surviving voxel. Keys retain all
+36 bits needed for a 4096³ grid. This is categorical coloring, not a removal-rate
+heatmap. Playback-frame attribution and Windows picking remain separate work.

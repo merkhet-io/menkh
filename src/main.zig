@@ -164,6 +164,11 @@ fn execute() !void {
         std.debug.print("Checkpoint compacted: {d} -> {d} pool bytes; {d} occupied voxels. Start new history from this checkpoint.\n", .{ before.pool_used_bytes, g.stats().pool_used_bytes, g.stats().occupied });
         return;
     }
+    if (std.mem.eql(u8, command, "sparse-bench")) {
+        if (args.len != 3) return error.ExpectedOutputDirectory;
+        try @import("sparse.zig").benchmark(a, args[2]);
+        return;
+    }
     if (std.mem.eql(u8, command, "tiles-bench")) {
         if (args.len != 3) return error.ExpectedOutputDirectory;
         try @import("tiles.zig").benchmark(a, args[2]);

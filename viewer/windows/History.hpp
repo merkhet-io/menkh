@@ -88,6 +88,8 @@ class History {
     std::vector<uint32_t> blocks, slotOwner;
     std::vector<uint64_t> pool;
     std::vector<Step> steps;
+    std::vector<uint32_t> provenance; // u64 cell, u32 operation, u32 tool, little endian words
+    bool hasProvenance = false;
     std::vector<size_t> dirtyBlocks, dirtySlots;
     explicit History(const fs::path &path) {
         root = path.parent_path();
@@ -190,6 +192,39 @@ class History {
         }
         require(previous == final, "Final frame count mismatch");
         require(occupied() == initial, "Initial occupied count mismatch");
+        loadProvenance();
+    }
+    void loadProvenance() {
+        const auto path = root / "surface-provenance.json";
+        if (!fs::exists(path)) return;
+        const auto j = Json::parse(read(path, 64 << 20));
+        require(j.at("format") == "menkh-surface-provenance-v1" && j.at("scope") == "final_surface" &&
+                j.at("grid") == Json(n) && vec(j.at("origin_mm")) == origin &&
+                j.at("voxel_mm").get<float>() == h && j.at("final_occupied") == final &&
+                j.at("record_bytes") == 16 && j.at("initial_id") == 0,
+                "Provenance does not match history");
+        const auto &ops = j.at("operations");
+        require(ops.is_array() && ops.size() == steps.size(), "Provenance operation count mismatch");
+        for(size_t i=0;i<steps.size();++i)
+            require(ops.at(i).at("id") == steps[i].stage, "Provenance operation ID mismatch");
+        const size_t entries = integer(j.at("entries"), 67108864);
+        require(integer(j.at("bytes"), size_t(1)<<30) == entries*16, "Invalid provenance size");
+        const auto bytes = read(root / "surface-provenance.bin");
+        require(bytes.size() == entries*16, "Invalid provenance buffer length");
+        uint64_t previous = 0, cells = uint64_t(n[0])*n[1]*n[2];
+        provenance.resize(entries*4);
+        for(size_t i=0;i<entries;++i) {
+            const auto *p=bytes.data()+i*16;
+            const uint64_t key=u64(p); const uint32_t op=u32(p+8), tool=u32(p+12);
+            require(key<cells && (!i || key>previous) && op>0 && op<=ops.size(), "Invalid provenance entry");
+            const auto &source=ops.at(op-1);
+            const uint32_t expected=source.contains("tool") && !source.at("tool").is_null()
+                ? uint32_t(integer(source.at("tool"), uint64_t(UINT32_MAX)-1)+1) : 0;
+            require(tool==expected,"Provenance tool mismatch");
+            for(size_t w=0;w<4;++w) provenance[i*4+w]=u32(p+w*4);
+            previous=key;
+        }
+        hasProvenance=true;
     }
     std::array<size_t, 3> coords(size_t i) const {
         return {i % nb[0], (i / nb[0]) % nb[1], i / (size_t(nb[0]) * nb[1])};
