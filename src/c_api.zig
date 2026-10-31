@@ -201,7 +201,7 @@ export fn menkh_run_job_v1(path: ?[*:0]const u8, output: ?[*:0]const u8, working
     if (callback) |cb| if (cb(context, 0, 0, 0) != 0) return .cancelled;
     const progress = std.fs.path.join(allocator, &.{ out, "progress.jsonl" }) catch return .out_of_memory;
     defer allocator.free(progress);
-    @import("job.zig").runControlled(allocator, input, out, false, null, progress, base, if (callback) |cb| .{ .callback = cb, .context = context } else null) catch |err| {
+    @import("job.zig").runControlled(allocator, input, out, false, null, progress, base, if (callback) |cb| .{ .callback = cb, .context = context } else null, null) catch |err| {
         // Best-effort diagnostic belongs to this run, never global error storage.
         const log = std.fs.path.join(allocator, &.{ out, "simulation.log" }) catch return failure(err);
         defer allocator.free(log);

@@ -1,15 +1,38 @@
 # Surface exposure attribution during playback
 
 Each visible voxel face can carry the operation ID that exposed it, plus the
-operation's tool ID. Enable the derived index in a general JSON job:
+operation's tool ID. General JSON jobs now default to:
 
 ```json
 {"export_provenance": true, "provenance_scope": "all_frames"}
 ```
 
-These are fields in the existing job, not a complete job document. The default
-scope remains `final_surface`, which uses less memory. `all_frames` retains
-attribution for every completed operation, including surfaces removed later.
+These are fields in the existing job, not a complete job document. `all_frames`
+retains attribution for every completed operation, including surfaces removed
+later. Existing explicit `export_provenance: false` or `provenance_scope:
+"final_surface"` settings are honored. The latter uses less memory, but cannot
+provide attribution for arbitrary earlier frames.
+
+Engine CLI overrides apply after JSON parsing without rewriting the source job:
+
+```sh
+menkh job job.json --provenance all_frames --out out/playback
+menkh job job.json --provenance final_surface --out out/final-only
+menkh job job.json --provenance off --out out/no-colors
+# Equivalent disable option:
+menkh job job.json --no-provenance --out out/no-colors
+```
+
+If repeated, the last provenance option wins. Invalid/missing mode values fail
+before creating job output. The report's `provenance_scope` records the effective
+scope, or null when disabled. These overrides belong to the engine's `job`
+command; viewers open its exported history. The unchanged C ABI and viewer-owned
+JSON calculations inherit the new JSON defaults too.
+
+Changing these defaults increases memory use and export work for jobs that omit
+the fields. The existing 1 GiB archive index limit and separate live limits still
+fail explicitly; no provenance is silently truncated. Historical benchmark
+records keep their original settings and are not new-default measurements.
 
 ```sh
 ./zig build -Doptimize=ReleaseFast
