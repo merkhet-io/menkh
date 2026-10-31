@@ -61,3 +61,36 @@ python3 scripts/check-live-presentation.py --result out/presentation-run \
 
 Use a completed result from the identical generated job as the reference.
 Windows rendering and the simulation engine are unchanged by this fix.
+
+## Adaptive sharp inspection follow-up
+
+Adaptive presentation replaces the permanent display cap. Movement uses the
+bounded pixel budget; paused/held inspection redraws at native backing resolution
+after 350 ms, then stops repeated idle GPU work. The complete-history viewer uses
+the same behavior. Active live following stays at motion quality between slow
+publications, avoiding expensive idle/full-resolution transitions in the middle
+of a running cut.
+
+`adaptive-metal-check.json` records the actual MTKView transition on a 2× Retina
+display: 1280 × 900 moving, 2560 × 1800 idle, continuous rendering resumes on
+activity, and native-resolution override works. It also checks the active-producer
+and held-view states and verifies unchanged material buffers. The pure sizing
+and hysteresis policy has a macOS CI test.
+
+The tool shader adds camera-relative steel highlights. This changes lighting only;
+no flutes or changes to the cutting envelope are introduced. A saved tool snapshot
+was visually inspected. Native full-history replay and the independent seven-frame
+exposure/target oracle passed after the adaptive changes.
+
+The first adaptive diagnostic run (`adaptive-check.json`, `adaptive-raw.jsonl`)
+retains an unfavorable 662.6 ms maximum callback gap. It preceded the explicit
+active-producer guard and overlapped offscreen snapshot validation. It is not a
+controlled before/after benchmark. Final follow-up diagnostics are recorded
+separately; none of these callback measurements establish locked 60 FPS.
+
+The final active-producer run (`adaptive-final-check.json`,
+`adaptive-final-raw.jsonl`) adopted 240 windows, retained the same drawable view,
+and preserved monotonically advancing operations. Median per-window maximum
+callback gap was 17.52 ms, overall maximum 59.63 ms. The final checkpoint matches
+the reference SHA-256 above exactly. The subsequent UI-only status label exposes
+motion/native quality so users know to hold or pause for sharp inspection.

@@ -110,6 +110,8 @@ final class JobRunner:NSObject,NSWindowDelegate {
         } catch {status.stringValue="Cannot change pause: \(error)"}
     }
     func update() {
+        live?.advancing=follow.state == .on && !paused && !cancelled && !finished
+        live?.controller?.liveAdvancing=live?.advancing ?? false
         if cancelled,live != nil {try? Data().write(to:output.appendingPathComponent("live/cancel"))}
         if follow.state == .on {do {try live?.update()}catch {follow.state = .off;status.stringValue="Live inspection stopped: \(error)";fputs("Live inspection: \(error)\n",stderr)}}
         if !cancelled,let data=try? Data(contentsOf:output.appendingPathComponent("live/status.json")),
@@ -146,7 +148,7 @@ final class JobRunner:NSObject,NSWindowDelegate {
     @objc func openLogFile() {NSWorkspace.shared.open(output.appendingPathComponent("simulation.log"))}
     func windowShouldClose(_ sender:NSWindow)->Bool {if finished{return true};cancel();return false}
     func complete() {
-        guard !finished else {return};finished=true;pause.isEnabled=false;timer?.invalidate();try? log?.close();progress.stopAnimation(nil)
+        guard !finished else {return};finished=true;live?.advancing=false;live?.controller?.liveAdvancing=false;pause.isEnabled=false;timer?.invalidate();try? log?.close();progress.stopAnimation(nil)
         if quitRequested {NSApp.reply(toApplicationShouldTerminate:true);return}
         if cancelled {
             status.stringValue="Calculation cancelled. Logs and the last live window were retained; no final result was loaded."
@@ -194,6 +196,7 @@ final class LiveInspection {
     var loading=false
     var closed=false
     var following=true
+    var advancing=true
     var loadError:Error?
     let loader=DispatchQueue(label:"menkh.live-window-loader",qos:.userInitiated)
     init(output:URL) {self.output=output}
@@ -256,13 +259,13 @@ final class LiveInspection {
             let w=NSWindow(contentRect:NSRect(x:0,y:0,width:1280,height:900),styleMask:[.titled,.closable,.miniaturizable,.resizable],backing:.buffered,defer:false)
             w.isReleasedWhenClosed=false;w.center();window=w
             w.contentViewController=nextController;controller=nextController
-            nextController.metal.livePixelBudget = !CommandLine.arguments.contains("--live-native-resolution")
             w.makeKeyAndOrderFront(nil)
         } else {
             let view=controller!.metal
             try controller!.replaceLiveRenderer(renderer,animate:true)
             precondition(controller!.metal === view && window!.contentViewController === controller!)
         }
+        controller!.liveAdvancing=advancing
         window!.title="Menkh — LIVE · retained operations \(first)…\(completed) · uncheck Follow latest to seek"
         lease=held;sequence=next;lastLoad=Date()
         var usage=rusage();getrusage(RUSAGE_SELF,&usage)

@@ -186,19 +186,27 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
     }
 }
 final class VoxelMetalView:MTKView {
-    // Live inspection is capped in display pixels, independent of voxel spacing.
-    // Retina backing otherwise quadruples ray work at the same window size.
-    var livePixelBudget=false {didSet {autoResizeDrawable = !livePixelBudget;updateLiveSize()}}
-    func updateLiveSize() {
-        guard livePixelBudget,bounds.width>0,bounds.height>0 else {return}
-        let scale=min(1,min(1280/bounds.width,900/bounds.height))
-        let size=CGSize(width:max(1,(bounds.width*scale).rounded()),height:max(1,(bounds.height*scale).rounded()))
-        if drawableSize != size {drawableSize=size}
+    // Keep motion responsive, then redraw once at native backing resolution.
+    var adaptiveResolution=true
+    var presentation=PresentationBudget()
+    var wasActive=true
+    func noteActivity() {presentation.touch(at:CFAbsoluteTimeGetCurrent())}
+    func updatePresentation(at now:Double = CFAbsoluteTimeGetCurrent()) {
+        guard bounds.width>0,bounds.height>0 else {return}
+        let active=presentation.active(at:now)
+        let size=presentation.size(width:Double(bounds.width),height:Double(bounds.height),backing:Double(window?.backingScaleFactor ?? 1),time:now,adaptive:adaptiveResolution)
+        let resized=drawableSize != size
+        if resized {drawableSize=size}
+        if isPaused == active {isPaused = !active}
+        if !active && (wasActive || resized) {draw()}
+        wasActive=active
     }
-    override func setFrameSize(_ size:NSSize) {super.setFrameSize(size);updateLiveSize()}
+    override func setFrameSize(_ size:NSSize) {let changed=frame.size != size;super.setFrameSize(size);if changed {noteActivity()}}
+    override func viewDidChangeBackingProperties() {super.viewDidChangeBackingProperties();noteActivity()}
     var renderer:VoxelRenderer?
     override var acceptsFirstResponder:Bool {true}
     override func mouseDown(with event:NSEvent) {
+        noteActivity()
         window?.makeFirstResponder(self)
         if event.clickCount==2,let r=renderer {
             let p=convert(event.locationInWindow,from:nil)
@@ -206,13 +214,14 @@ final class VoxelMetalView:MTKView {
         }
     }
     override func mouseDragged(with event:NSEvent) {
+        noteActivity()
         guard let r=renderer else {return}
         if event.modifierFlags.contains(.shift) {
             let u=r.uniforms(width:1,height:1);let right=SIMD3(u.right.x,u.right.y,u.right.z);let up=SIMD3(u.up.x,u.up.y,u.up.z)
             r.target+=(-Float(event.deltaX)*right+Float(event.deltaY)*up)*r.distance*0.0015
         } else {r.yaw-=Float(event.deltaX)*0.008;r.elevation=clamp(r.elevation+Float(event.deltaY)*0.008,-1.5,1.5)}
     }
-    override func scrollWheel(with event:NSEvent) {guard let r=renderer else {return};r.distance=clamp(r.distance*exp(Float(event.scrollingDeltaY)*0.015),0.05,300)}
+    override func scrollWheel(with event:NSEvent) {noteActivity();guard let r=renderer else {return};r.distance=clamp(r.distance*exp(Float(event.scrollingDeltaY)*0.015),0.05,300)}
     func clamp(_ x:Float,_ low:Float,_ high:Float)->Float {min(high,max(low,x))}
 }
 final class VoxelController:NSViewController {
@@ -230,6 +239,7 @@ final class VoxelController:NSViewController {
     let holderControl=NSButton(checkboxWithTitle:"Tool assembly",target:nil,action:nil)
     let comparisonControl=NSButton(checkboxWithTitle:"Target: excess yellow / missing red",target:nil,action:nil)
     let provenanceControl=NSPopUpButton()
+    var liveAdvancing=false
     var livePlaybackEnd:Int?
     var livePlaybackStart=0
     var livePlaybackBegan=0.0
@@ -240,6 +250,9 @@ final class VoxelController:NSViewController {
     override func loadView() {
         view=NSView(frame:NSRect(x:0,y:0,width:1280,height:900))
         metal.frame=view.bounds;metal.autoresizingMask=[.width,.height];metal.framebufferOnly=false;metal.colorPixelFormat = .bgra8Unorm;metal.delegate=renderer;metal.renderer=renderer;metal.preferredFramesPerSecond=60
+        metal.autoResizeDrawable=false
+        metal.adaptiveResolution = !CommandLine.arguments.contains("--live-native-resolution")
+        metal.noteActivity()
         view.addSubview(metal)
         let title=NSTextField(labelWithString:"MENKH / VOXEL CUTTING");title.font = .systemFont(ofSize:19,weight:.bold);title.textColor = .white
         let help=NSTextField(labelWithString:"Drag: orbit · Scroll: zoom · Double-click: focus surface · Shift + drag: pan");help.textColor = .white
@@ -275,16 +288,18 @@ final class VoxelController:NSViewController {
         RunLoop.main.add(timer!,forMode:.common)
     }
     func refresh() {
-        let label=renderer.label
+        let quality=metal.adaptiveResolution && metal.wasActive ? "motion (hold/pause for sharp inspection)":"native"
+        let label=renderer.label+" · Display: "+quality
         if status.stringValue != label {status.stringValue=label}
         if slider.doubleValue != Double(renderer.frame) {slider.doubleValue=Double(renderer.frame)}
         let title=playing ? "Pause":"Play";if play.title != title {play.title=title}
     }
-    func seek(_ n:Int) {do {try renderer.seek(n);refresh()}catch{playing=false;status.stringValue="Error: \(error)"}}
+    func seek(_ n:Int) {do {if n != renderer.frame {metal.noteActivity()};try renderer.seek(n);refresh()}catch{livePlaybackEnd=nil;playing=false;status.stringValue="Error: \(error)"}}
     // Swap only complete prepared states; preserve the drawable layer and controls.
     func replaceLiveRenderer(_ next:VoxelRenderer, animate:Bool) throws {
         let nextFindings=try next.loadFindings()
         renderer.lastCommand?.waitUntilCompleted()
+        metal.noteActivity()
         renderer=next;metal.renderer=next;metal.delegate=next
         slider.maxValue=Double(next.history.frames.count)
         comparisonControl.isEnabled=next.targetBlocks != nil
@@ -299,6 +314,7 @@ final class VoxelController:NSViewController {
     }
     func tick() {
         let now=CFAbsoluteTimeGetCurrent()
+        if playing || livePlaybackEnd != nil || liveAdvancing {metal.noteActivity()}
         if let end=livePlaybackEnd {
             let fraction=min(1,max(0,(now-livePlaybackBegan)/0.12))
             let frame=livePlaybackStart+Int(Double(end-livePlaybackStart)*fraction)
@@ -308,6 +324,7 @@ final class VoxelController:NSViewController {
             lastPlaybackTick=now
             if renderer.frame<renderer.history.frames.count {seek(renderer.frame+1)}else{playing=false}
         }
+        metal.updatePresentation()
         refresh()
     }
     @objc func filterFindings() {
@@ -315,7 +332,7 @@ final class VoxelController:NSViewController {
         visibleFindings=findings.filter {query.isEmpty || $0.title.lowercased().contains(query)}
         findingMenu.removeAllItems();findingMenu.addItems(withTitles:["Select a finding (\(visibleFindings.count) / \(findings.count))"]+visibleFindings.map {$0.title})
     }
-    @objc func selectFinding(_ sender:NSPopUpButton) {
+    @objc func selectFinding(_ sender:NSPopUpButton) {metal.noteActivity();
         let i=sender.indexOfSelectedItem-1;guard visibleFindings.indices.contains(i) else {return}
         playing=false
         do {try renderer.focusFinding(visibleFindings[i]);findingDetail.stringValue=renderer.picked;sectionControl.doubleValue=Double(renderer.sectionFraction);axesControl.selectItem(at:renderer.sectionAxis);comparisonControl.state=renderer.compareTarget ? .on:.off;stockControl.state=renderer.showStock ? .on:.off;fixtureControl.state=renderer.showFixtures ? .on:.off;holderControl.state=renderer.showHolder ? .on:.off;refresh()}
@@ -324,16 +341,16 @@ final class VoxelController:NSViewController {
     @objc func toggle() {livePlaybackEnd=nil;playing.toggle();refresh()}
     @objc func restart() {livePlaybackEnd=nil;playing=true;seek(0)}
     @objc func scrub() {livePlaybackEnd=nil;playing=false;seek(Int(slider.doubleValue.rounded()))}
-    @objc func resetCamera() {renderer.resetView()}
-    @objc func provenance(_ sender:NSPopUpButton) {livePlaybackEnd=nil;playing=false;renderer.provenanceMode=UInt32(sender.indexOfSelectedItem);if renderer.provenanceMode != 0 && !renderer.provenanceAllFrames {seek(renderer.history.frames.count)};refresh()}
-    @objc func stock(_ sender:NSButton) {renderer.showStock=sender.state == .on}
-    @objc func fixtures(_ sender:NSButton) {renderer.showFixtures=sender.state == .on}
-    @objc func holder(_ sender:NSButton) {renderer.showHolder=sender.state == .on}
-    @objc func compare(_ sender:NSButton) {renderer.compareTarget=sender.state == .on}
-    @objc func sectionAxis(_ sender:NSPopUpButton) {renderer.sectionAxis=sender.indexOfSelectedItem}
-    @objc func section(_ sender:NSSlider) {renderer.sectionFraction=Float(sender.doubleValue)}
-    @objc func lighting(_ b:NSButton) {renderer.smoothLighting=b.state == .on}
-    @objc func background(_ b:NSButton) {renderer.darkBackground=b.state == .on}
+    @objc func resetCamera() {metal.noteActivity();renderer.resetView()}
+    @objc func provenance(_ sender:NSPopUpButton) {metal.noteActivity();livePlaybackEnd=nil;playing=false;renderer.provenanceMode=UInt32(sender.indexOfSelectedItem);if renderer.provenanceMode != 0 && !renderer.provenanceAllFrames {seek(renderer.history.frames.count)};refresh()}
+    @objc func stock(_ sender:NSButton) {metal.noteActivity();renderer.showStock=sender.state == .on}
+    @objc func fixtures(_ sender:NSButton) {metal.noteActivity();renderer.showFixtures=sender.state == .on}
+    @objc func holder(_ sender:NSButton) {metal.noteActivity();renderer.showHolder=sender.state == .on}
+    @objc func compare(_ sender:NSButton) {metal.noteActivity();renderer.compareTarget=sender.state == .on}
+    @objc func sectionAxis(_ sender:NSPopUpButton) {metal.noteActivity();renderer.sectionAxis=sender.indexOfSelectedItem}
+    @objc func section(_ sender:NSSlider) {metal.noteActivity();renderer.sectionFraction=Float(sender.doubleValue)}
+    @objc func lighting(_ b:NSButton) {metal.noteActivity();renderer.smoothLighting=b.state == .on}
+    @objc func background(_ b:NSButton) {metal.noteActivity();renderer.darkBackground=b.state == .on}
     deinit {timer?.invalidate()}
 }
 extension Delegate {
@@ -368,6 +385,9 @@ extension Delegate {
         if args.contains("--pick-center") {renderer.focus(x:0.5,y:0.5,aspect:1280/900);guard !renderer.picked.isEmpty else {throw MeshError.invalidOBJ("Center pick missed material")}}
         if let i=args.firstIndex(of:"--movie"),i+1<args.count {try renderer.movie(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
         if let i=args.firstIndex(of:"--verify-provenance-oracle"),i+1<args.count {try renderer.verifyProvenanceOracle(URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
+        if let i=args.firstIndex(of:"--verify-adaptive-presentation"),i+1<args.count {
+            try renderer.verifyAdaptivePresentation(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return
+        }
         if let i=args.firstIndex(of:"--verify-history"),i+1<args.count {try renderer.verifyHistory(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
         if let i=args.firstIndex(of:"--render-bench"),i+1<args.count {
             var samples=[Double]();for j in 0..<13 {_ = try renderer.image();if j>=3 {samples.append(renderer.lastGPUms)}};samples.sort()
@@ -498,5 +518,36 @@ extension VoxelRenderer {
     func resetView() {
         let low=SIMD3<Float>(history.stock_min[0],history.stock_min[1],history.stock_min[2]);let high=SIMD3<Float>(history.stock_max[0],history.stock_max[1],history.stock_max[2])
         target=(low+high)/2;distance=max(1,simd_length(high-low)*1.5);yaw = -0.8;elevation=0.5;roll=0
+    }
+}
+
+extension VoxelRenderer {
+    func verifyAdaptivePresentation(to output:URL) throws {
+        let controller=VoxelController(self);controller.playing=false
+        let window=NSWindow(contentRect:NSRect(x:0,y:0,width:1280,height:900),styleMask:[.titled],backing:.buffered,defer:false)
+        window.isReleasedWhenClosed=false;window.contentViewController=controller;window.makeKeyAndOrderFront(nil)
+        defer {controller.timer?.invalidate();controller.metal.isPaused=true;window.close()}
+        let view=controller.metal
+        let before=Data(bytes:blocks.contents(),count:blocks.length)
+        let bits=Data(bytes:pool.contents(),count:pool.length)
+        view.adaptiveResolution=true;view.presentation=PresentationBudget();view.presentation.touch(at:100)
+        view.updatePresentation(at:100)
+        let moving=view.drawableSize
+        guard moving.width<=1280,moving.height<=900,!view.isPaused else {throw MeshError.invalidOBJ("Moving presentation budget failed")}
+        view.updatePresentation(at:101)
+        let sharp=view.drawableSize,backing=window.backingScaleFactor
+        guard sharp.width==(view.bounds.width*backing).rounded(),sharp.height==(view.bounds.height*backing).rounded(),view.isPaused else {throw MeshError.invalidOBJ("Idle native resolution failed")}
+        view.presentation.touch(at:102);view.updatePresentation(at:102)
+        guard view.drawableSize==moving,!view.isPaused else {throw MeshError.invalidOBJ("Motion did not resume")}
+        view.adaptiveResolution=false;view.updatePresentation(at:102)
+        guard view.drawableSize==sharp else {throw MeshError.invalidOBJ("Native resolution override failed")}
+        view.adaptiveResolution=true;controller.liveAdvancing=true;controller.tick()
+        guard view.drawableSize==moving,!view.isPaused else {throw MeshError.invalidOBJ("Active live producer must retain motion quality")}
+        controller.liveAdvancing=false;view.presentation=PresentationBudget();view.updatePresentation()
+        guard view.drawableSize==sharp,view.isPaused else {throw MeshError.invalidOBJ("Held live inspection must restore native quality")}
+        guard before==Data(bytes:blocks.contents(),count:blocks.length),bits==Data(bytes:pool.contents(),count:pool.length) else {throw MeshError.invalidOBJ("Presentation modified occupancy")}
+        let record:[String:Any]=["moving_pixels":[moving.width,moving.height],"idle_pixels":[sharp.width,sharp.height],"backing_scale":backing,"idle_pauses_rendering":true,"motion_resumes":true,"native_override":true,"live_follow_keeps_motion_quality":true,"held_restores_native_quality":true,"occupancy_unchanged":true]
+        try JSONSerialization.data(withJSONObject:record,options:[.prettyPrinted,.sortedKeys]).write(to:output)
+        print("Adaptive Metal presentation verified")
     }
 }

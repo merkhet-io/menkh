@@ -158,11 +158,17 @@ publication algorithms are not claimed to be formally verified.
 The native live window retains its controls and Metal drawable layer across
 publications. A single background loader validates the next leased history and
 prepares buffers while the current state remains visible. The Metal pipeline and
-device are reused. Live rendering caps the drawable at 1280 × 900 display pixels
-with the window aspect ratio preserved, avoiding quadrupled ray work from Retina
-backing. Use `--live-native-resolution` to retain full backing resolution. This
-affects display sampling only; voxel occupancy, picking coordinates, exports and
-material metrics are unchanged. Camera and inspection modes are copied at handover, so camera
+device are reused. During playback, zooming, dragging or inspection changes,
+adaptive rendering caps the drawable at 1280 × 900 display pixels with the window
+aspect ratio preserved. Following an active calculation keeps this motion quality
+even between slow publications. Hold, pause or completion permits sharp inspection.
+After 350 ms without activity it redraws once at full
+native backing resolution, then suspends idle GPU rendering. Activity resumes
+continuous rendering. The delay prevents quality switching between normal live
+publications. Use `--live-native-resolution` to keep full backing resolution even
+during motion. This also applies to completed voxel-history playback. Display
+sampling never changes voxel occupancy, picking coordinates, exports or material
+metrics. Camera and inspection modes are copied at handover, so camera
 input received during preparation is preserved. Both leases survive handover;
 holding Follow latest discards any in-flight prepared replacement.
 
@@ -187,3 +193,12 @@ diagnostics, not displayed-frame timing or interactive FPS.
 
 Actual presentation diagnostics, including unfavorable intermediate results, are
 in the [presentation evidence](evidence/live-presentation/README.md).
+
+The idealized cutter uses steel-like display lighting with a camera-relative key
+highlight. Its silhouette and collision/cutting geometry are unchanged; no flutes
+or other nonexistent geometry are painted into the material model.
+
+The adaptive sizing policy runs in macOS CI. A native Metal integration check is
+available with `menkh-viewer HISTORY.json --verify-adaptive-presentation REPORT.json`;
+it verifies capped movement, native-resolution idle rendering, resumed motion,
+the full-resolution override and byte-exact occupancy preservation.

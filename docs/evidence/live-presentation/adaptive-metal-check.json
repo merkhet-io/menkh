@@ -1,0 +1,17 @@
+{
+  "backing_scale" : 2,
+  "held_restores_native_quality" : true,
+  "idle_pauses_rendering" : true,
+  "idle_pixels" : [
+    2560,
+    1800
+  ],
+  "live_follow_keeps_motion_quality" : true,
+  "motion_resumes" : true,
+  "moving_pixels" : [
+    1280,
+    900
+  ],
+  "native_override" : true,
+  "occupancy_unchanged" : true
+}
