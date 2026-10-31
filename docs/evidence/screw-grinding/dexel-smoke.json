@@ -1,0 +1,1438 @@
+{
+  "format": "menkh-experimental-quantized-dexels-v1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "grid": [
+    24,
+    24,
+    80
+  ],
+  "origin": [
+    -6,
+    -6,
+    0
+  ],
+  "voxel_mm": 0.5,
+  "motion_tolerance_mm": 0.08,
+  "columns": 448,
+  "intervals": 2736,
+  "allocated_bytes": 69080,
+  "initial_occupied": 35840,
+  "remaining_occupied": 27332,
+  "init_ns": 38833,
+  "cut_ns": 957628585,
+  "peak_rss_before_oracle_bytes": 2523136,
+  "exact_grid_comparison": true,
+  "operations": [
+    {
+      "cut_ns": 9978667,
+      "occupied": 35651,
+      "intervals": 505,
+      "allocated_bytes": 22560,
+      "work": {
+        "interval_tests": 2124,
+        "center_tests": 0,
+        "removed_whole_intervals": 234
+      }
+    },
+    {
+      "cut_ns": 12241083,
+      "occupied": 35588,
+      "intervals": 522,
+      "allocated_bytes": 24744,
+      "work": {
+        "interval_tests": 2588,
+        "center_tests": 0,
+        "removed_whole_intervals": 98
+      }
+    },
+    {
+      "cut_ns": 12013333,
+      "occupied": 35520,
+      "intervals": 540,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 2538,
+        "center_tests": 0,
+        "removed_whole_intervals": 108
+      }
+    },
+    {
+      "cut_ns": 6246500,
+      "occupied": 35456,
+      "intervals": 557,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 1572,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 6400583,
+      "occupied": 35393,
+      "intervals": 574,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 1422,
+        "center_tests": 0,
+        "removed_whole_intervals": 94
+      }
+    },
+    {
+      "cut_ns": 11345834,
+      "occupied": 35330,
+      "intervals": 591,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 2462,
+        "center_tests": 0,
+        "removed_whole_intervals": 94
+      }
+    },
+    {
+      "cut_ns": 12551083,
+      "occupied": 35262,
+      "intervals": 609,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 2838,
+        "center_tests": 0,
+        "removed_whole_intervals": 104
+      }
+    },
+    {
+      "cut_ns": 6619583,
+      "occupied": 35198,
+      "intervals": 626,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 1660,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 6585541,
+      "occupied": 35135,
+      "intervals": 643,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 1380,
+        "center_tests": 0,
+        "removed_whole_intervals": 108
+      }
+    },
+    {
+      "cut_ns": 11578416,
+      "occupied": 35072,
+      "intervals": 660,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 2470,
+        "center_tests": 0,
+        "removed_whole_intervals": 92
+      }
+    },
+    {
+      "cut_ns": 12295125,
+      "occupied": 35004,
+      "intervals": 678,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 2576,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8559083,
+      "occupied": 34940,
+      "intervals": 695,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 1830,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 7310750,
+      "occupied": 34877,
+      "intervals": 712,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 1506,
+        "center_tests": 0,
+        "removed_whole_intervals": 108
+      }
+    },
+    {
+      "cut_ns": 11630375,
+      "occupied": 34814,
+      "intervals": 729,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 2342,
+        "center_tests": 0,
+        "removed_whole_intervals": 114
+      }
+    },
+    {
+      "cut_ns": 10137250,
+      "occupied": 34746,
+      "intervals": 747,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 2576,
+        "center_tests": 0,
+        "removed_whole_intervals": 118
+      }
+    },
+    {
+      "cut_ns": 7317959,
+      "occupied": 34682,
+      "intervals": 764,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 1612,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 6386542,
+      "occupied": 34619,
+      "intervals": 781,
+      "allocated_bytes": 26928,
+      "work": {
+        "interval_tests": 1414,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 11033292,
+      "occupied": 34556,
+      "intervals": 798,
+      "allocated_bytes": 30200,
+      "work": {
+        "interval_tests": 2478,
+        "center_tests": 0,
+        "removed_whole_intervals": 100
+      }
+    },
+    {
+      "cut_ns": 10853667,
+      "occupied": 34488,
+      "intervals": 816,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2526,
+        "center_tests": 0,
+        "removed_whole_intervals": 104
+      }
+    },
+    {
+      "cut_ns": 6920791,
+      "occupied": 34424,
+      "intervals": 833,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1556,
+        "center_tests": 0,
+        "removed_whole_intervals": 98
+      }
+    },
+    {
+      "cut_ns": 6392834,
+      "occupied": 34361,
+      "intervals": 850,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1376,
+        "center_tests": 0,
+        "removed_whole_intervals": 100
+      }
+    },
+    {
+      "cut_ns": 11606959,
+      "occupied": 34298,
+      "intervals": 867,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2392,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 11572708,
+      "occupied": 34230,
+      "intervals": 885,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2518,
+        "center_tests": 0,
+        "removed_whole_intervals": 108
+      }
+    },
+    {
+      "cut_ns": 7415667,
+      "occupied": 34166,
+      "intervals": 902,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1606,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 6510083,
+      "occupied": 34103,
+      "intervals": 919,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1438,
+        "center_tests": 0,
+        "removed_whole_intervals": 98
+      }
+    },
+    {
+      "cut_ns": 9531625,
+      "occupied": 34040,
+      "intervals": 936,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2454,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 11374209,
+      "occupied": 33972,
+      "intervals": 954,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2678,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 6533042,
+      "occupied": 33908,
+      "intervals": 971,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1630,
+        "center_tests": 0,
+        "removed_whole_intervals": 108
+      }
+    },
+    {
+      "cut_ns": 6301500,
+      "occupied": 33845,
+      "intervals": 988,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1408,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 9769917,
+      "occupied": 33782,
+      "intervals": 1005,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2400,
+        "center_tests": 0,
+        "removed_whole_intervals": 104
+      }
+    },
+    {
+      "cut_ns": 11820542,
+      "occupied": 33714,
+      "intervals": 1023,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2432,
+        "center_tests": 0,
+        "removed_whole_intervals": 108
+      }
+    },
+    {
+      "cut_ns": 7245208,
+      "occupied": 33650,
+      "intervals": 1040,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1582,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 6537042,
+      "occupied": 33587,
+      "intervals": 1057,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1394,
+        "center_tests": 0,
+        "removed_whole_intervals": 98
+      }
+    },
+    {
+      "cut_ns": 10470292,
+      "occupied": 33524,
+      "intervals": 1074,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2202,
+        "center_tests": 0,
+        "removed_whole_intervals": 84
+      }
+    },
+    {
+      "cut_ns": 9672167,
+      "occupied": 33456,
+      "intervals": 1092,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2348,
+        "center_tests": 0,
+        "removed_whole_intervals": 92
+      }
+    },
+    {
+      "cut_ns": 6647208,
+      "occupied": 33392,
+      "intervals": 1109,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1460,
+        "center_tests": 0,
+        "removed_whole_intervals": 92
+      }
+    },
+    {
+      "cut_ns": 5721041,
+      "occupied": 33329,
+      "intervals": 1126,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1300,
+        "center_tests": 0,
+        "removed_whole_intervals": 94
+      }
+    },
+    {
+      "cut_ns": 10464542,
+      "occupied": 33266,
+      "intervals": 1143,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2398,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 10395875,
+      "occupied": 33198,
+      "intervals": 1161,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 2412,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 6285750,
+      "occupied": 33134,
+      "intervals": 1178,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1430,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 5397625,
+      "occupied": 33071,
+      "intervals": 1195,
+      "allocated_bytes": 33472,
+      "work": {
+        "interval_tests": 1246,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 10187375,
+      "occupied": 33008,
+      "intervals": 1212,
+      "allocated_bytes": 38384,
+      "work": {
+        "interval_tests": 2164,
+        "center_tests": 0,
+        "removed_whole_intervals": 90
+      }
+    },
+    {
+      "cut_ns": 10616666,
+      "occupied": 32940,
+      "intervals": 1230,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2296,
+        "center_tests": 0,
+        "removed_whole_intervals": 98
+      }
+    },
+    {
+      "cut_ns": 6248041,
+      "occupied": 32876,
+      "intervals": 1247,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1434,
+        "center_tests": 0,
+        "removed_whole_intervals": 96
+      }
+    },
+    {
+      "cut_ns": 5573042,
+      "occupied": 32813,
+      "intervals": 1264,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1266,
+        "center_tests": 0,
+        "removed_whole_intervals": 100
+      }
+    },
+    {
+      "cut_ns": 10182250,
+      "occupied": 32750,
+      "intervals": 1281,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2278,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 10629375,
+      "occupied": 32682,
+      "intervals": 1299,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2534,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 6001041,
+      "occupied": 32618,
+      "intervals": 1316,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1418,
+        "center_tests": 0,
+        "removed_whole_intervals": 98
+      }
+    },
+    {
+      "cut_ns": 5464333,
+      "occupied": 32555,
+      "intervals": 1333,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1204,
+        "center_tests": 0,
+        "removed_whole_intervals": 96
+      }
+    },
+    {
+      "cut_ns": 9449792,
+      "occupied": 32492,
+      "intervals": 1350,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2170,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 10473959,
+      "occupied": 32424,
+      "intervals": 1368,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2300,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 5987792,
+      "occupied": 32360,
+      "intervals": 1385,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1438,
+        "center_tests": 0,
+        "removed_whole_intervals": 98
+      }
+    },
+    {
+      "cut_ns": 5414000,
+      "occupied": 32297,
+      "intervals": 1402,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1212,
+        "center_tests": 0,
+        "removed_whole_intervals": 96
+      }
+    },
+    {
+      "cut_ns": 10814792,
+      "occupied": 32234,
+      "intervals": 1419,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2120,
+        "center_tests": 0,
+        "removed_whole_intervals": 96
+      }
+    },
+    {
+      "cut_ns": 10503291,
+      "occupied": 32166,
+      "intervals": 1437,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2306,
+        "center_tests": 0,
+        "removed_whole_intervals": 100
+      }
+    },
+    {
+      "cut_ns": 6385166,
+      "occupied": 32102,
+      "intervals": 1454,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1474,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 5447500,
+      "occupied": 32039,
+      "intervals": 1471,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1306,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 10107250,
+      "occupied": 31976,
+      "intervals": 1488,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2336,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 10129000,
+      "occupied": 31908,
+      "intervals": 1506,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2234,
+        "center_tests": 0,
+        "removed_whole_intervals": 114
+      }
+    },
+    {
+      "cut_ns": 5367584,
+      "occupied": 31844,
+      "intervals": 1523,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1278,
+        "center_tests": 0,
+        "removed_whole_intervals": 88
+      }
+    },
+    {
+      "cut_ns": 4605459,
+      "occupied": 31781,
+      "intervals": 1540,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1130,
+        "center_tests": 0,
+        "removed_whole_intervals": 92
+      }
+    },
+    {
+      "cut_ns": 8969584,
+      "occupied": 31718,
+      "intervals": 1557,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2046,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 8801875,
+      "occupied": 31650,
+      "intervals": 1575,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2116,
+        "center_tests": 0,
+        "removed_whole_intervals": 108
+      }
+    },
+    {
+      "cut_ns": 5059208,
+      "occupied": 31586,
+      "intervals": 1592,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1246,
+        "center_tests": 0,
+        "removed_whole_intervals": 96
+      }
+    },
+    {
+      "cut_ns": 6537000,
+      "occupied": 31397,
+      "intervals": 1649,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1634,
+        "center_tests": 0,
+        "removed_whole_intervals": 218
+      }
+    },
+    {
+      "cut_ns": 8631917,
+      "occupied": 31334,
+      "intervals": 1666,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1932,
+        "center_tests": 0,
+        "removed_whole_intervals": 100
+      }
+    },
+    {
+      "cut_ns": 8904583,
+      "occupied": 31266,
+      "intervals": 1684,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2022,
+        "center_tests": 0,
+        "removed_whole_intervals": 104
+      }
+    },
+    {
+      "cut_ns": 4870458,
+      "occupied": 31202,
+      "intervals": 1701,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1220,
+        "center_tests": 0,
+        "removed_whole_intervals": 98
+      }
+    },
+    {
+      "cut_ns": 4177917,
+      "occupied": 31139,
+      "intervals": 1718,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1048,
+        "center_tests": 0,
+        "removed_whole_intervals": 100
+      }
+    },
+    {
+      "cut_ns": 8210084,
+      "occupied": 31076,
+      "intervals": 1735,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2022,
+        "center_tests": 0,
+        "removed_whole_intervals": 100
+      }
+    },
+    {
+      "cut_ns": 8787625,
+      "occupied": 31008,
+      "intervals": 1753,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 2192,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4873708,
+      "occupied": 30944,
+      "intervals": 1770,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1192,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4316042,
+      "occupied": 30881,
+      "intervals": 1787,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1046,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8060209,
+      "occupied": 30818,
+      "intervals": 1804,
+      "allocated_bytes": 43296,
+      "work": {
+        "interval_tests": 1964,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8912333,
+      "occupied": 30750,
+      "intervals": 1822,
+      "allocated_bytes": 50664,
+      "work": {
+        "interval_tests": 1956,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4888083,
+      "occupied": 30686,
+      "intervals": 1839,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1196,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4409375,
+      "occupied": 30623,
+      "intervals": 1856,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1074,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8239792,
+      "occupied": 30560,
+      "intervals": 1873,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1884,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8430792,
+      "occupied": 30492,
+      "intervals": 1891,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2012,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4594041,
+      "occupied": 30428,
+      "intervals": 1908,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1164,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4084458,
+      "occupied": 30365,
+      "intervals": 1925,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1074,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8324542,
+      "occupied": 30302,
+      "intervals": 1942,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2098,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8346167,
+      "occupied": 30234,
+      "intervals": 1960,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2026,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4786459,
+      "occupied": 30170,
+      "intervals": 1977,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1164,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4227541,
+      "occupied": 30107,
+      "intervals": 1994,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1068,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8292083,
+      "occupied": 30044,
+      "intervals": 2011,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1938,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8666875,
+      "occupied": 29976,
+      "intervals": 2029,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1978,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 3674416,
+      "occupied": 29912,
+      "intervals": 2046,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1162,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4117833,
+      "occupied": 29849,
+      "intervals": 2063,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1058,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8134833,
+      "occupied": 29786,
+      "intervals": 2080,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1994,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8520000,
+      "occupied": 29718,
+      "intervals": 2098,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2166,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4866750,
+      "occupied": 29654,
+      "intervals": 2115,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1180,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4142167,
+      "occupied": 29591,
+      "intervals": 2132,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1042,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8285625,
+      "occupied": 29528,
+      "intervals": 2149,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1974,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 9092917,
+      "occupied": 29460,
+      "intervals": 2167,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1996,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4904334,
+      "occupied": 29396,
+      "intervals": 2184,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1212,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4586250,
+      "occupied": 29333,
+      "intervals": 2201,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1090,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8905333,
+      "occupied": 29270,
+      "intervals": 2218,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1924,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8497084,
+      "occupied": 29202,
+      "intervals": 2236,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2022,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4544041,
+      "occupied": 29138,
+      "intervals": 2253,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1164,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4114750,
+      "occupied": 29075,
+      "intervals": 2270,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1074,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 7916083,
+      "occupied": 29012,
+      "intervals": 2287,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2098,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 7531292,
+      "occupied": 28944,
+      "intervals": 2305,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2026,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4605000,
+      "occupied": 28880,
+      "intervals": 2322,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1164,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4080250,
+      "occupied": 28817,
+      "intervals": 2339,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1068,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8150333,
+      "occupied": 28754,
+      "intervals": 2356,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1938,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8810958,
+      "occupied": 28686,
+      "intervals": 2374,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1978,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4097875,
+      "occupied": 28622,
+      "intervals": 2391,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1162,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4121292,
+      "occupied": 28559,
+      "intervals": 2408,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1058,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8197375,
+      "occupied": 28496,
+      "intervals": 2425,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1994,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8625084,
+      "occupied": 28428,
+      "intervals": 2443,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2166,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4657875,
+      "occupied": 28364,
+      "intervals": 2460,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1180,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4156334,
+      "occupied": 28301,
+      "intervals": 2477,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1042,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8263375,
+      "occupied": 28238,
+      "intervals": 2494,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1964,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8711708,
+      "occupied": 28170,
+      "intervals": 2512,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1956,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4915167,
+      "occupied": 28106,
+      "intervals": 2529,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1196,
+        "center_tests": 0,
+        "removed_whole_intervals": 110
+      }
+    },
+    {
+      "cut_ns": 4623166,
+      "occupied": 28043,
+      "intervals": 2546,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1074,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 8660875,
+      "occupied": 27980,
+      "intervals": 2563,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1884,
+        "center_tests": 0,
+        "removed_whole_intervals": 106
+      }
+    },
+    {
+      "cut_ns": 7848875,
+      "occupied": 27912,
+      "intervals": 2581,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2040,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    },
+    {
+      "cut_ns": 4668709,
+      "occupied": 27848,
+      "intervals": 2598,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1174,
+        "center_tests": 0,
+        "removed_whole_intervals": 104
+      }
+    },
+    {
+      "cut_ns": 4325791,
+      "occupied": 27785,
+      "intervals": 2615,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1058,
+        "center_tests": 0,
+        "removed_whole_intervals": 102
+      }
+    },
+    {
+      "cut_ns": 8452083,
+      "occupied": 27722,
+      "intervals": 2632,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2108,
+        "center_tests": 0,
+        "removed_whole_intervals": 108
+      }
+    },
+    {
+      "cut_ns": 7513583,
+      "occupied": 27654,
+      "intervals": 2650,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 2088,
+        "center_tests": 0,
+        "removed_whole_intervals": 116
+      }
+    },
+    {
+      "cut_ns": 3938125,
+      "occupied": 27590,
+      "intervals": 2667,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1162,
+        "center_tests": 0,
+        "removed_whole_intervals": 98
+      }
+    },
+    {
+      "cut_ns": 3832750,
+      "occupied": 27527,
+      "intervals": 2684,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1024,
+        "center_tests": 0,
+        "removed_whole_intervals": 96
+      }
+    },
+    {
+      "cut_ns": 6834292,
+      "occupied": 27464,
+      "intervals": 2701,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1948,
+        "center_tests": 0,
+        "removed_whole_intervals": 96
+      }
+    },
+    {
+      "cut_ns": 7413166,
+      "occupied": 27396,
+      "intervals": 2719,
+      "allocated_bytes": 58032,
+      "work": {
+        "interval_tests": 1974,
+        "center_tests": 0,
+        "removed_whole_intervals": 100
+      }
+    },
+    {
+      "cut_ns": 4629084,
+      "occupied": 27332,
+      "intervals": 2736,
+      "allocated_bytes": 69080,
+      "work": {
+        "interval_tests": 1190,
+        "center_tests": 0,
+        "removed_whole_intervals": 112
+      }
+    }
+  ],
+  "note": "Experimental quantized Z-column cutting, no history/export/viewer integration. Two compacted buffers, transactional preflight. Timings are not the full voxel job pipeline. --operations explicitly selects a prefix."
+}

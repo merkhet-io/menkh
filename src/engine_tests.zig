@@ -1043,3 +1043,67 @@ test "playback exposure allocation and explicit limit preserve authoritative sto
     defer a.free(after);
     try std.testing.expectEqualSlices(u8, before, after);
 }
+
+test "tilted cutter bounds and cylinder rejection preserve exhaustive subtraction" {
+    const profiles = [_][]const e.ProfilePoint{
+        &.{ .{ .z = 0, .radius = 1 }, .{ .z = 0.3, .radius = 1.2 }, .{ .z = 0.7, .radius = 1 } },
+        &.{ .{ .z = 0, .radius = 1.2 }, .{ .z = 0.4, .radius = 0.2 }, .{ .z = 0.7, .radius = 1.2 } },
+    };
+    var rng = std.Random.DefaultPrng.init(0x43987);
+    for (0..12) |trial| {
+        const tool = e.Tool{ .kind = .profile, .radius = 1.2, .length = 0.7, .profile = profiles[trial % 2] };
+        var axis: e.V = undefined;
+        for (&axis) |*v| v.* = rng.random().float(f64) * 2 - 1;
+        axis = e.scale(axis, 1 / e.norm(axis));
+        const sweep = e.Sweep{ .tool = tool, .a = .{ .position = .{ -0.2, 0.1, -0.1 }, .axis = axis }, .b = .{ .position = .{ 0.3, -0.2, 0.2 }, .axis = axis }, .tolerance_mm = 0.08, .dilation_mm = 0.03 };
+        try sweep.validate();
+        const bounds = e.Bounds{ .lo = .{ -2, -2, -2 }, .hi = .{ 2, 2, 2 } };
+        const shape = e.Shape{ .sweep = sweep };
+        const tight = shape.cuttingBounds();
+        var g = try e.stock(a, bounds, 0.2, &.{.{ .box = bounds }});
+        defer g.deinit();
+        var r = try e.stock(a, bounds, 0.2, &.{.{ .box = bounds }});
+        defer r.deinit();
+        var changes: e.Changes = .{};
+        defer changes.deinit(a);
+        try e.subtract(&g, shape, &changes, false);
+        try e.subtract(&r, shape, &changes, true);
+        for (0..g.blocks.len) |i| try std.testing.expectEqualSlices(u64, &g.bits(i), &r.bits(i));
+        // Independent support-function oracle: an enclosing cylinder's support
+        // point in each world-axis direction must be inside the tightened box.
+        for (0..3) |k| for ([_]f64{ -1, 1 }) |sign| {
+            var radial = e.scale(axis, -sign * axis[k]);
+            radial[k] += sign;
+            if (e.norm(radial) > 1e-12) radial = e.scale(radial, tool.radius / e.norm(radial));
+            for ([_]e.V{ sweep.a.position, sweep.b.position }) |endpoint| {
+                var p = e.add(endpoint, radial);
+                if (sign * axis[k] > 0) p = e.add(p, e.scale(axis, tool.length));
+                p[k] += sign * sweep.errorBound();
+                try std.testing.expect(p[k] >= tight.lo[k] and p[k] <= tight.hi[k]);
+            }
+        };
+    }
+}
+
+test "temporal envelope grouping matches reference for mixed tools and orientations" {
+    const tool = e.Tool{ .kind = .profile, .radius = 1, .length = 1, .profile = &.{ .{ .z = 0, .radius = 1 }, .{ .z = 0.5, .radius = 0.3 }, .{ .z = 1, .radius = 1 } } };
+    var sweeps: [19]e.Sweep = undefined;
+    for (&sweeps, 0..) |*s, i| {
+        const t = @as(f64, @floatFromInt(i)) * 0.03;
+        const axis: e.V = .{ @sin(t), 0, @cos(t) };
+        s.* = .{ .tool = tool, .a = .{ .position = .{ t, -0.2, 0 }, .axis = axis }, .b = .{ .position = .{ t + 0.02, -0.19, 0.01 }, .axis = axis }, .tolerance_mm = 0.015, .dilation_mm = 0.006 };
+    }
+    // Force fallback in one group; the other groups exercise changing axes and
+    // a nonconvex waist. The final group is shorter than the batching width.
+    sweeps[9].tool = .{ .kind = .ball, .radius = 0.6, .length = 1 };
+    const bounds = e.Bounds{ .lo = .{ -1.3, -1.4, -0.4 }, .hi = .{ 2, 1.4, 1.6 } };
+    var g = try e.stock(a, bounds, 0.17, &.{.{ .box = bounds }});
+    defer g.deinit();
+    var r = try e.stock(a, bounds, 0.17, &.{.{ .box = bounds }});
+    defer r.deinit();
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    try e.subtract(&g, .{ .path = &sweeps }, &changes, false);
+    try e.subtract(&r, .{ .path = &sweeps }, &changes, true);
+    for (0..g.blocks.len) |i| try std.testing.expectEqualSlices(u64, &g.bits(i), &r.bits(i));
+}

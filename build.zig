@@ -35,7 +35,7 @@ pub fn build(b: *std.Build) void {
     const kernel = b.addExecutable(.{ .name = "menkh-kernel-bench", .root_module = b.createModule(.{ .root_source_file = b.path("src/kernel_bench.zig"), .target = target, .optimize = optimize }) });
     b.installArtifact(kernel);
     b.step("kernel-bench", "Benchmark scalar/SIMD stationary and swept f64 predicates with 1/8 workers").dependOn(&b.addRunArtifact(kernel).step);
-    inline for (.{ "demo", "bench", "export", "drill", "job", "scene" }) |name| {
+    inline for (.{ "demo", "bench", "export", "drill", "job", "scene", "grinding-demo" }) |name| {
         const run = b.addRunArtifact(exe);
         run.addArg(name);
         if (b.args) |args| run.addArgs(args);

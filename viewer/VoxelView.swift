@@ -383,7 +383,14 @@ extension Delegate {
         }
         if args.contains("--color-operation") || args.contains("--color-tool") {guard renderer.provenanceBuffer != nil else {throw MeshError.invalidOBJ("No surface provenance; enable export_provenance in the job")};renderer.provenanceMode=args.contains("--color-tool") ? 2:1;if !args.contains("--frame") {try renderer.seek(renderer.history.frames.count)}}
         if args.contains("--pick-center") {renderer.focus(x:0.5,y:0.5,aspect:1280/900);guard !renderer.picked.isEmpty else {throw MeshError.invalidOBJ("Center pick missed material")}}
-        if let i=args.firstIndex(of:"--movie"),i+1<args.count {try renderer.movie(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
+        if let i=args.firstIndex(of:"--movie"),i+1<args.count {
+            var fps=12
+            if let j=args.firstIndex(of:"--movie-fps") {
+                guard j+1<args.count,let value=Int(args[j+1]),(1...120).contains(value) else {throw MeshError.invalidOBJ("--movie-fps requires an integer from 1 to 120")}
+                fps=value
+            }
+            try renderer.movie(to:URL(fileURLWithPath:args[i+1]),fps:fps);NSApp.terminate(nil);return
+        }
         if let i=args.firstIndex(of:"--verify-provenance-oracle"),i+1<args.count {try renderer.verifyProvenanceOracle(URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
         if let i=args.firstIndex(of:"--verify-adaptive-presentation"),i+1<args.count {
             try renderer.verifyAdaptivePresentation(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return
@@ -405,19 +412,19 @@ extension Delegate {
 }
 
 extension VoxelRenderer {
-    func movie(to url:URL) throws {
+    func movie(to url:URL,fps:Int=12) throws {
         let writer=try AVAssetWriter(outputURL:url,fileType:.mp4)
         let width=1280;let height=900
         let input=AVAssetWriterInput(mediaType:.video,outputSettings:[AVVideoCodecKey:AVVideoCodecType.h264,AVVideoWidthKey:width,AVVideoHeightKey:height,AVVideoCompressionPropertiesKey:[AVVideoAverageBitRateKey:8_000_000]])
         input.expectsMediaDataInRealTime=false
         let adapter=AVAssetWriterInputPixelBufferAdaptor(assetWriterInput:input,sourcePixelBufferAttributes:[kCVPixelBufferPixelFormatTypeKey as String:kCVPixelFormatType_32ARGB,kCVPixelBufferWidthKey as String:width,kCVPixelBufferHeightKey as String:height,kCVPixelBufferCGImageCompatibilityKey as String:true,kCVPixelBufferCGBitmapContextCompatibilityKey as String:true])
         writer.add(input);guard writer.startWriting() else {throw writer.error ?? MeshError.imageEncoding};writer.startSession(atSourceTime:.zero)
-        let order=Array(repeating:0,count:12)+Array(0...history.frames.count)+Array(repeating:history.frames.count,count:36)
+        let order=Array(repeating:0,count:fps)+Array(0...history.frames.count)+Array(repeating:history.frames.count,count:3*fps)
         for (i,f) in order.enumerated() {
             try autoreleasepool {
                 try seek(f)
-                if i>12+history.frames.count {
-                    let t=Float(i-12-history.frames.count)/36
+                if i>fps+history.frames.count {
+                    let t=Float(i-fps-history.frames.count)/Float(3*fps)
                     yaw = -0.8+0.35*t
                 }
                 let image=try image(width:width,height:height)
@@ -435,12 +442,12 @@ extension VoxelRenderer {
                 context.draw(cg,in:rect)
                 let deadline=Date().addingTimeInterval(20)
                 while !input.isReadyForMoreMediaData {if writer.status == .failed || Date()>deadline {throw writer.error ?? MeshError.imageEncoding};Thread.sleep(forTimeInterval:0.002)}
-                guard adapter.append(pixel,withPresentationTime:CMTime(value:Int64(i),timescale:12)) else {throw writer.error ?? MeshError.imageEncoding}
+                guard adapter.append(pixel,withPresentationTime:CMTime(value:Int64(i),timescale:Int32(fps))) else {throw writer.error ?? MeshError.imageEncoding}
             }
         }
         input.markAsFinished();let done=DispatchSemaphore(value:0);writer.finishWriting {done.signal()};done.wait()
         guard writer.status == .completed else {throw writer.error ?? MeshError.imageEncoding}
-        print("Voxel job video: \(order.count) frames, \(url.path)")
+        print("Voxel job video: \(order.count) frames at \(fps) fps, \(url.path)")
     }
     func occupiedCount()->UInt64 {
         let descriptors=blocks.contents().assumingMemoryBound(to:UInt32.self)

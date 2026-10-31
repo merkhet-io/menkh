@@ -7,6 +7,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Capability | Status | Evidence and boundary |
 |---|---|---|
 | 65,536³ virtual world / 2³² faces in 16 GB | Unsupported, resource failure reproduced | Even a 1 mm³ stock in these worlds fails the dense descriptor limit; tiled snapshots improve sparse inspection but regress on full cubes and do not support mutation/history. [Qualification](LARGE-WORLD-QUALIFICATION.md) |
+| Quantized Z-dexel cutting experiment | Experimental, restricted | Sparse cylinder columns, transactional compacted intervals, exact scalar/checkpoint comparison. Full 100 µm screw matches but is slower; no history/viewer/import integration. [Measurements](DEXEL-EXPERIMENT.md) |
 | Binary voxel material state | Implemented, validated | 8³ blocks, compact descriptors, pooled bits; disconnected pieces and enclosed cavities |
 | Explicit origin and finite domain | Implemented, validated | Negative/translated coordinates, non-cubic grids, edge blocks; common workpiece coordinates |
 | Cuboid, cylinder, sphere stock and primitive unions | Implemented, validated | Independent exhaustive center oracles; cylinders accept a fixed unit axis |
@@ -16,6 +17,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Taper and idealized drill | Implemented, restricted | Truncated cone and full conical cutter; no flutes, chisel edge, relief, or production drill definition |
 | Fixed tilted orientation / 3+2 | Implemented, validated | Unit tool axis fixed within each operation; arbitrary straight translation |
 | Circular/helical motion | Implemented, restricted | Arbitrary planar basis and normal rise; fixed tool axis, bounded conservative chord and pose approximation; arc shank/holder and feed inputs explicitly rejected |
+| Native helical screw grinding demo | Implemented, restricted | Two starts, four turns/start, 1,024 continuous XYZAC segments; Windows/macOS CLI generator, reference and resume tests. [Frozen protocol](SCREW-GRINDING.md). Dense 16,384³ world rejected; no certified thread geometry. |
 | Rotational-profile wheels | Implemented, restricted | 2–256 ordered radius/Z vertices, caps and nonconvex waists; independent geometric tests, bounded XYZAC coverage. No analytic-function input, overhangs, bore or wheel display. [Contract](GRINDING.md) |
 | Simultaneous orientation change / 5-axis | Restricted grinding-wheel increment | Explicit unwrapped XYZAC interpolation, continuous conservative coverage and per-operation bound; cylinder or validated piecewise-linear radius profile; no machine kinematics or rotary shank/holder. [Contract](GRINDING.md) |
 | Cutting vs shank/holder geometry | Implemented, validated | Separate finite cylindrical noncutting components, offsets above cutting length |

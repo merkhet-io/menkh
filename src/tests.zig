@@ -491,6 +491,107 @@ test "live publication options have explicit limits" {
     try std.testing.expectError(error.InvalidLiveOptions, (Options{ .max_snapshot_bytes = std.math.maxInt(usize) }).validate());
 }
 
+test "native screw generator freezes two continuous starts and validates options" {
+    const demo = @import("grinding_demo.zig");
+    var arena = std.heap.ArenaAllocator.init(a);
+    defer arena.deinit();
+    const job = try demo.makeJob(arena.allocator(), 0.1, 0.01, 128, true, null);
+    try @import("job.zig").validate(arena.allocator(), job);
+    try std.testing.expectEqual(@as(usize, 1024), job.operations.len);
+    try std.testing.expectApproxEqAbs(4, job.operations[0].rotary.?.a.position[2], 1e-12);
+    try std.testing.expectApproxEqAbs(36, job.operations[511].rotary.?.b.position[2], 1e-12);
+    try std.testing.expectApproxEqAbs(180, job.operations[512].rotary.?.a.c_deg, 1e-12);
+    for (0..2) |start| for (0..511) |i| {
+        try std.testing.expectEqualDeep(job.operations[start * 512 + i].rotary.?.b, job.operations[start * 512 + i + 1].rotary.?.a);
+    };
+    try std.testing.expectError(error.InvalidGrindingOptions, demo.makeJob(a, 0, 0.01, 128, false, null));
+    try std.testing.expectError(error.InvalidGrindingOptions, demo.makeJob(a, 0.1, std.math.nan(f64), 128, false, null));
+    try std.testing.expectError(error.InvalidVirtualGrid, demo.makeJob(a, 0.1, 0.01, 128, false, 16383));
+    try std.testing.expectError(error.OutOfMemory, demo.makeJob(std.testing.failing_allocator, 0.1, 0.01, 128, false, null));
+}
+
+fn dexelAllocations(allocator: std.mem.Allocator) !void {
+    const D = @import("dexel.zig").Dexels;
+    var grid = try D.initCylinder(allocator, .{ .lo = .{ -2, -2, -0.3 }, .hi = .{ 2, 2, 3.7 } }, 0.25, .{ 0.1, -0.1, 0 }, 1.7, 3);
+    defer grid.deinit();
+    const pool_hash = std.hash.Wyhash.hash(0, std.mem.sliceAsBytes(grid.pool.items));
+    const columns_hash = std.hash.Wyhash.hash(0, std.mem.sliceAsBytes(grid.columns));
+    _ = grid.subtract(.{ .primitive = .{ .box = .{ .lo = .{ -3, -3, 1 }, .hi = .{ 3, 3, 2 } } } }) catch |err| {
+        try std.testing.expectEqual(pool_hash, std.hash.Wyhash.hash(0, std.mem.sliceAsBytes(grid.pool.items)));
+        try std.testing.expectEqual(columns_hash, std.hash.Wyhash.hash(0, std.mem.sliceAsBytes(grid.columns)));
+        return err;
+    };
+}
+test "experimental dexels allocate transactionally and retain bounded idempotent buffers" {
+    try std.testing.checkAllAllocationFailures(a, dexelAllocations, .{});
+    const D = @import("dexel.zig").Dexels;
+    const bounds = @import("engine.zig").Bounds{ .lo = .{ -2, -2, 0 }, .hi = .{ 2, 2, 4 } };
+    var d = try D.initCylinder(a, bounds, 0.25, .{ 0, 0, 0 }, 1.8, 4);
+    defer d.deinit();
+    const shape = @import("engine.zig").Shape{ .primitive = .{ .box = .{ .lo = .{ -3, -3, 1 }, .hi = .{ 3, 3, 2 } } } };
+    _ = try d.subtract(shape);
+    _ = try d.subtract(shape);
+    const size = d.bytes();
+    const occupied = d.occupiedCount();
+    for (0..20) |_| _ = try d.subtract(shape);
+    try std.testing.expectEqual(size, d.bytes());
+    try std.testing.expectEqual(occupied, d.occupiedCount());
+}
+test "experimental dexels match scalar tilted grinding including cavities and empty columns" {
+    const e = @import("engine.zig");
+    const D = @import("dexel.zig").Dexels;
+    const bounds = e.Bounds{ .lo = .{ -2.1, -2.1, -0.3 }, .hi = .{ 2.1, 2.1, 4.2 } };
+    const base: e.V = .{ 0.12, -0.08, 0.07 };
+    var d = try D.initCylinder(a, bounds, 0.25, base, 1.8, 3.9);
+    defer d.deinit();
+    var g = try e.stock(a, bounds, 0.25, &.{.{ .cylinder = .{ .base = base, .radius = 1.8, .length = 3.9 } }});
+    defer g.deinit();
+    try d.compareGrid(g);
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    const tool = e.Tool{ .kind = .profile, .radius = 1.2, .length = 0.7, .profile = &.{ .{ .z = 0, .radius = 1.2 }, .{ .z = 0.35, .radius = 0.4 }, .{ .z = 0.7, .radius = 1.2 } } };
+    for (0..6) |i| {
+        const t = @as(f64, @floatFromInt(i));
+        const plan = try @import("motion.zig").rotary(a, tool, .{ .a = .{ .position = .{ t * 0.1, 0.1, 1.5 }, .a_deg = t * 15, .c_deg = t * 35 }, .b = .{ .position = .{ t * 0.1 + 0.1, -0.1, 1.7 }, .a_deg = t * 15 + 10, .c_deg = t * 35 + 20 } }, 0.08);
+        defer plan.deinit(a);
+        _ = try d.subtract(.{ .path = plan.segments });
+        try e.subtract(&g, .{ .path = plan.segments }, &changes, true);
+        try d.compareGrid(g);
+    }
+    const all = e.Shape{ .primitive = .{ .box = bounds } };
+    _ = try d.subtract(all);
+    try e.subtract(&g, all, &changes, true);
+    try d.compareGrid(g);
+    try std.testing.expectEqual(@as(u64, 0), d.occupiedCount());
+}
+
+test "experimental sparse columns initialize a 16384 cubed virtual domain" {
+    const D = @import("dexel.zig").Dexels;
+    var d = try D.initCylinder(a, .{ .lo = .{ -819.2, -819.2, 0 }, .hi = .{ 819.2, 819.2, 1638.4 } }, 0.1, .{ 0, 0, 0 }, 6, 40);
+    defer d.deinit();
+    try std.testing.expectEqualSlices(u32, &.{ 16384, 16384, 16384 }, &d.n);
+    try std.testing.expect(d.columns.len <= 120 * 120);
+    try std.testing.expect(d.bytes() < 1024 * 1024);
+    const before = d.occupiedCount();
+    _ = try d.subtract(.{ .primitive = .{ .sphere = .{ .center = .{ 0, 0, 20 }, .radius = 1 } } });
+    const after = d.occupiedCount();
+    try std.testing.expect(after > 0 and after < before);
+    _ = try d.subtract(.{ .primitive = .{ .sphere = .{ .center = .{ 0, 0, 20 }, .radius = 1 } } });
+    try std.testing.expectEqual(after, d.occupiedCount());
+}
+
+test "experimental dexels retain tangential cylinder caps and reject invalid spacing" {
+    const D = @import("dexel.zig").Dexels;
+    const e = @import("engine.zig");
+    const bounds = e.Bounds{ .lo = .{ -2, -2, -0.5 }, .hi = .{ 2, 2, 2.5 } };
+    var d = try D.initCylinder(a, bounds, 1, .{ 0, 0, 0 }, @sqrt(@as(f64, 0.5)), 1);
+    defer d.deinit();
+    var g = try e.stock(a, bounds, 1, &.{.{ .cylinder = .{ .base = .{ 0, 0, 0 }, .radius = @sqrt(@as(f64, 0.5)), .length = 1 } }});
+    defer g.deinit();
+    try d.compareGrid(g);
+    try std.testing.expectError(error.InvalidDexelDimensions, D.initCylinder(a, bounds, std.math.nan(f64), .{ 0, 0, 0 }, 1, 1));
+}
+
 const scene_module = @import("scene.zig");
 fn sceneAllocationCheck(allocator: std.mem.Allocator) !void {
     var arena = std.heap.ArenaAllocator.init(allocator);

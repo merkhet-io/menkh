@@ -7,6 +7,21 @@ which can load the engine DLL to calculate jobs in process. Building only the Zi
 CLI does not require Visual Studio; building the native viewer requires the C++
 desktop tools and Windows SDK.
 
+## Screw grinding without shell scripts
+
+After building the CLI, the workload generator and simulator are both native:
+
+```powershell
+.\zig-out\bin\menkh.exe grinding-demo --voxel 0.1 --out out/screw
+.\out\windows-viewer\menkh-viewer.exe out/screw/result/voxel-animation.json
+```
+
+Use a fresh output directory; `--voxel 0.025` requests 25 µm spacing.
+`--generate-only` writes a reusable JSON job without running it. The
+[two-start screw protocol](SCREW-GRINDING.md) records geometry, continuous-motion
+approximations, benchmark commands and the unsupported 16k³ world case.
+The wheel profile cuts material but is not yet drawn by the viewer.
+
 ## Native viewer
 
 The separate C++17 viewer uses D3D12 and reads the engine's voxel history.

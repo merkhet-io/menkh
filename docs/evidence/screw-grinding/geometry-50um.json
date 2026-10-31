@@ -1,0 +1,10 @@
+{
+  "state": "out/screw-50um/result/final.menkh",
+  "voxel_mm": 0.05,
+  "samples": {
+    "core": 2592,
+    "end_caps": 256,
+    "inside_wheel_at_path_endpoints": 130
+  },
+  "note": "Sampled independent retained-core/cap and cutter-interior invariants. Not a local surface deviation or Hausdorff bound."
+}

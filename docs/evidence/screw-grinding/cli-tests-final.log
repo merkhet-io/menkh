@@ -1,0 +1,11 @@
+{
+  "state": "out/screw-cli-release-final/native/result/final.menkh",
+  "voxel_mm": 0.5,
+  "samples": {
+    "core": 2592,
+    "end_caps": 256,
+    "inside_wheel_at_path_endpoints": 130
+  },
+  "note": "Sampled independent retained-core/cap and cutter-interior invariants. Not a local surface deviation or Hausdorff bound."
+}
+Native screw demo: 128 continuous cuts, exhaustive occupancy equality, resume, bounds and input failures passed

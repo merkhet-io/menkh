@@ -1,0 +1,57 @@
+{
+  "voxel_mm": 0.1,
+  "repeats": 3,
+  "warmups": 1,
+  "workers": 1,
+  "job_sha256": "58af2e2c13eedc3fe08c8825b9cc49d65cf7cf7c9725b7ec3bb2e143fb374a02",
+  "binary_sha256": {
+    "baseline": "ca0c66fda3cfe991c055922a86c7cb8427c2400f126aac634de99f4f198f22fd",
+    "optimized": "782eebd17c4ad745b89ef8438a8631f6452de2003985080acace5f61c19db3e0"
+  },
+  "results": {
+    "baseline": {
+      "wall_seconds": {
+        "median": 68.51975945799495,
+        "min": 68.24687558299047,
+        "max": 68.57485087501118
+      },
+      "total_seconds": {
+        "median": 68.50853,
+        "min": 68.235399208,
+        "max": 68.564136333
+      },
+      "cut_seconds": {
+        "median": 68.104055295,
+        "min": 67.845079295,
+        "max": 68.186778252
+      },
+      "peak_rss_bytes": {
+        "median": 45383680,
+        "min": 45383680,
+        "max": 45383680
+      }
+    },
+    "optimized": {
+      "wall_seconds": {
+        "median": 15.037764249980683,
+        "min": 14.803008499991847,
+        "max": 16.011540417006472
+      },
+      "total_seconds": {
+        "median": 15.027452417,
+        "min": 14.790740708,
+        "max": 15.9998615
+      },
+      "cut_seconds": {
+        "median": 14.718359993,
+        "min": 14.495202009,
+        "max": 15.677709692
+      },
+      "peak_rss_bytes": {
+        "median": 45367296,
+        "min": 45367296,
+        "max": 45367296
+      }
+    }
+  }
+}
