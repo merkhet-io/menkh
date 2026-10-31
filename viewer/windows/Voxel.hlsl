@@ -77,10 +77,10 @@ float3 shade(float2 pixel) {
     float spec=pow(max(0,dot(normal,normalize(key-ray))),48)*.10;
     float3 material=float3(.32,.50,.82);
     if(flags.z!=0) {
-        float3 point=eye.xyz+ray*hit.t;
+        float3 facePosition=eye.xyz+ray*hit.t;
         uint axis=abs(normal.x)>.5?0:(abs(normal.y)>.5?1:2);
         // Clip-plane interiors have no exposure attribution.
-        uint id=0;if(abs(point[axis]-round(point[axis]))<.01)id=exposure(hit.cell+int3(round(normal)));
+        uint id=0;if(abs(facePosition[axis]-round(facePosition[axis]))<.01)id=exposure(hit.cell+int3(round(normal)));
         material=category(id);
     }
     return material*light+spec;
