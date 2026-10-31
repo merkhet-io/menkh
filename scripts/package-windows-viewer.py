@@ -76,6 +76,7 @@ menkh-viewer.exe demo\\voxel-animation.json --warp
 Source, build instructions, dependencies and limits:
 https://github.com/merkhet-io/menkh/tree/main/viewer/windows
 ''')
+        archive.write(Path(__file__).resolve().parent.parent / 'LICENSE', 'LICENSE.txt')
         archive.write(Path(__file__).resolve().parent.parent / 'viewer/windows/vendor/LICENSE.json', 'LICENSE.json.txt')
     print(f'{args.out}: {args.out.stat().st_size:,} bytes, {len(history["frames"])} recorded operations')
 

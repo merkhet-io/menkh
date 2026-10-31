@@ -282,3 +282,9 @@ in a job and use `--color-operation` or `--color-tool` in either native voxel vi
 - Windows final-surface operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
 
 The [C API](docs/C-API.md) supports shared/static embedding and Windows viewer-owned calculation. Consistent live snapshots, bounded buffering and inspection while a job is running remain tracked in [#24](https://github.com/merkhet-io/menkh/issues/24).
+
+## License
+
+Menkh is licensed under the [MIT License](LICENSE).
+Third-party components retain their own copyright and license notices,
+including [nlohmann/json](viewer/windows/vendor/LICENSE.json) in the Windows viewer.
