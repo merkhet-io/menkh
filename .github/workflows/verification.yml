@@ -39,6 +39,7 @@ jobs:
           python3 scripts/test-playback-provenance.py
           out/history-test out/playback-provenance/all_frames/voxel-animation.json out/playback-provenance/all_frames/oracle.json
           python3 scripts/test-viewer-provenance.py --exe out/history-test --history out/playback-provenance/all_frames/voxel-animation.json
+          python3 scripts/test-live-overlays.py --reader out/history-test
       - name: C embedding boundary and independent host
         run: |
           ./zig build sdk -Doptimize=ReleaseFast
@@ -72,6 +73,8 @@ jobs:
         run: |
           python3 scripts/test-defect-inspector.py --result out/clamped-ci/unsafe
           ./scripts/build-viewer.sh
+          xcrun swiftc viewer/Presentation.swift tests/viewer/PresentationTest.swift -o out/presentation-test
+          out/presentation-test
   windows-cli:
     runs-on: windows-2025
     timeout-minutes: 20
@@ -130,6 +133,11 @@ jobs:
         run: |
           python scripts/test-windows-live.py --viewer out/windows-viewer/menkh-viewer.exe --engine zig-out/bin/menkh.exe --library zig-out/bin/menkh.dll
           if ($LASTEXITCODE -ne 0) { throw 'Windows live inspection failed' }
+      - name: Live exposure and target comparison oracles and rendered sections
+        shell: pwsh
+        run: |
+          python scripts/test-live-overlays.py --reader out/windows-viewer/menkh-viewer.exe --viewer --render
+          if ($LASTEXITCODE -ne 0) { throw 'Live inspection overlays failed' }
       - name: Default drill animation opens in Windows viewer
         shell: pwsh
         run: |
@@ -199,6 +207,8 @@ jobs:
           path: |
             out/live-test/
             out/windows-live/
+            out/live-overlays/validation.json
+            out/live-overlays/images/
             out/windows-viewer/menkh.exe
             out/windows-viewer/menkh-viewer.exe
             out/windows-viewer/Voxel.hlsl

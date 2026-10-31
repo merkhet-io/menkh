@@ -75,14 +75,22 @@ float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device 
     float3 background=u.grid.z==0?float3(0.83,0.47,0.25):float3(0.055,0.07,0.095);
     if(u.grid.x==0)hit.found=false;
     bool missing=false;
-    if(u.dimensions.w!=0) {Hit th=trace(u.eye.xyz,ray,u,targetBlocks,targetPool);if(th.found && (!hit.found || th.t<hit.t-0.01f)){hit=th;missing=true;}}
+    if(u.dimensions.w!=0) {Hit th=trace(u.eye.xyz,ray,u,targetBlocks,targetPool);if(th.found && (!hit.found || th.t<hit.t-0.01f)){hit=th;missing=!filled(th.cell,blocks,pool,u.dimensions.xyz,u.blockDimensions.xyz);}}
     bool fixture=false;
     if(u.blockDimensions.w!=0){Hit fh=trace(u.eye.xyz,ray,u,fixtureBlocks,fixturePool);if(fh.found && (!hit.found || fh.t<hit.t)){hit=fh;fixture=true;}}
     Hit sh=cylinderHit(u.eye.xyz,ray,u.shank,u.shankAxis),ho=cylinderHit(u.eye.xyz,ray,u.holder,u.holderAxis);
     Hit cutter=u.eye.w!=0?ballHit(u.eye.xyz,ray,u.cutter,u.cutterAxis):cylinderHit(u.eye.xyz,ray,u.cutter,u.cutterAxis);
     Hit part=(sh.found && (!ho.found || sh.t<ho.t))?sh:ho;
     if(cutter.found && (!part.found || cutter.t<part.t))part=cutter;
-    if(part.found && (!hit.found || part.t<hit.t))return float3(0.65,0.68,0.72)*(0.45+0.55*max(0.0f,dot(part.normal,normalize(float3(-0.4,-0.55,0.8)))));
+    if(part.found && (!hit.found || part.t<hit.t)) {
+        // Display-only polished steel: broad key highlight, fill and a subtle rim.
+        // Intersections and the idealized cutting envelope are unchanged.
+        float3 n=part.normal,key=normalize(-u.forward.xyz+u.right.xyz*0.8f+u.up.xyz*0.15f);
+        float diffuse=max(0.0f,dot(n,key)),fill=max(0.0f,dot(n,normalize(float3(0.6,0.3,0.4))));
+        float highlight=pow(max(0.0f,dot(n,normalize(key-ray))),48.0f);
+        float rim=pow(1.0f-clamp(dot(n,-ray),0.0f,1.0f),4.0f);
+        return clamp(float3(0.58,0.63,0.70)*(0.25f+0.55f*diffuse+0.2f*fill)+float3(0.85,0.9,1.0)*highlight*0.65f+rim*0.12f,0.0f,1.0f);
+    }
     if(!hit.found)return background;
     float3 normal=hit.normal;
     // Optional shading-only occupancy gradient; hit position/visibility ALWAYS remain voxel-exact.

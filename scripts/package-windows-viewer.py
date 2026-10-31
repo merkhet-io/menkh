@@ -39,6 +39,13 @@ def main():
         parser.error('Incomplete color data: both surface-provenance.json and .bin are required')
     colors = bool(present)
     names.update(present)
+    for kind in ('target', 'fixture'):
+        pair = {kind + '.blocks', kind + '.pool'}
+        available = {name for name in pair if (args.history.parent / name).is_file()}
+        if available and available != pair:
+            parser.error(f'Incomplete {kind} grid: both .blocks and .pool are required')
+        names.update(available)
+    names.update(name for name in ('report.json', 'defects.json') if (args.history.parent / name).is_file())
     names.update(frame['file'] for frame in history['frames'])
     for name in sorted(names):
         if not isinstance(name, str) or '/' in name or '\\' in name or ':' in name or name in ('.', '..'):
@@ -69,7 +76,8 @@ When menkh.dll is included beside the viewer, calculation runs in process on a w
 thread. Otherwise the viewer runs the bundled CLI as a supervised background process.
 Use --library PATH or --engine PATH to select explicitly. DLL cancellation waits for
 an operation boundary. Add --live to inspect consistent material during calculation.
-Live windows do not yet carry exposure colors; colors are available in completed history.
+Live windows carry exposure colors when export_provenance is enabled in the job.
+Target/fixture grids and retained-operation findings are also available during calculation.
 ''')
         archive.writestr('README.txt', '''Menkh Windows D3D12 viewer
 Extract the entire ZIP, then double-click open-demo.bat.
@@ -77,7 +85,9 @@ Requires Windows x64 and a D3D12 graphics adapter. No Zig or Visual Studio neede
 
 Left drag: orbit. Right drag: pan. Wheel: zoom. R: reset.
 Space: play/pause. Slider: scrub. Left/Right: step. Home/End: first/last.
-B: background. T: tool visibility. A: antialiasing. [ / ]: Z section.
+B: background. T: tool visibility. A: antialiasing. X/Y/Z: section axis, [ / ]: section position.
+G: target comparison. F: fixtures. V: target. S: stock.
+Ctrl + left click: pick material. N: cycle retained contact findings.
 C: cycle material / exposing operation / exposing tool colors when data is included.
 open-colors.bat (when included) opens the colored final result directly.
 Initial stock faces stay neutral. Colors mark cut faces, not all material.

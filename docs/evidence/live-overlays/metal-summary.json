@@ -1,0 +1,51 @@
+{
+  "hardware": "Apple M5 Max, 128 GiB RAM",
+  "compiler": "Zig 0.15.2",
+  "build_mode": "ReleaseFast",
+  "workers": 1,
+  "engine_total_seconds": 52.9861675,
+  "cut_seconds": 45.209967509,
+  "engine_peak_rss_bytes": 156696576,
+  "final_state_sha256": "380734c1fa84fac35f9e048174954a29b77cdd6542a321e3293a8744755df47d",
+  "live": {
+    "publications": 296,
+    "skipped": 3,
+    "write_ns": 5742387342,
+    "base_capacity_bytes": 15105408,
+    "peak_payload_bytes": 38519540,
+    "asset_bytes": 6160000,
+    "provenance_capacity_bytes": 33554432,
+    "provenance_extract_ns": 1011062149,
+    "provenance_encoding_peak_bytes": 22660448
+  },
+  "viewer_windows": 79,
+  "viewer_peak_rss_bytes": 236306432,
+  "viewer_metrics": {
+    "load_upload_ms": {
+      "median": 23.4830379486084,
+      "min": 10.403990745544434,
+      "max": 68.0629014968872
+    },
+    "seek_ms": {
+      "median": 1.8099546432495117,
+      "min": 0.00095367431640625,
+      "max": 6.381034851074219
+    },
+    "gpu_asset_bytes": {
+      "median": 6160128,
+      "min": 6160128,
+      "max": 6160128
+    },
+    "gpu_provenance_bytes": {
+      "median": 13605680,
+      "min": 16,
+      "max": 22660448
+    },
+    "gpu_material_bytes": {
+      "median": 9202752,
+      "min": 3080064,
+      "max": 15128064
+    }
+  },
+  "note": "Native UI evidence; other validation overlapped part of this run. Use the separate repeated benchmark for throughput. Window replay captures an early retained range; full replay validates the completed archive."
+}

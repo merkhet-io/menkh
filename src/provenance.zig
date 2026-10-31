@@ -21,6 +21,36 @@ pub const Index = struct {
         s.grid = g; // Pool storage can move between operations.
         try s.consume(bytes, operation, tool);
     }
+    // At a live checkpoint retain only empty neighbors of its remaining stock.
+    // Under monotone subtraction a discarded neighbor can never border material
+    // again. Keep all subsequent exposures until the next checkpoint so rewind
+    // within the retained window still has its complete chronology.
+    pub fn retainBoundary(s: *Index, g: c.Grid) void {
+        s.grid = g;
+        var count: usize = 0;
+        for (s.entries.items) |entry| {
+            const k: usize = @intCast(entry.cell);
+            const p = [3]usize{ k % g.n[0], k / g.n[0] % g.n[1], k / (g.n[0] * g.n[1]) };
+            var visible = false;
+            for (0..3) |axis| {
+                var q = p;
+                if (p[axis] > 0) {
+                    q[axis] -= 1;
+                    visible = visible or g.occupied(q);
+                }
+                q = p;
+                if (p[axis] + 1 < g.n[axis]) {
+                    q[axis] += 1;
+                    visible = visible or g.occupied(q);
+                }
+            }
+            if (visible) {
+                s.entries.items[count] = entry;
+                count += 1;
+            }
+        }
+        s.entries.items.len = count;
+    }
     fn adjacent(s: Index, b: [3]usize) c.Bits {
         var neighbors: [6]c.Bits = @splat(@splat(0));
         for (0..3) |axis| {
