@@ -591,3 +591,33 @@ test "experimental dexels retain tangential cylinder caps and reject invalid spa
     try d.compareGrid(g);
     try std.testing.expectError(error.InvalidDexelDimensions, D.initCylinder(a, bounds, std.math.nan(f64), .{ 0, 0, 0 }, 1, 1));
 }
+
+const scene_module = @import("scene.zig");
+fn sceneAllocationCheck(allocator: std.mem.Allocator) !void {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const bounds = @import("engine.zig").Bounds{ .lo = .{ 0, 0, 0 }, .hi = .{ 2, 2, 2 } };
+    const primitives = [_]@import("engine.zig").Primitive{.{ .box = bounds }};
+    const geometries = [_]scene_module.Geometry{.{ .id = "blank", .source = .{ .primitives = &primitives } }};
+    const objects = [_]scene_module.Object{.{ .id = "part", .role = .workpiece, .geometry = "blank", .bounds = bounds, .translation_mm = .{ 10, -5, 3 } }};
+    const operations = [_]scene_module.Operation{.{ .id = "face", .workpiece = "part", .subtract = .{ .halfspace = .{ .normal = .{ 0, 0, 1 }, .offset = 4 } } }};
+    const compiled = try scene_module.compile(arena.allocator(), .{ .format = "menkh-scene-v1", .version = 1, .units = "mm", .voxel_mm = 0.25, .geometries = &geometries, .objects = &objects, .operations = &operations });
+    try std.testing.expectEqual(@as(usize, 1), compiled.len);
+    try std.testing.expectEqual(@as(f64, 1), compiled[0].job.operations[0].subtract.?.halfspace.offset);
+    try std.testing.expectEqualStrings("part", compiled[0].object_id);
+}
+test "scene translation compilation and allocation failure cleanup" {
+    try sceneAllocationCheck(a);
+    try std.testing.checkAllAllocationFailures(a, sceneAllocationCheck, .{});
+}
+test "scene translations preserve independent primitive membership" {
+    const e = @import("engine.zig");
+    const delta = e.V{ 10.25, -3.5, 2.125 };
+    const shape = e.Primitive{ .sphere = .{ .center = .{ 1, 1, 1 }, .radius = 0.5 } };
+    const placed = try scene_module.translated(shape, delta);
+    // Independent squared-distance oracle, including the tangent point.
+    for ([_]e.V{ .{ 0, 0, 0 }, .{ 1, 1, 1 }, .{ 1.5, 1, 1 }, .{ 1.75, 1, 1 } }) |point| {
+        const d = e.sub(point, .{ 1, 1, 1 });
+        try std.testing.expectEqual(e.dot(d, d) <= 0.25, placed.distance(e.add(point, delta)) <= 0);
+    }
+}

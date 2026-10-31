@@ -124,10 +124,11 @@ class Delegate: NSObject, NSApplicationDelegate {
     var controller: Viewer?
     var jobRunner:JobRunner?
     var calculatedJob=false
+    var sceneContext=""
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
             if CommandLine.arguments.dropFirst().first == "--help" {
-                print("menkh-viewer [JOB_OR_HISTORY.json | MESH.obj] [--engine PATH] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--snapshot FILE.png]\nJobs run in the background and open at the final state. --live enables bounded completed-operation inspection on macOS. Relative resources default to the job directory.")
+                print("menkh-viewer [SCENE_RESULT.json | JOB_OR_HISTORY.json | MESH.obj] [--workpiece ID] [--engine PATH] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--snapshot FILE.png]\nJobs run in the background and open at the final state. --live enables bounded completed-operation inspection on macOS. Relative resources default to the job directory.")
                 NSApp.terminate(nil);return
             }
             var file: URL
@@ -139,6 +140,8 @@ class Delegate: NSObject, NSApplicationDelegate {
             }
             if file.pathExtension == "json" {
                 let header = try JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any]
+                if header?["format"] as? String == "menkh-scene-result-v1" {try openScene(file);return}
+                if header?["format"] as? String == "menkh-scene-v1" {throw MeshError.invalidOBJ("Run menkh scene FILE --out NEW_DIR first, then open NEW_DIR/scene.json")}
                 if header?["version"] != nil && header?["format"] == nil {
                     let runner=JobRunner();jobRunner=runner
                     try runner.start(file) { [weak self] result in

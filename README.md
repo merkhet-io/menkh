@@ -34,6 +34,28 @@ comparison; it is currently slower and is not the default.
 
 Sources: [Gardiner sign list, U22](https://www.egyptianhieroglyphs.net/gardiners-sign-list/) and the Metropolitan Museum’s [*Ancient Egyptian Calligraphy*](https://resources.metmuseum.org/resources/metpublications/pdf/Ancient_Egyptian_Calligraphy.pdf), entry U22.
 
+## Why Zig?
+
+Menkh started as a chance to learn Zig by building a cutting simulator with coding
+agents. Zig also fits the practical demands of this engine:
+
+- **Control over memory.** Explicit allocators let us reserve storage before a
+  cut, keep voxel bits in contiguous pools, and avoid allocations in the inner
+  cutting loop. Memory use matters as much as arithmetic at fine resolutions.
+- **Direct data representation.** Integer types, bitwise operations, `@popCount`
+  and `@Vector` suit compact occupancy grids and CPU kernels. The implementation
+  keeps material in arrays and pooled blocks rather than per-voxel entities.
+- **Explicit failure handling.** Error unions and `defer`/`errdefer` help make
+  invalid geometry, capacity limits and allocation failures visible, with cleanup
+  close to the code that owns each resource.
+- **One engine toolchain.** The repository pins Zig and uses `build.zig` for the
+  CLI, tests, benchmarks and libraries on macOS and Windows. Native viewers stay
+  in Swift/Metal and C++/D3D12, connected through files or the versioned C API.
+
+Zig gives us useful control; the algorithms and data layout determine whether we
+use it well. Performance claims come from measured workloads and comparison with
+reference implementations, not from the language choice alone.
+
 ## Get started
 
 General jobs consume stock geometry, tools and motion. They support primitive or binary-STL stock, fixed-orientation flat/ball/bull/taper cutters, bounded helical motion, reversible cutting history, resumable checkpoints, fixture/holder checks, target comparison, cross-sections and limited turning envelopes.
@@ -311,6 +333,16 @@ zig-out/bin/menkh job examples/general.json --no-provenance --out out/no-colors
 Playback attribution uses additional memory and export time. Use `final_surface`
 for lower-memory final-result attribution or `off` / `--no-provenance` to disable
 it. Explicit JSON settings remain supported; CLI options take precedence.
+
+## Static multi-workpiece scenes
+
+A [typed scene layer](docs/SCENES.md) adds stable object/tool IDs, reusable geometry
+and independent workpiece states. `./scripts/scene-demo.sh` runs two translated
+workpieces with named targets and fixtures, then opens a workpiece selector on
+macOS. Both native viewers can open its `scene.json` catalog with `--workpiece ID`.
+The current scope is translation-only placement and inspection of one workpiece
+at a time, without inter-workpiece collision checks or synchronized playback.
+The voxel engine remains specialized; this is not a generic ECS rewrite.
 
 ## Further capabilities
 

@@ -1,0 +1,258 @@
+{
+  "format": "menkh-scene-v1",
+  "version": 1,
+  "units": "mm",
+  "voxel_mm": 0.25,
+  "motion_tolerance_mm": 0.01,
+  "geometries": [
+    {
+      "id": "blank",
+      "source": {
+        "primitives": [
+          {
+            "box": {
+              "lo": [
+                0,
+                0,
+                0
+              ],
+              "hi": [
+                4,
+                4,
+                4
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "design",
+      "source": {
+        "primitives": [
+          {
+            "box": {
+              "lo": [
+                0,
+                0,
+                0
+              ],
+              "hi": [
+                4,
+                4,
+                2.5
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "clamp",
+      "source": {
+        "primitives": [
+          {
+            "box": {
+              "lo": [
+                0,
+                0,
+                0
+              ],
+              "hi": [
+                0.5,
+                2,
+                3
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "id": "left",
+      "role": "workpiece",
+      "geometry": "blank",
+      "translation_mm": [
+        0,
+        0,
+        0
+      ],
+      "bounds": {
+        "lo": [
+          -1,
+          -1,
+          0
+        ],
+        "hi": [
+          5,
+          5,
+          5
+        ]
+      },
+      "target": "left-target",
+      "fixtures": [
+        "left-clamp-a",
+        "left-clamp-b"
+      ]
+    },
+    {
+      "id": "left-target",
+      "role": "target",
+      "geometry": "design",
+      "translation_mm": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "left-clamp-a",
+      "role": "fixture",
+      "geometry": "clamp",
+      "translation_mm": [
+        -0.75,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "left-clamp-b",
+      "role": "fixture",
+      "geometry": "clamp",
+      "translation_mm": [
+        4.25,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "right",
+      "role": "workpiece",
+      "geometry": "blank",
+      "translation_mm": [
+        10.25,
+        -3.5,
+        2.125
+      ],
+      "bounds": {
+        "lo": [
+          -1,
+          -1,
+          0
+        ],
+        "hi": [
+          5,
+          5,
+          5
+        ]
+      },
+      "target": "right-target",
+      "fixtures": [
+        "right-clamp-a",
+        "right-clamp-b"
+      ]
+    },
+    {
+      "id": "right-target",
+      "role": "target",
+      "geometry": "design",
+      "translation_mm": [
+        10.375,
+        -3.5,
+        2.125
+      ]
+    },
+    {
+      "id": "right-clamp-a",
+      "role": "fixture",
+      "geometry": "clamp",
+      "translation_mm": [
+        9.5,
+        -2.5,
+        2.125
+      ]
+    },
+    {
+      "id": "right-clamp-b",
+      "role": "fixture",
+      "geometry": "clamp",
+      "translation_mm": [
+        14.5,
+        -2.5,
+        2.125
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "id": "ball-1",
+      "assembly": {
+        "cutter": {
+          "kind": "ball",
+          "radius": 0.5,
+          "length": 3
+        }
+      }
+    }
+  ],
+  "operations": [
+    {
+      "id": "left-groove",
+      "workpiece": "left",
+      "tool": "ball-1",
+      "line": {
+        "a": {
+          "position": [
+            0.5,
+            2,
+            2
+          ]
+        },
+        "b": {
+          "position": [
+            3.5,
+            2,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "id": "right-groove",
+      "workpiece": "right",
+      "tool": "ball-1",
+      "line": {
+        "a": {
+          "position": [
+            10.75,
+            -1.5,
+            4.125
+          ]
+        },
+        "b": {
+          "position": [
+            13.75,
+            -1.5,
+            4.125
+          ]
+        }
+      }
+    },
+    {
+      "id": "left-hole",
+      "workpiece": "left",
+      "subtract": {
+        "sphere": {
+          "center": [
+            1,
+            1,
+            3.5
+          ],
+          "radius": 0.5
+        }
+      }
+    }
+  ]
+}
