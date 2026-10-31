@@ -379,12 +379,7 @@ class Renderer {
         device->CreateUnorderedAccessView(output.Get(), nullptr, &uav,
                                           heap->GetCPUDescriptorHandleForHeapStart());
     }
-    void render(History &h, const Camera &camera) {
-        // Keep the acquired swapchain resource alive until command execution completes.
-        ComPtr<ID3D12Resource> back;
-        const auto u = camera.uniforms(h, width, height);
-        std::memcpy(constantData, &u, sizeof(u));
-        begin();
+    void materials(History &h) {
         update(blocks, h.blocks.data(), h.dirtyBlocks, 4);
         update(pool, h.pool.data(), h.dirtySlots, 64);
         if (initial) {
@@ -393,6 +388,22 @@ class Renderer {
             update(provenance, h.provenance.empty() ? zero : h.provenance.data(), dirty, 4);
         }
         initial = false;
+    }
+    // Complete the CPU copy and GPU transfer before timing the first render.
+    void uploadMaterial(History &h) { begin(); materials(h); submit(); }
+    Json materialMemory() const {
+        auto allocation=[&](ID3D12Resource *resource)->uint64_t {if(!resource)return 0;const auto desc=resource->GetDesc();return device->GetResourceAllocationInfo(0,1,&desc).SizeInBytes;};
+        return Json{{"gpu_committed_material_bytes",allocation(blocks.gpu.Get())+allocation(pool.gpu.Get())+allocation(provenance.gpu.Get())},
+                    {"upload_committed_material_bytes",allocation(blocks.upload.Get())+allocation(pool.upload.Get())+allocation(provenance.upload.Get())},
+                    {"output_texture_committed_bytes",allocation(output.Get())},{"constants_committed_bytes",allocation(constants.Get())}};
+    }
+    void render(History &h, const Camera &camera) {
+        // Keep the acquired swapchain resource alive until command execution completes.
+        ComPtr<ID3D12Resource> back;
+        const auto u = camera.uniforms(h, width, height);
+        std::memcpy(constantData, &u, sizeof(u));
+        begin();
+        materials(h);
         commands->SetComputeRootSignature(root.Get());
         ID3D12DescriptorHeap *heaps[] = {heap.Get()};
         commands->SetDescriptorHeaps(1, heaps);

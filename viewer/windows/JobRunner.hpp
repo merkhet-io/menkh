@@ -8,6 +8,7 @@
 #include <iostream>
 #include <atomic>
 #include <thread>
+#include <functional>
 #include "../../include/menkh.h"
 #pragma comment(lib, "comdlg32.lib")
 namespace menkh {
@@ -77,16 +78,43 @@ inline Json lastProgress(const fs::path &path) {
 struct RunWindow {
     HWND window = nullptr, status = nullptr, progress = nullptr, cancel = nullptr;
     HANDLE group = nullptr; bool cancelled = false;
+    fs::path liveOutput;
+    HWND follow = nullptr, pause = nullptr;
+    bool paused = false;
+    bool following() const { return !follow || SendMessageW(follow, BM_GETCHECK, 0, 0) == BST_CHECKED; }
+    void controlFile(const char *name, bool present) {
+        if (liveOutput.empty() || !fs::is_directory(liveOutput / "live")) return;
+        const auto path=liveOutput / "live" / name;
+        if (present) { std::ofstream file(path); require(bool(file), "Cannot write live control"); }
+        else { std::error_code error; fs::remove(path,error); require(!error,"Cannot remove live control"); }
+    }
+    void liveControls() {
+        if (liveOutput.empty()) return;
+        if(cancelled)controlFile("cancel", true);
+        if (!cancelled && fs::is_regular_file(liveOutput/"live/status.json")) {
+            const auto state=Json::parse(read(liveOutput/"live/status.json"));
+            if (state.value("state", "") == "paused") {
+                SetWindowTextW(status,(L"Paused after operation "+std::to_wstring(state.at("completed_operations").get<uint64_t>())+L". Retained history is safe to inspect.").c_str());
+            }
+        }
+        if (pause) EnableWindow(pause, !cancelled && fs::is_directory(liveOutput/"live"));
+    }
     ~RunWindow() { if (window) DestroyWindow(window); }
     void stop() {
         cancelled = true;
-        if (group) TerminateJobObject(group, 2);
+        if (group && liveOutput.empty()) TerminateJobObject(group, 2);
+        if (!liveOutput.empty()) {try {controlFile("cancel", true);} catch (...) {if(group)TerminateJobObject(group,2);}}
         if (cancel) EnableWindow(cancel, FALSE);
         if (status) SetWindowTextW(status, group ? L"Cancelling calculation…" : L"Cancelling after the current operation…");
     }
     static LRESULT CALLBACK procedure(HWND window, UINT message, WPARAM w, LPARAM l) {
         auto *s = reinterpret_cast<RunWindow *>(GetWindowLongPtrW(window, GWLP_USERDATA));
         if (message == WM_NCCREATE) { s = static_cast<RunWindow *>(reinterpret_cast<CREATESTRUCTW *>(l)->lpCreateParams); SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(s)); }
+        if (s && message == WM_COMMAND && LOWORD(w) == 2) {
+            try { s->controlFile("pause", !s->paused); s->paused=!s->paused;SetWindowTextW(s->pause,s->paused?L"Resume calculation":L"Pause calculation"); }
+            catch(const std::exception &e){SetWindowTextW(s->status,wide(e.what()).c_str());}
+            return 0;
+        }
         if (s && (message == WM_CLOSE || (message == WM_COMMAND && LOWORD(w) == 1))) { s->stop(); return 0; }
         return DefWindowProcW(window, message, w, l);
     }
@@ -100,6 +128,11 @@ struct RunWindow {
         progress = CreateWindowExW(0, PROGRESS_CLASSW, L"", WS_CHILD | WS_VISIBLE | PBS_MARQUEE, 20, 95, 590, 20, window, nullptr, wc.hInstance, nullptr);
         cancel = CreateWindowExW(0, L"BUTTON", L"Cancel", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, 135, 110, 28, window, reinterpret_cast<HMENU>(1), wc.hInstance, nullptr);
         require(status && progress && cancel, "Progress controls unavailable");
+        if (!liveOutput.empty()) {
+            pause=CreateWindowExW(0,L"BUTTON",paused?L"Resume calculation":L"Pause calculation",WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,20,135,155,28,window,reinterpret_cast<HMENU>(2),wc.hInstance,nullptr);
+            follow=CreateWindowExW(0,L"BUTTON",L"Follow latest (uncheck to seek)",WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX,185,135,300,28,window,reinterpret_cast<HMENU>(3),wc.hInstance,nullptr);
+            require(pause && follow,"Live controls unavailable");SendMessageW(follow,BM_SETCHECK,BST_CHECKED,0);EnableWindow(pause,FALSE);
+        }
         SendMessageW(progress, PBM_SETMARQUEE, TRUE, 80); ShowWindow(window, SW_SHOW); UpdateWindow(window);
     }
     void update(const Json &p) {
@@ -122,7 +155,25 @@ struct RunWindow {
         } catch (...) { /* Ignore incomplete/unrecognized progress, never the process exit code. */ }
     }
 };
-inline std::optional<fs::path> calculateLibrary(const fs::path &job, const fs::path &library, const fs::path &output, const fs::path &cwd, int cancelAfter) {
+struct LiveHooks {
+    bool enabled=false, startPaused=false;
+    fs::path sourceJob;
+    std::function<void(const fs::path &, RunWindow &)> update;
+};
+// The C job API requires a fresh output directory. Keep the launch copy in a
+// unique temporary file until the worker is finished, then retain it for audit.
+struct LiveJobCopy {
+    fs::path path, output;
+    ~LiveJobCopy() { if(!path.empty()){std::error_code ec;fs::copy_file(path,output/"live-job.json",fs::copy_options::overwrite_existing,ec);fs::remove(path,ec);} }
+    void create(Json config, const fs::path &destination) {
+        wchar_t directory[32768],name[MAX_PATH];
+        const DWORD n=GetTempPathW(32768,directory);require(n && n<32768,"Cannot locate temporary directory");
+        require(GetTempFileNameW(directory,L"mnk",0,name)!=0,"Cannot create live launch copy");
+        path=name;output=destination;
+        std::ofstream file(path);file<<config.dump();require(bool(file),"Cannot write live launch copy");
+    }
+};
+inline std::optional<fs::path> calculateLibrary(const fs::path &job, const fs::path &library, const fs::path &output, const fs::path &cwd, int cancelAfter, LiveHooks *live = nullptr) {
     struct Module { HMODULE h=nullptr; ~Module(){if(h)FreeLibrary(h);} } module;
     module.h=LoadLibraryExW(library.c_str(),nullptr,LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
     require(module.h!=nullptr,"Cannot load selected engine library");
@@ -135,12 +186,12 @@ inline std::optional<fs::path> calculateLibrary(const fs::path &job, const fs::p
         std::atomic<uint64_t> done{0},total{0};
         menkh_status result=MENKH_INVALID_ARGUMENT;
     } state;
-    RunWindow ui;ui.create();
+    RunWindow ui;if(live){ui.liveOutput=output;ui.paused=live->startPaused;}ui.create();
     if(cancelAfter==0){ui.stop();state.cancel=true;}
     const auto input=job.u8string(),destination=output.u8string(),base=cwd.u8string();
     {
         std::ofstream file(output/"launch.json");
-        file<<Json{{"mode","library"},{"viewer_pid",GetCurrentProcessId()},{"library",library.u8string()},{"job",input},{"working_directory",base}}.dump(2);
+        file<<Json{{"mode","library"},{"viewer_pid",GetCurrentProcessId()},{"library",library.u8string()},{"job",input},{"source_job",live?live->sourceJob.u8string():input},{"working_directory",base}}.dump(2);
         require(bool(file),"Cannot write library launch metadata");
     }
     struct Worker {
@@ -159,6 +210,8 @@ inline std::optional<fs::path> calculateLibrary(const fs::path &job, const fs::p
         if(ui.cancelled)state.cancel=true;
         const char *phase=state.phase==3?"cutting":state.phase==4?"finalizing":state.phase==5?"complete":"preparing";
         ui.update(Json{{"version",1},{"phase",phase},{"completed_operations",state.done.load()},{"total_operations",state.total.load()},{"operation",nullptr}});
+        ui.liveControls();
+        if(live && live->update)live->update(output,ui);
         MsgWaitForMultipleObjects(0,nullptr,FALSE,50,QS_ALLINPUT);
     }
     worker.thread.join();
@@ -167,11 +220,11 @@ inline std::optional<fs::path> calculateLibrary(const fs::path &job, const fs::p
     require(fs::is_regular_file(output/"voxel-animation.json"),"Library result manifest missing");
     return output/"voxel-animation.json";
 }
-inline std::optional<fs::path> calculateJob(const fs::path &input, fs::path engine, fs::path output, fs::path cwd, int cancelAfter, fs::path library = {}) {
+inline std::optional<fs::path> calculateJob(const fs::path &input, fs::path engine, fs::path output, fs::path cwd, int cancelAfter, fs::path library = {}, LiveHooks *live = nullptr) {
     const bool explicitEngine=!engine.empty();
     if(library.empty() && !explicitEngine && fs::is_regular_file(viewerExecutable().parent_path()/"menkh.dll"))library=viewerExecutable().parent_path()/"menkh.dll";
     if(library.empty())engine = findEngine(engine);
-    else {require(!explicitEngine,"Choose --engine or --library");library=fs::absolute(library);require(fs::is_regular_file(library),"Selected engine library does not exist");} const auto job = fs::absolute(input);
+    else {require(!explicitEngine,"Choose --engine or --library");library=fs::absolute(library);require(fs::is_regular_file(library),"Selected engine library does not exist");} auto job = fs::absolute(input);
     cwd = cwd.empty() ? job.parent_path() : fs::absolute(cwd);
     require(fs::is_directory(cwd), "Job working directory does not exist");
     if (output.empty()) {
@@ -183,7 +236,15 @@ inline std::optional<fs::path> calculateJob(const fs::path &input, fs::path engi
     require(!fs::exists(output), "Job output already exists; choose a new --job-output directory");
     fs::create_directories(output);
     std::cout << "Simulation output: " << output.u8string() << '\n';
-    if(!library.empty())return calculateLibrary(job,library,output,cwd,cancelAfter);
+    LiveJobCopy copy;
+    if(live) {
+        live->sourceJob=job;
+        auto config=Json::parse(read(job,64<<20));
+        if(!config.contains("live_inspection") || config["live_inspection"].is_null())config["live_inspection"]=Json::object();
+        live->startPaused=config.at("live_inspection").value("start_paused",false);
+        copy.create(std::move(config),output);job=copy.path;
+    }
+    if(!library.empty())return calculateLibrary(job,library,output,cwd,cancelAfter,live);
     WinHandle group, log, inputHandle, process, thread;
     group.value = CreateJobObjectW(nullptr, nullptr); require(group.value != nullptr, "Cannot create calculation process group");
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{}; limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
@@ -201,17 +262,20 @@ inline std::optional<fs::path> calculateJob(const fs::path &input, fs::path engi
     if (!AssignProcessToJobObject(group.value, process.value)) { TerminateProcess(process.value, 1); throw std::runtime_error("Cannot supervise simulation process"); }
     {
         std::ofstream launch(output / "launch.json");
-        launch << Json{{"engine_pid",info.dwProcessId},{"engine",engine.u8string()},{"job",job.u8string()},{"working_directory",cwd.u8string()}}.dump(2);
+        launch << Json{{"engine_pid",info.dwProcessId},{"engine",engine.u8string()},{"job",job.u8string()},{"source_job",live?live->sourceJob.u8string():job.u8string()},{"working_directory",cwd.u8string()}}.dump(2);
         require(bool(launch), "Cannot write launch metadata");
     }
-    RunWindow ui; ui.group = group.value; ui.create();
-    if (cancelAfter == 0) ui.stop(); else require(ResumeThread(thread.value) != DWORD(-1), "Cannot resume simulation process");
+    RunWindow ui; ui.group = group.value;if(live){ui.liveOutput=output;ui.paused=live->startPaused;} ui.create();
+    if (cancelAfter == 0) ui.stop();
+    if(cancelAfter != 0 || live)require(ResumeThread(thread.value) != DWORD(-1), "Cannot resume simulation process");
     const auto began = std::chrono::steady_clock::now();
     while (WaitForSingleObject(process.value, 0) == WAIT_TIMEOUT) {
         MSG message{};
         while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE)) { if (message.message == WM_QUIT) ui.stop(); else { TranslateMessage(&message); DispatchMessageW(&message); } }
         if (cancelAfter > 0 && std::chrono::steady_clock::now() - began >= std::chrono::milliseconds(cancelAfter)) ui.stop();
         ui.update(lastProgress(output / "progress.jsonl"));
+        ui.liveControls();
+        if(live && live->update)live->update(output,ui);
         HANDLE handle = process.value; MsgWaitForMultipleObjects(1, &handle, FALSE, 100, QS_ALLINPUT);
     }
     if (ui.cancelled) { std::cerr << "Simulation cancelled; partial output retained at " << output.u8string() << '\n'; return std::nullopt; }
