@@ -136,10 +136,11 @@ fn atomicBytes(dir: std.fs.Dir, name: []const u8, bytes: []const u8) !void {
     try file.flush();
     var retries: usize = 0;
     while (true) {
-        file.renameIntoPlace() catch |err| {
+        const renamed = if (@import("builtin").os.tag == .windows) renameWindows(&file) else file.renameIntoPlace();
+        renamed catch |err| {
             // Windows readers may briefly open a pointer without DELETE sharing.
             // Keep the old pointer intact and bound retries; persistent errors fail.
-            if (@import("builtin").os.tag == .windows and err == error.AccessDenied and retries < 20) {
+            if (@import("builtin").os.tag == .windows and (err == error.AccessDenied or err == error.WouldBlock) and retries < 20) {
                 retries += 1;
                 std.Thread.sleep(std.time.ns_per_ms);
                 continue;
@@ -148,4 +149,64 @@ fn atomicBytes(dir: std.fs.Dir, name: []const u8, bytes: []const u8) !void {
         };
         break;
     }
+}
+
+// Zig 0.15.2 renameatW maps STATUS_SHARING_VIOLATION to Unexpected.
+// Use the Win32 replacement operation so a reader without FILE_SHARE_DELETE
+// yields a specific, retryable error. Never retry an arbitrary Unexpected error.
+fn renameWindows(file: *std.fs.AtomicFile) !void {
+    const w = std.os.windows;
+    if (file.file_open) {
+        file.file_writer.file.close();
+        file.file_open = false;
+    }
+    const temporary = std.fmt.hex(file.random_integer);
+    const source = try w.sliceToPrefixedFileW(file.dir.fd, &temporary);
+    const destination = try w.sliceToPrefixedFileW(file.dir.fd, file.dest_basename);
+    if (w.kernel32.MoveFileExW(source.span().ptr, destination.span().ptr, w.MOVEFILE_REPLACE_EXISTING) == 0) {
+        return switch (w.GetLastError()) {
+            .SHARING_VIOLATION, .LOCK_VIOLATION => error.WouldBlock,
+            .ACCESS_DENIED => error.AccessDenied,
+            .FILE_NOT_FOUND, .PATH_NOT_FOUND => error.FileNotFound,
+            else => |err| w.unexpectedError(err),
+        };
+    }
+    file.file_exists = false;
+}
+
+test "Windows pointer replacement preserves old file during a sharing conflict" {
+    if (@import("builtin").os.tag != .windows) return error.SkipZigTest;
+    const a = std.testing.allocator;
+    const w = std.os.windows;
+    var temp = std.testing.tmpDir(.{});
+    defer temp.cleanup();
+    try atomicBytes(temp.dir, "latest.json", "old");
+    var buffer: [32]u8 = undefined;
+    var pending = try temp.dir.atomicFile("latest.json", .{ .write_buffer = &buffer });
+    defer pending.deinit();
+    try pending.file_writer.interface.writeAll("new");
+    try pending.flush();
+    {
+        const held = try w.OpenFile(std.unicode.utf8ToUtf16LeStringLiteral("latest.json"), .{
+            .dir = temp.dir.fd,
+            .access_mask = w.GENERIC_READ | w.SYNCHRONIZE,
+            .share_access = w.FILE_SHARE_READ | w.FILE_SHARE_WRITE,
+            .creation = w.FILE_OPEN,
+        });
+        defer w.CloseHandle(held);
+        if (renameWindows(&pending)) |_| {
+            return error.ExpectedSharingConflict;
+        } else |err| {
+            try std.testing.expect(err == error.WouldBlock or err == error.AccessDenied);
+        }
+        const old = try temp.dir.readFileAlloc(a, "latest.json", 16);
+        defer a.free(old);
+        try std.testing.expectEqualStrings("old", old);
+        try std.testing.expect(pending.file_exists);
+    }
+    try renameWindows(&pending);
+    try std.testing.expect(!pending.file_exists);
+    const new = try temp.dir.readFileAlloc(a, "latest.json", 16);
+    defer a.free(new);
+    try std.testing.expectEqualStrings("new", new);
 }

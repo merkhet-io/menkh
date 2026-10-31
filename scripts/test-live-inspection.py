@@ -112,6 +112,17 @@ item=wait(lambda:lease(stream));states=decode(item[1]);meta=item[2]
 assert meta['completed_operations']==len(job['operations'])
 assert states==oracle[meta['first_operation']:];item[0].close()
 assert (stream/'final.menkh').read_bytes()==(root/'baseline/final.menkh').read_bytes()
+# On Windows an ordinary Python open omits FILE_SHARE_DELETE. Force a
+# replacement conflict, release it within the bounded retry period, and require
+# a successful complete job. The old pointer must remain readable while held.
+if os.name=='nt':
+ proc,sharing=launch('sharing',dict(job,operations=job['operations'][:40],live_inspection=opts))
+ wait(lambda:read(sharing/'live/status.json').get('state')=='paused')
+ with (sharing/'live/latest.json').open('rb') as pointer:
+  old=pointer.read();(sharing/'live/pause').unlink();time.sleep(.01)
+  pointer.seek(0);assert pointer.read()==old
+ assert proc.wait(timeout=30)==0, (root/'sharing.log').read_text()[-8000:]
+ assert read(sharing/'live/latest.json')['completed_operations']==40
 # A paused producer remains stationary, cancellation unblocks it and leaves a usable window.
 proc,cancel=launch('cancel',dict(job,live_inspection=opts))
 wait(lambda:read(cancel/'live/status.json').get('state')=='paused')
