@@ -1,4 +1,5 @@
 #pragma once
+#include <process.h>
 #include "History.hpp"
 #include <windows.h>
 #include <commctrl.h>
@@ -213,14 +214,26 @@ inline std::optional<fs::path> calculateLibrary(const fs::path &job, const fs::p
         require(bool(file),"Cannot write library launch metadata");
     }
     struct Worker {
-        State &state;std::thread thread;
-        ~Worker(){state.cancel=true;if(thread.joinable())thread.join();}
-    } worker{state,std::thread([&]{
+        State &state;
+        std::function<void()> task;
+        WinHandle thread;
+        Worker(State &s, std::function<void()> f):state(s),task(std::move(f)) {
+            // The whole-job DLL uses nested Windows long-path conversion buffers.
+            // Reserve the same 16 MiB as a Zig thread, rather than inheriting the
+            // MSVC host's 1 MiB default. Pages are committed on demand.
+            thread.value=reinterpret_cast<HANDLE>(_beginthreadex(nullptr,16*1024*1024,
+                [](void *p)->unsigned {static_cast<Worker*>(p)->task();return 0;},this,
+                STACK_SIZE_PARAM_IS_A_RESERVATION,nullptr));
+            require(thread.value!=nullptr,"Cannot start calculation worker");
+        }
+        void join(){require(WaitForSingleObject(thread.value,INFINITE)==WAIT_OBJECT_0,"Cannot join calculation worker");}
+        ~Worker(){state.cancel=true;if(thread.value && thread.value!=INVALID_HANDLE_VALUE)WaitForSingleObject(thread.value,INFINITE);}
+    } worker{state,[&]{
         state.result=run(input.c_str(),destination.c_str(),base.c_str(),[](void *context,uint32_t phase,uint64_t done,uint64_t total)->uint32_t {
             auto &s=*static_cast<State*>(context);s.total=total;s.done=done;s.phase=phase;return s.cancel?1u:0u;
         },&state);
         state.finished=true;
-    })};
+    }};
     const auto began=std::chrono::steady_clock::now();
     while(!state.finished){
         MSG message{};while(PeekMessageW(&message,nullptr,0,0,PM_REMOVE)) {if(message.message==WM_QUIT)ui.stop();else{TranslateMessage(&message);DispatchMessageW(&message);}}
@@ -232,7 +245,7 @@ inline std::optional<fs::path> calculateLibrary(const fs::path &job, const fs::p
         if(live && live->update)live->update(output,ui);
         MsgWaitForMultipleObjects(0,nullptr,FALSE,50,QS_ALLINPUT);
     }
-    worker.thread.join();
+    worker.join();
     if(state.result==MENKH_CANCELLED || ui.cancelled)return std::nullopt;
     if(state.result!=MENKH_OK)throw std::runtime_error("Library calculation failed: "+tail(output/"simulation.log"));
     require(fs::is_regular_file(output/"voxel-animation.json"),"Library result manifest missing");
