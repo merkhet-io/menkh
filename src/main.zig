@@ -114,7 +114,7 @@ fn execute() !void {
     const args = try std.process.argsAlloc(a);
     defer std.process.argsFree(a, args);
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help")) {
-        std.debug.print("menkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--provenance all_frames|final_surface|off] [--no-provenance] [--voxel MM] [--out DIR] [--progress FILE] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
+        std.debug.print("menkh grinding-demo [--out NEW_DIR] [--voxel MM] [--tolerance MM] [--steps-per-turn N] [--world-grid N] [--generate-only] [--no-provenance]\nmenkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--provenance all_frames|final_surface|off] [--no-provenance] [--voxel MM] [--out DIR] [--progress FILE] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
         return;
     }
     const command = args[1];
@@ -162,6 +162,10 @@ fn execute() !void {
         defer a.free(encoded);
         try std.fs.cwd().writeFile(.{ .sub_path = args[3], .data = encoded });
         std.debug.print("Checkpoint compacted: {d} -> {d} pool bytes; {d} occupied voxels. Start new history from this checkpoint.\n", .{ before.pool_used_bytes, g.stats().pool_used_bytes, g.stats().occupied });
+        return;
+    }
+    if (std.mem.eql(u8, command, "grinding-demo")) {
+        try @import("grinding_demo.zig").run(a, args[2..]);
         return;
     }
     if (std.mem.eql(u8, command, "sparse-bench")) {

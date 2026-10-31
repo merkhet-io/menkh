@@ -6,6 +6,24 @@ Menkh calculates the material left after machining, using a **Zig CPU engine** a
 
 [Get started](#get-started) · [Windows guide](docs/WINDOWS.md) · [C API](docs/C-API.md) · [Capabilities](docs/CAPABILITIES.md) · [Changelog](CHANGELOG.md)
 
+## Helical screw grinding
+
+A native Zig command grinds a two-start screw from a 12 × 40 mm cylindrical
+blank with a profiled wheel: 1,024 continuous XYZAC segments, reversible
+history and operation-exposure colors. No Python or shell script is needed to
+generate the workload, including on Windows.
+
+```sh
+zig-out/bin/menkh grinding-demo --voxel 0.1 --out out/screw
+```
+
+Use `zig-out\bin\menkh.exe` on Windows. Open
+`out/screw/result/voxel-animation.json` in the native viewer. For 25 µm, use
+`--voxel 0.025` and a fresh output directory. See the
+[frozen protocol, commands and measured limits](docs/SCREW-GRINDING.md).
+This is a grinding experiment, not a certified thread profile or a claim of
+16k³ cutting capability.
+
 ## Why “Menkh”?
 
 **𓍊 — a chisel.** The name draws on ancient Egyptian *mnḫ*, associated with carving. We chose it because the simulator does the same basic job as a chisel: remove material to give a workpiece its shape. The sign **𓍊** is Gardiner **U22** (Unicode U+1334A), used in writing *mnḫ*. “Menkh” is our readable Latin spelling, not a claim about the exact ancient pronunciation. The logo pairs a chisel with a voxel block.
