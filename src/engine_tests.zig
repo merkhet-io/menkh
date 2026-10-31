@@ -869,7 +869,7 @@ test "XYZAC stationary exact cylinder, unwrapped turns, limits and allocation fa
     defer turn.deinit(a);
     try std.testing.expect(turn.segments.len > 100);
     try std.testing.expectError(error.MotionToleranceTooSmall, m.rotary(a, tool, .{ .a = p, .b = end }, 1e-12));
-    try std.testing.expectError(error.RotaryRequiresCylinder, m.rotary(a, .{ .kind = .ball, .radius = 1, .length = 2 }, .{ .a = p, .b = p }, 0.1));
+    try std.testing.expectError(error.RotaryRequiresWheel, m.rotary(a, .{ .kind = .ball, .radius = 1, .length = 2 }, .{ .a = p, .b = p }, 0.1));
     try std.testing.expectError(error.OutOfMemory, m.rotary(std.testing.failing_allocator, tool, .{ .a = p, .b = p }, 0.1));
 }
 
@@ -899,4 +899,115 @@ test "rotary pure rotation covers intermediate poses and split curves within bou
     defer tiny.deinit(a);
     try std.testing.expect(tiny.over_removal_bound_mm < 1e-10);
     try std.testing.expect((e.Shape{ .path = tiny.segments }).contains(.{ 0, 0, 0 }));
+}
+
+test "rotational profile caps, axis, nonconvex waist and invalid input" {
+    const profile = e.Tool{ .kind = .profile, .radius = 1, .length = 2, .profile = &.{ .{ .z = 0, .radius = 1 }, .{ .z = 1, .radius = 0.4 }, .{ .z = 2, .radius = 1 } } };
+    try profile.validate();
+    // Independent piecewise analytic membership, including a reentrant waist.
+    for (0..41) |iz| for (0..31) |ir| {
+        const z = -0.5 + @as(f64, @floatFromInt(iz)) * 0.075;
+        const r = @as(f64, @floatFromInt(ir)) * 0.05;
+        const radius = 0.4 + 0.6 * @abs(z - 1);
+        if (@abs(r - radius) < 1e-12 or @abs(z) < 1e-12 or @abs(z - 2) < 1e-12) continue;
+        try std.testing.expectEqual(z >= 0 and z <= 2 and r < radius, profile.distance(r, z) < 0);
+    };
+    try std.testing.expectApproxEqAbs(-0.4, profile.distance(0, 1), 1e-12);
+    try std.testing.expectApproxEqAbs(-0.1, profile.distance(0, 0.1), 1e-12);
+    try std.testing.expectApproxEqAbs(0.5, profile.distance(0, -0.5), 1e-12);
+    try std.testing.expectApproxEqAbs(0.5, profile.distance(1.3, -0.4), 1e-12);
+    try std.testing.expectApproxEqAbs(0, profile.distance(0.4, 1), 1e-12);
+    for ([_][]const e.ProfilePoint{
+        &.{},                                                      &.{.{ .z = 0, .radius = 1 }},
+        &.{ .{ .z = 0, .radius = 1 }, .{ .z = 0, .radius = 1 } },  &.{ .{ .z = 0.1, .radius = 1 }, .{ .z = 2, .radius = 1 } },
+        &.{ .{ .z = 0, .radius = -1 }, .{ .z = 2, .radius = 1 } }, &.{ .{ .z = 0, .radius = 1 }, .{ .z = 2, .radius = std.math.nan(f64) } },
+    }) |points| {
+        var bad = profile;
+        bad.profile = points;
+        try std.testing.expectError(error.InvalidToolProfile, bad.validate());
+    }
+    var bad = profile;
+    bad.kind = .flat;
+    try std.testing.expectError(error.InvalidToolProfile, bad.validate());
+}
+
+test "XYZAC profile continuous coverage against independent cylinder oracle" {
+    const m = @import("motion.zig");
+    const tool = e.Tool{ .kind = .profile, .radius = 1.1, .length = 0.7, .profile = &.{ .{ .z = 0, .radius = 1.1 }, .{ .z = 0.7, .radius = 1.1 } } };
+    const input = m.RotaryLine{ .a = .{ .position = .{ -0.2, 0.1, 0.2 }, .a_deg = 18, .c_deg = -30 }, .b = .{ .position = .{ 0.3, -0.1, 0.1 }, .a_deg = 79, .c_deg = 75 } };
+    const plan = try m.rotary(a, tool, input, 0.08);
+    defer plan.deinit(a);
+    try std.testing.expect(plan.over_removal_bound_mm <= 0.08 + 1e-12);
+    const shape = e.Shape{ .path = plan.segments };
+    var rng = std.Random.DefaultPrng.init(0x2122);
+    const samples = 512;
+    const speed: f64 = @sqrt(0.3) + @sqrt(1.1 * 1.1 + 0.35 * 0.35) * 166 * std.math.pi / 180.0;
+    for (0..400) |_| {
+        const p: e.V = .{ rng.random().float(f64) * 3 - 1.5, rng.random().float(f64) * 3 - 1.5, rng.random().float(f64) * 3 - 1.5 };
+        var best = std.math.inf(f64);
+        for (0..samples + 1) |i| {
+            const t = @as(f64, @floatFromInt(i)) / samples;
+            const aa = (18 + 61 * t) * std.math.pi / 180;
+            const cc = (-30 + 105 * t) * std.math.pi / 180;
+            const x = p[0] + 0.2 - 0.5 * t;
+            const y = p[1] - 0.1 + 0.2 * t;
+            const z = p[2] - 0.2 + 0.1 * t;
+            const xx = @cos(cc) * x + @sin(cc) * y;
+            const yy = -@sin(cc) * x + @cos(cc) * y;
+            const local_y = @cos(aa) * yy + @sin(aa) * z;
+            const local_z = -@sin(aa) * yy + @cos(aa) * z;
+            const dr = @sqrt(xx * xx + local_y * local_y) - 1.1;
+            const dz = @abs(local_z) - 0.35;
+            best = @min(best, @sqrt(@max(dr, 0) * @max(dr, 0) + @max(dz, 0) * @max(dz, 0)) + @min(@max(dr, dz), 0));
+        }
+        if (best <= 0) try std.testing.expect(shape.contains(p));
+        if (shape.contains(p)) try std.testing.expect(best <= plan.over_removal_bound_mm + speed / (2 * samples) + 1e-9);
+    }
+    try std.testing.expectError(error.OutOfMemory, m.rotary(std.testing.failing_allocator, tool, input, 0.08));
+}
+
+test "waisted profile motion has independent sampled surface envelope and split coverage" {
+    const m = @import("motion.zig");
+    const tool = e.Tool{ .kind = .profile, .radius = 1, .length = 2, .profile = &.{ .{ .z = 0, .radius = 1 }, .{ .z = 1, .radius = 0.4 }, .{ .z = 2, .radius = 1 } } };
+    const input = m.RotaryLine{ .a = .{ .position = .{ 0, 0, 0 }, .a_deg = 0, .c_deg = 0 }, .b = .{ .position = .{ 0.3, 0, 0 }, .a_deg = 90, .c_deg = 60 } };
+    const plan = try m.rotary(a, tool, input, 0.08);
+    defer plan.deinit(a);
+    const left = try m.rotary(a, tool, .{ .a = input.a, .b = input.at(0.5) }, 0.08);
+    defer left.deinit(a);
+    const right = try m.rotary(a, tool, .{ .a = input.at(0.5), .b = input.b }, 0.08);
+    defer right.deinit(a);
+    const shape = e.Shape{ .path = plan.segments };
+    var rng = std.Random.DefaultPrng.init(0x2123);
+    for (0..160) |_| {
+        const p: e.V = .{ rng.random().float(f64) * 3 - 1.5, rng.random().float(f64) * 3 - 1.5, rng.random().float(f64) * 3 - 1.5 };
+        var best = std.math.inf(f64);
+        for (0..129) |i| {
+            const t = @as(f64, @floatFromInt(i)) / 128;
+            const aa = t * std.math.pi / 2;
+            const cc = t * std.math.pi / 3;
+            const x = p[0] - 0.3 * t;
+            const xx = @cos(cc) * x + @sin(cc) * p[1];
+            const yy = -@sin(cc) * x + @cos(cc) * p[1];
+            const y = @cos(aa) * yy + @sin(aa) * p[2];
+            const z = -@sin(aa) * yy + @cos(aa) * p[2];
+            const r = @sqrt(xx * xx + y * y);
+            if (@abs(z) <= 1 and r <= 0.4 + 0.6 * @abs(z)) {
+                try std.testing.expect(shape.contains(p));
+                try std.testing.expect((e.Shape{ .path = left.segments }).contains(p) or (e.Shape{ .path = right.segments }).contains(p));
+                best = 0;
+                break;
+            }
+            // Independently sample the analytic meridian, not Tool.distance.
+            for (0..129) |k| {
+                const zz = -1 + @as(f64, @floatFromInt(k)) / 64;
+                const rr = 0.4 + 0.6 * @abs(zz);
+                best = @min(best, @sqrt((r - rr) * (r - rr) + (z - zz) * (z - zz)));
+            }
+            const cap_r = @max(0, r - 1);
+            best = @min(best, @sqrt(cap_r * cap_r + (@abs(z) - 1) * (@abs(z) - 1)));
+        }
+        const time_error: f64 = (0.3 + @sqrt(2.0) * 150 * std.math.pi / 180.0) / 256.0;
+        const surface_error = @sqrt(@as(f64, 1.36)) / 128;
+        if (shape.contains(p)) try std.testing.expect(best <= plan.over_removal_bound_mm + time_error + surface_error + 1e-9);
+    }
 }

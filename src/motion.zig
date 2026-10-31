@@ -97,29 +97,34 @@ pub const RotaryLine = struct {
 /// Every material point moves <= rho*(|dA|+|dC|)/(2n) from that orientation.
 /// Radial+axial dilation contains this ball, and is contained in a sqrt(2)*d ball.
 /// Relative to the true moving solid, total over-removal <= (1+sqrt(2))*d.
-/// This bound is geometric, separate from voxel and floating-point tolerances.
+/// Profiles instead use Euclidean dilation d+q, where q is the translation
+/// lattice half-gap. Their bound is 2*d+q; each term receives half the budget.
+/// These bounds are geometric, separate from voxel and floating-point tolerances.
 pub fn rotary(a: std.mem.Allocator, tool: e.Tool, input: RotaryLine, tolerance: f64) !Plan {
     try tool.validate();
-    if (tool.kind != .flat) return error.RotaryRequiresCylinder;
+    if (tool.kind != .flat and tool.kind != .profile) return error.RotaryRequiresWheel;
     try input.a.validate();
     try input.b.validate();
     if (!std.math.isFinite(tolerance) or tolerance <= 0) return error.InvalidMotionTolerance;
     const angular = (@abs(input.b.a_deg - input.a.a_deg) + @abs(input.b.c_deg - input.a.c_deg)) * (std.math.pi / 180.0);
     const rho = @sqrt(tool.radius * tool.radius + tool.length * tool.length / 4);
-    const factor = 1 + @sqrt(@as(f64, 2));
+    // Profiles reserve half the budget for translation pose coverage.
+    const factor = if (tool.kind == .profile) @as(f64, 4) else 1 + @sqrt(@as(f64, 2));
     const count = @ceil(factor * rho * angular / (2 * tolerance));
     if (!std.math.isFinite(count) or count > 100000) return error.MotionToleranceTooSmall;
     const n: usize = @max(1, @as(usize, @intFromFloat(count)));
     const dilation = rho * angular / (2 * @as(f64, @floatFromInt(n)));
     const segments = try a.alloc(e.Sweep, n);
     errdefer a.free(segments);
+    var bound: f64 = 0;
     for (segments, 0..) |*s, i| {
         const t0 = @as(f64, @floatFromInt(i)) / @as(f64, @floatFromInt(n));
         const t1 = @as(f64, @floatFromInt(i + 1)) / @as(f64, @floatFromInt(n));
         const axis = input.at((t0 + t1) / 2).axis();
         const offset = e.scale(axis, tool.length / 2);
-        s.* = .{ .tool = tool, .a = .{ .position = e.sub(input.at(t0).position, offset), .axis = axis }, .b = .{ .position = e.sub(input.at(t1).position, offset), .axis = axis }, .tolerance_mm = tolerance, .dilation_mm = dilation };
+        s.* = .{ .tool = tool, .a = .{ .position = e.sub(input.at(t0).position, offset), .axis = axis }, .b = .{ .position = e.sub(input.at(t1).position, offset), .axis = axis }, .tolerance_mm = if (tool.kind == .profile) tolerance / 2 else tolerance, .dilation_mm = dilation };
         try s.validate();
+        bound = @max(bound, dilation + s.errorBound());
     }
-    return .{ .segments = segments, .over_removal_bound_mm = factor * dilation, .chord_error_mm = 0 };
+    return .{ .segments = segments, .over_removal_bound_mm = bound, .chord_error_mm = 0 };
 }

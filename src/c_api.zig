@@ -17,7 +17,7 @@ fn failure(err: anyerror) Status {
         error.OutOfMemory => .out_of_memory,
         error.Cancelled => .cancelled,
         error.FileNotFound, error.AccessDenied, error.NotDir, error.NoSpaceLeft, error.InputOutput => .io_error,
-        error.OrientationChangeUnsupported, error.RotaryRequiresCylinder => .unsupported,
+        error.OrientationChangeUnsupported, error.RotaryRequiresWheel => .unsupported,
         error.MotionToleranceTooSmall, error.PoolTooLarge, error.Overflow, error.GridTooLargeOrEmpty => .resource_limit,
         else => .invalid_argument,
     };
@@ -26,7 +26,7 @@ fn tool(t: Tool) !e.Tool {
     const value = e.Tool{ .kind = switch (t.kind) {
         0 => .flat,
         1 => .ball,
-        else => return error.RotaryRequiresCylinder,
+        else => return error.RotaryRequiresWheel,
     }, .radius = t.radius_mm, .length = t.length_mm };
     try value.validate();
     return value;
