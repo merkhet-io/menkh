@@ -75,6 +75,7 @@ struct Step {
     size_t changed = 0, bytes = 0;
     Vec tool{}, axis{0, 0, 1};
     Part cutter, shank, holder;
+    std::vector<std::array<float,2>> profile;
     bool unsupportedCutter = false;
 };
 class History {
@@ -188,7 +189,17 @@ class History {
             if (f.contains("cutter") && !f.at("cutter").is_null()) {
                 if (f.at("cutter").at("kind") == "flat")
                     s.cutter = part(f.at("cutter"));
-                else
+                else if (f.at("cutter").at("kind") == "profile") {
+                    const auto &c=f.at("cutter");s.cutter=part(c);
+                    const auto &points=c.at("profile");
+                    require(points.is_array() && points.size()>=2 && points.size()<=256,"Invalid wheel profile size");
+                    for(const auto &p:points) {
+                        const float z=p.at("z").get<float>(),r=p.at("radius").get<float>();
+                        require(std::isfinite(z)&&std::isfinite(r)&&r>=0&&r<=s.cutter.radius&&(s.profile.empty()||z>s.profile.back()[0]),"Invalid or unrepresentable wheel profile");
+                        s.profile.push_back({z,r});
+                    }
+                    require(s.profile.front()[0]==0&&s.profile.back()[0]==s.cutter.length,"Invalid wheel profile caps");
+                } else
                     s.unsupportedCutter = true;
             }
             if (f.contains("shank") && !f.at("shank").is_null())

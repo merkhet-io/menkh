@@ -34,8 +34,9 @@ struct Uniforms {
     F4 eye, forward, right, up, low, high, settings;
     U4 dimensions, blockDimensions, flags;
     F4 shank, shankAxis, holder, holderAxis, cutter, cutterAxis;
+    std::array<F4,256> wheelProfile;
 };
-static_assert(sizeof(Uniforms) == 256, "HLSL constant buffer layout");
+static_assert(sizeof(Uniforms) == 4352, "HLSL constant buffer layout");
 inline Vec add(Vec a, Vec b) { return {a[0] + b[0], a[1] + b[1], a[2] + b[2]}; }
 inline Vec mul(Vec a, float s) { return {a[0] * s, a[1] * s, a[2] * s}; }
 inline Vec sub(Vec a, Vec b) { return add(a, mul(b, -1)); }
@@ -49,7 +50,7 @@ struct Camera {
     Vec target{};
     float distance = 1, yaw = -.8f, elevation = .5f, section = 1;
     uint32_t colorMode = 0; // 0 material, 1 exposing operation, 2 exposing tool
-    bool dark = false, tool = true, antialias = true;
+    bool dark = false, tool = true, antialias = true, smoothLighting = false;
     bool compare=false,fixtures=true,stock=true,targetVisible=false;
     uint32_t sectionAxis=2;
     void reset(const History &h) {
@@ -104,7 +105,7 @@ struct Camera {
         v.settings = {h.h, float(width), float(height), .41421356f};
         v.dimensions = {h.n[0], h.n[1], h.n[2], uint32_t(h.firstOperation+h.frame)};
         v.blockDimensions = {h.nb[0], h.nb[1], h.nb[2], uint32_t(compare && !h.targetBlocks.empty()) | (uint32_t(fixtures && !h.fixtureBlocks.empty())<<1) | (uint32_t(!stock)<<2) | (uint32_t(targetVisible && !h.targetBlocks.empty())<<3)};
-        v.flags = {uint32_t(dark), uint32_t(antialias), h.provenanceAvailableAtFrame() && !compare ? colorMode : 0, uint32_t(h.provenance.size()/4)};
+        v.flags = {uint32_t(dark), (uint32_t(antialias) | (uint32_t(smoothLighting)<<1)), h.provenanceAvailableAtFrame() && !compare ? colorMode : 0, uint32_t(h.provenance.size()/4)};
         if (tool && h.frame) {
             const auto &s = h.steps[h.frame - 1];
             auto set = [&](Part p, F4 &radial, F4 &axial) {
@@ -113,6 +114,8 @@ struct Camera {
                 axial = four(s.axis, p.length / h.h);
             };
             set(s.cutter, v.cutter, v.cutterAxis);
+            v.eye.w=float(s.profile.size());
+            for(size_t i=0;i<s.profile.size();++i)v.wheelProfile[i]={s.profile[i][0]/h.h,s.profile[i][1]/h.h,0,0};
             set(s.shank, v.shank, v.shankAxis);
             set(s.holder, v.holder, v.holderAxis);
         }
@@ -355,7 +358,7 @@ class Renderer {
             srv.Buffer.StructureByteStride = 4;
             device->CreateShaderResourceView(b->gpu.Get(), &srv, handle);
         }
-        constants = buffer(256, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
+        constants = buffer(sizeof(Uniforms), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
         D3D12_RANGE noRead{0, 0};
         hr(constants->Map(0, &noRead, reinterpret_cast<void **>(&constantData)), "Map constants");
     }

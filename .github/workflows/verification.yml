@@ -79,11 +79,21 @@ jobs:
           ./scripts/build-viewer.sh
           xcrun swiftc viewer/Presentation.swift tests/viewer/PresentationTest.swift -o out/presentation-test
           out/presentation-test
+          xcrun swiftc -O tests/viewer/ProfileWheelTest.swift -o out/profile-wheel-test
+          out/profile-wheel-test
   windows-cli:
     runs-on: windows-2025
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Compile the viewer shader with the native SM5 compiler
+        shell: pwsh
+        run: |
+          $fxc = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\fxc.exe" | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $fxc) { throw 'Windows SDK FXC compiler not found' }
+          New-Item -ItemType Directory -Force out | Out-Null
+          & $fxc.FullName /nologo /Ges /O3 /T cs_5_0 /E main /Fo out/voxel-shader.cso viewer/windows/Voxel.hlsl
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer shader compilation failed' }
       - name: Install pinned repository-local Zig
         shell: pwsh
         run: ./scripts/bootstrap-zig.ps1
@@ -98,7 +108,12 @@ jobs:
         run: ./zig.ps1 build test -Doptimize=ReleaseFast --summary all
       - name: Native screw grinding and exhaustive oracle
         shell: pwsh
-        run: python scripts/test-screw-demo.py
+        run: |
+          python scripts/test-screw-demo.py
+          if ($LASTEXITCODE -ne 0) { throw 'Screw tests failed' }
+          ./scripts/summarize-grinding.ps1 out/screw-cli-test/native/result/report.json | Out-File out/screw-summary.json
+          $summary = Get-Content out/screw-summary.json -Raw | ConvertFrom-Json
+          if ($summary.operations -ne 128 -or $summary.cutting_seconds -le 0) { throw 'Phase summary failed' }
       - name: Provenance CLI defaults and overrides
         shell: pwsh
         run: python scripts/test-provenance-options.py
@@ -138,6 +153,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Viewer batch build failed' }
           cmd /c "viewer\windows\build.bat --project" 2>&1 | Tee-Object out/windows-viewer-project.log
           if ($LASTEXITCODE -ne 0) { throw 'Viewer project build failed' }
+      - name: Screw wheel and shading-only silhouette
+        shell: pwsh
+        run: python scripts/test-windows-grinding-render.py
       - name: Scene workpieces and native D3D12 selection
         shell: pwsh
         run: python scripts/test-scene.py --reader out/windows-viewer/menkh-viewer.exe --viewer
@@ -232,6 +250,8 @@ jobs:
             out/windows-job-render-images/
             out/windows-provenance.ppm
             out/windows-profile.ppm
+            out/windows-grinding-render/
+            out/screw-summary.json
 
             out/windows-playback-provenance/
             out/windows-job-runner/

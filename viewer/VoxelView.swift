@@ -4,7 +4,8 @@ import simd
 import AVFoundation
 
 struct NoncuttingPart:Decodable {let radius:Float;let length:Float;let offset:Float}
-struct CutterGeometry:Decodable {let kind:String;let radius:Float;let length:Float}
+struct WheelPoint:Decodable {let z:Float;let radius:Float}
+struct CutterGeometry:Decodable {let kind:String;let radius:Float;let length:Float;let profile:[WheelPoint]?}
 struct VoxelStep:Decodable {let cutter:CutterGeometry?;let axis:[Float]?;let shank:NoncuttingPart?;let holder:NoncuttingPart?;let file:String;let stage:String;let occupied:UInt64;let changed_blocks:Int;let delta_bytes:Int;let tool:[Float]}
 struct VoxelHistory:Decodable {
     let format:String;let grid:[Int];let block_grid:[Int];let voxel_mm:Float
@@ -46,6 +47,9 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         root=file.deletingLastPathComponent();let decoded=try JSONDecoder().decode(VoxelHistory.self,from:Data(contentsOf:file));history=decoded
 
         guard history.format=="menkh-voxel-history-v1",history.grid.count==3,history.block_grid.count==3,history.stock_min.count==3,history.stock_max.count==3,history.grid.allSatisfy({$0>=1 && $0<=4096}),zip(history.grid,history.block_grid).allSatisfy({($0.0+7)/8==$0.1}),history.pool_slots>=0,history.pool_slots<=history.block_grid.reduce(1,*),history.voxel_mm.isFinite,history.voxel_mm>0 else {throw MeshError.invalidOBJ("Invalid voxel history")}
+        for step in history.frames where step.cutter?.kind == "profile" {
+            guard let cutter=step.cutter,let profile=cutter.profile,(2...256).contains(profile.count),profile.first!.z==0,profile.last!.z==cutter.length,cutter.length.isFinite,cutter.radius.isFinite,cutter.length>0,cutter.radius>0,profile.allSatisfy({$0.z.isFinite && $0.radius.isFinite && $0.radius>=0 && $0.radius<=cutter.radius}),zip(profile,profile.dropFirst()).allSatisfy({$0.0.z<$0.1.z}) else {throw MeshError.invalidOBJ("Invalid or unrepresentable display wheel profile")}
+        }
         let first=history.live_sequence == nil ? 0:(history.first_operation ?? 0)
         guard first>=0,first<=Int(UInt32.max)-history.frames.count else {throw MeshError.invalidOBJ("Invalid global operation range")}
         if let previous {
@@ -141,9 +145,9 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         var shank=SIMD4<Float>(repeating:0),shankAxis=SIMD4<Float>(0,0,1,0),holder=shank,holderAxis=shankAxis
         var cutter=SIMD4<Float>(repeating:0),cutterAxis=SIMD4<Float>(0,0,1,0)
         if showHolder,frame>0 {let step=history.frames[frame-1];let axis=step.axis ?? [0,0,1]
-            if axis.count==3,step.tool.count==3 {let u=SIMD3<Float>(axis[0],axis[1],axis[2]);let p=SIMD3<Float>(step.tool[0],step.tool[1],step.tool[2]);if let part=step.cutter,(part.kind=="flat" || part.kind=="ball") {cutter=SIMD4((p-origin)/h,part.radius/h);cutterAxis=SIMD4(u,part.length/h)};if let part=step.shank {shank=SIMD4((p+u*part.offset-origin)/h,part.radius/h);shankAxis=SIMD4(u,part.length/h)};if let part=step.holder {holder=SIMD4((p+u*part.offset-origin)/h,part.radius/h);holderAxis=SIMD4(u,part.length/h)}}
+            if axis.count==3,step.tool.count==3 {let u=SIMD3<Float>(axis[0],axis[1],axis[2]);let p=SIMD3<Float>(step.tool[0],step.tool[1],step.tool[2]);if let part=step.cutter,(part.kind=="flat" || part.kind=="ball" || part.kind=="profile") {cutter=SIMD4((p-origin)/h,part.radius/h);cutterAxis=SIMD4(u,part.length/h)};if let part=step.shank {shank=SIMD4((p+u*part.offset-origin)/h,part.radius/h);shankAxis=SIMD4(u,part.length/h)};if let part=step.holder {holder=SIMD4((p+u*part.offset-origin)/h,part.radius/h);holderAxis=SIMD4(u,part.length/h)}}
         }
-        return VoxelUniforms(eye:SIMD4((eye-origin)/h,frame>0 && history.frames[frame-1].cutter?.kind=="ball" ? 1:0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis,provenance:SIMD4(provenanceCount,provenanceAvailableAtFrame && !compareTarget ? provenanceMode:0,UInt32(operationOffset+frame),0))
+        return VoxelUniforms(eye:SIMD4((eye-origin)/h,frame>0 && history.frames[frame-1].cutter?.kind=="ball" ? 1:0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis,provenance:SIMD4(provenanceCount,provenanceAvailableAtFrame && !compareTarget ? provenanceMode:0,UInt32(operationOffset+frame),showHolder && frame>0 && history.frames[frame-1].cutter?.kind=="profile" ? UInt32(history.frames[frame-1].cutter?.profile?.count ?? 0):0))
     }
     func encode(_ texture:MTLTexture)->MTLCommandBuffer? {
         guard let command=queue.makeCommandBuffer(),let encoder=command.makeComputeCommandEncoder() else {return nil}
@@ -151,6 +155,8 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         encoder.setBuffer(targetBlocks ?? blocks,offset:0,index:3);encoder.setBuffer(targetPool ?? pool,offset:0,index:4)
         encoder.setBuffer(fixtureBlocks ?? blocks,offset:0,index:5);encoder.setBuffer(fixturePool ?? pool,offset:0,index:6)
         encoder.setBuffer(provenanceBuffer ?? pool,offset:0,index:7)
+        let wheel = u.provenance.w>0 ? history.frames[frame-1].cutter!.profile!.map {SIMD2<Float>($0.z/history.voxel_mm,$0.radius/history.voxel_mm)}:[SIMD2<Float>(repeating:0)]
+        wheel.withUnsafeBytes {encoder.setBytes($0.baseAddress!,length:$0.count,index:8)}
         encoder.setComputePipelineState(pipeline);encoder.setTexture(texture,index:0);encoder.setBuffer(blocks,offset:0,index:0);encoder.setBuffer(pool,offset:0,index:1);encoder.setBytes(&u,length:MemoryLayout<VoxelUniforms>.stride,index:2)
         encoder.dispatchThreads(MTLSize(width:texture.width,height:texture.height,depth:1),threadsPerThreadgroup:MTLSize(width:8,height:8,depth:1));encoder.endEncoding()
         return command
@@ -181,7 +187,7 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         let stage=frame==0 ? "Initial stock":frame==history.frames.count ? "Complete":history.frames[frame-1].stage
         let approximation=history.motion_tolerance_mm.map {String(format:" · motion budget %.4f mm",$0)} ?? ""
         let exposureNotice = provenanceMode == 0 ? "" : compareTarget ? " · provenance inactive (target comparison)" : provenanceAvailableAtFrame ? (provenanceAllFrames ? " · playback surface provenance" : " · final surface provenance") : " · provenance inactive (final state only)"
-        let toolNotice = frame>0 && history.frames[frame-1].cutter?.kind == "profile" ? " · profile wheel display unavailable" : ""
+        let toolNotice = frame>0 && history.frames[frame-1].cutter?.kind == "profile" ? " · recorded profile wheel" : ""
         return "\(stage)\(toolNotice) · \(frame)/\(history.frames.count) · \(history.grid[0]) × \(history.grid[1]) × \(history.grid[2]) · \(String(format:"%.3f",history.voxel_mm*1000)) µm · \(occupied.formatted()) occupied · GPU \(String(format:"%.1f",lastGPUms)) ms\(approximation)\(exposureNotice) · \(picked)"
     }
 }
@@ -366,6 +372,7 @@ extension Delegate {
         if args.contains("--hide-stock") {renderer.showStock=false}
         if args.contains("--hide-tool") {renderer.showHolder=false}
         if args.contains("--smooth-lighting") {renderer.smoothLighting=true}
+        if args.contains("--dark-background") {renderer.darkBackground=true}
         if args.contains("--compare-target") {renderer.compareTarget=true}
         if let i=args.firstIndex(of:"--section"),i+1<args.count,let value=Float(args[i+1]),value>0,value<=1 {renderer.sectionFraction=value}
         if let i=args.firstIndex(of:"--distance"),i+1<args.count,let distance=Float(args[i+1]),distance.isFinite,distance>0 {renderer.distance=distance}

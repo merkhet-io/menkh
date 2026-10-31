@@ -47,6 +47,10 @@ public:
             app->renderer->attach(app->viewport);
         }
         sequence=incoming->pointer.at("sequence").get<uint64_t>();
+        // Expose the displayed publication's identity to native UI automation.
+        // Operation counts are not unique: a forced pause publication can
+        // repeat a completed count in a different leased slot.
+        require(SetPropW(app->window,L"MenkhLiveSequence",reinterpret_cast<HANDLE>(static_cast<UINT_PTR>(sequence)))!=FALSE,"Cannot publish live window identity");
         const auto first=incoming->metadata.at("first_operation").get<uint64_t>(),end=incoming->metadata.at("completed_operations").get<uint64_t>();
         app->playing=false;app->dirty=true;
         app->liveBanner=L"LIVE "+std::to_wstring(first)+L"…"+std::to_wstring(end)+L" | ";

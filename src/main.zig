@@ -114,7 +114,7 @@ fn execute() !void {
     const args = try std.process.argsAlloc(a);
     defer std.process.argsFree(a, args);
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help")) {
-        std.debug.print("menkh scene FILE --out NEW_DIR\nmenkh dexel-bench [--voxel MM] [--out DIR] [--check-state FILE] [--operations N] [--world-grid N] (experimental, no history/viewer)\nmenkh grinding-demo [--out NEW_DIR] [--voxel MM] [--tolerance MM] [--steps-per-turn N] [--world-grid N] [--generate-only] [--no-provenance]\nmenkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--provenance all_frames|final_surface|off] [--no-provenance] [--voxel MM] [--out DIR] [--progress FILE] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
+        std.debug.print("menkh scene FILE --out NEW_DIR\nmenkh dexel-bench [--voxel MM] [--out DIR] [--check-state FILE] [--operations N] [--world-grid N] (experimental, no history/viewer)\nmenkh grinding-demo [--out NEW_DIR] [--voxel MM] [--tolerance MM] [--steps-per-turn N] [--workers N] [--world-grid N] [--generate-only] [--no-provenance]\nmenkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--provenance all_frames|final_surface|off] [--no-provenance] [--voxel MM] [--out DIR] [--progress FILE] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
         return;
     }
     const command = args[1];

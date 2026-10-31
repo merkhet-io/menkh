@@ -141,3 +141,11 @@ history files retain their existing format.
 and fixture objects. `menkh-scene-result-v1` maps stable workpiece IDs to separate
 ordinary histories and states. See the [scene schema and coordinate contract](SCENES.md).
 Existing job/history/state formats are unchanged.
+
+### CPU worker limit
+
+Job v1 accepts optional `workers` (integer 1–64, default 1). It limits parallel
+partial-block mask calculation; exact flat XY and scalar reference paths remain
+serial. Operation reports include `work.workers_used`, while report `workers`
+is the requested limit (1 for reference). Final material/history ordering is
+independent of worker count. See [grinding performance](GRINDING-PERFORMANCE.md).

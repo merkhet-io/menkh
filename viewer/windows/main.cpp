@@ -48,6 +48,7 @@ struct App {
         if(camera.colorMode) text << (history.provenanceAvailableAtFrame() ? (history.provenanceAllFrames ? L"   | playback attribution":L"   | final-surface attribution") : L"   | attribution inactive (final only)");
         text << L"   | operation " << history.firstOperation+history.frame;
         if(camera.compare)text << L" | excess yellow / missing red";
+        if(camera.smoothLighting)text << L" | smoothed lighting only";
         text << inspectionDetail;
         SetWindowTextW(status, text.str().c_str());
     }
@@ -101,6 +102,8 @@ struct App {
             camera.dark = !camera.dark;
         else if (key == 'T')
             camera.tool = !camera.tool;
+        else if (key == 'L')
+            camera.smoothLighting = !camera.smoothLighting;
         else if (key == 'A')
             camera.antialias = !camera.antialias;
         else if (key == VK_OEM_4)
@@ -217,6 +220,7 @@ LRESULT CALLBACK procedure(HWND w, UINT msg, WPARAM wp, LPARAM lp) {
             DestroyWindow(w);
             return 0;
         case WM_DESTROY:
+            RemovePropW(w,L"MenkhLiveSequence");
             if (w == app->window && !app->live)
                 PostQuitMessage(0);
             return 0;
@@ -275,7 +279,7 @@ int wmain(int argc, wchar_t **argv) {
     try {
         fs::path input = argc < 2 ? chooseInput() : fs::path(argv[1]);
         if(input.empty()) return 0;
-        if(input==L"--help") {std::cout << "menkh-viewer.exe [SCENE_RESULT.json | JOB_OR_HISTORY.json] [--workpiece ID] [--engine PATH | --library DLL] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--live-evidence DIR] [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";return 0;}
+        if(input==L"--help") {std::cout << "menkh-viewer.exe [SCENE_RESULT.json | JOB_OR_HISTORY.json] [--workpiece ID] [--engine PATH | --library DLL] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--live-evidence DIR] [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N] [--smooth-lighting]\n";return 0;}
         fs::path engine, jobOutput, workingDirectory, library;
         bool runOnly=false, frameExplicit=false, live=false;
         fs::path liveEvidence;
@@ -283,7 +287,7 @@ int wmain(int argc, wchar_t **argv) {
         bool warp = false, debug = false, verify = false;
         uint32_t colorMode=0;
         fs::path smoke, snapshot, windowSmoke, exposureOracle, inspectionReport;
-        bool compare=false,showTarget=false,hideFixtures=false,hideStock=false,hideTool=false,pickCenter=false;
+        bool compare=false,showTarget=false,hideFixtures=false,hideStock=false,hideTool=false,pickCenter=false,smoothLighting=false;
         float section=1;uint32_t sectionAxis=2;
         size_t frame = 0;
         std::string workpiece, sceneLabel;
@@ -295,6 +299,7 @@ int wmain(int argc, wchar_t **argv) {
             else if(a==L"--hide-fixtures")hideFixtures=true;
             else if(a==L"--hide-stock")hideStock=true;
             else if(a==L"--hide-tool")hideTool=true;
+            else if(a==L"--smooth-lighting")smoothLighting=true;
             else if(a==L"--pick-center")pickCenter=true;
             else if(a==L"--inspection-report" && i+1<argc)inspectionReport=argv[++i];
             else if(a==L"--section" && i+1<argc){section=std::stof(argv[++i]);require(std::isfinite(section)&&section>0&&section<=1,"Invalid section");}
@@ -395,7 +400,7 @@ int wmain(int argc, wchar_t **argv) {
             return 0;
         }
         app.history.seek(frame);
-        app.camera.compare=compare;app.camera.targetVisible=showTarget;app.camera.fixtures=!hideFixtures;app.camera.stock=!hideStock;app.camera.tool=!hideTool;app.camera.section=section;app.camera.sectionAxis=sectionAxis;
+        app.camera.compare=compare;app.camera.targetVisible=showTarget;app.camera.fixtures=!hideFixtures;app.camera.stock=!hideStock;app.camera.tool=!hideTool;app.camera.smoothLighting=smoothLighting;app.camera.section=section;app.camera.sectionAxis=sectionAxis;
         Json picked=nullptr;if(pickCenter){picked=app.camera.pick(app.history,.5f,.5f,1280,900);require(!picked.is_null(),"Center material pick missed");std::cout<<picked.dump()<<'\n';}
         if(!inspectionReport.empty()){std::ofstream report(inspectionReport);report<<Json{{"comparison",app.history.comparison()},{"pick",picked},{"contacts",app.history.contacts}}.dump(2);require(bool(report),"Cannot write inspection report");}
         if (!snapshot.empty()) {

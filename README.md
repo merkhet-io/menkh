@@ -156,7 +156,7 @@ contacts are reported, not used to stop or reroute the path.
 
 On an M5 Max, the 325-segment, 100 µm pocket demo takes **2.43 ms for cutting** and **50.72 ms for the full CLI run**. At 25 µm, cutting takes **60.65 ms** for stock with 221 million occupied voxels; the full run takes **117.08 ms with mesh export disabled**. The second optimization pass improves 25 µm cutting by another **1.55×** and CLI wall time by **2.57×** over the first pass. These are repeated ReleaseFast medians with identical material/history and height-image output. Rendering is excluded.
 
-See [measured CPU performance, raw results and reproduction commands](docs/CPU-PERFORMANCE.md), including the separate scalar/SIMD predicate benchmark. Material updates still use one CPU worker; the eight-worker predicate benchmark does not measure whole-job throughput.
+See [measured CPU performance, raw results and reproduction commands](docs/CPU-PERFORMANCE.md), including the separate scalar/SIMD predicate benchmark. Material updates default to one CPU worker; `grinding-demo --workers 8` enables deterministic parallel block masks. The [screw job measurements](docs/evidence/grinding-workers/README.md) cover whole-job throughput, separately from the predicate benchmark.
 
 ## Formal verification with Lean
 

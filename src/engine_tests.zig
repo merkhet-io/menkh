@@ -1107,3 +1107,110 @@ test "temporal envelope grouping matches reference for mixed tools and orientati
     try e.subtract(&r, .{ .path = &sweeps }, &changes, true);
     for (0..g.blocks.len) |i| try std.testing.expectEqualSlices(u64, &g.bits(i), &r.bits(i));
 }
+
+test "SIMD profile distances are bit-identical to scalar at caps sides waists and random points" {
+    const simd = @import("profile_simd.zig");
+    const profiles = [_][]const e.ProfilePoint{
+        &.{ .{ .z = 0, .radius = 7 }, .{ .z = 0.8, .radius = 8 }, .{ .z = 1.2, .radius = 8 }, .{ .z = 2, .radius = 7 } },
+        &.{ .{ .z = 0, .radius = 8 }, .{ .z = 1, .radius = 0 }, .{ .z = 2, .radius = 8 } },
+        &.{ .{ .z = 0, .radius = 8 }, .{ .z = 2, .radius = 8 } },
+    };
+    var rng = std.Random.DefaultPrng.init(0x44a51);
+    for (profiles) |profile| {
+        const tool = e.Tool{ .kind = .profile, .radius = 8, .length = 2, .profile = profile };
+        for (0..1000) |batch| {
+            var r: simd.F = undefined;
+            var z: simd.F = undefined;
+            for (0..8) |lane| {
+                if (batch < profile.len) {
+                    r[lane] = profile[batch].radius + (@as(f64, @floatFromInt(lane)) - 4) * 1e-12;
+                    z[lane] = profile[batch].z;
+                } else {
+                    r[lane] = rng.random().float(f64) * 12;
+                    z[lane] = rng.random().float(f64) * 8 - 3;
+                }
+            }
+            const got = simd.distance(tool, r, z);
+            for (0..8) |lane| try std.testing.expectEqual(@as(u64, @bitCast(tool.distance(r[lane], z[lane]))), @as(u64, @bitCast(got[lane])));
+        }
+    }
+}
+
+test "SIMD profile mask matches exhaustive pose predicate on random sparse edge blocks" {
+    const simd = @import("profile_simd.zig");
+    var grid = try @import("core.zig").Grid.init(a, .{ 2.7, 2.9, 2.6 }, 0.25);
+    defer grid.deinit();
+    grid.origin = .{ -1.37, -1.46, -0.48 };
+    var rng = std.Random.DefaultPrng.init(0x91735);
+    for (0..12) |trial| {
+        const angle = @as(f64, @floatFromInt(trial)) * 0.27;
+        const axis: e.V = .{ @sin(angle), 0, @cos(angle) };
+        const sweep = e.Sweep{ .tool = .{ .kind = .profile, .radius = 1, .length = 1.5, .profile = &.{ .{ .z = 0, .radius = 1 }, .{ .z = 0.7, .radius = 0.3 }, .{ .z = 1.5, .radius = 1 } } }, .a = .{ .position = .{ 0.13, -0.09, 0.03 }, .axis = axis }, .b = .{ .position = .{ 0.13 + @as(f64, @floatFromInt(trial)) * 0.03, -0.09, 0.03 }, .axis = axis }, .tolerance_mm = 0.01, .dilation_mm = 0.002 };
+        try sweep.validate();
+        for (0..grid.blocks.len) |bi| {
+            const b = grid.blockCoords(bi);
+            var available = grid.validBits(b);
+            for (&available) |*word| word.* &= rng.random().int(u64);
+            var work = e.Work{};
+            const got = simd.mask(grid, b, sweep, available, &work);
+            const expected = e.mask(grid, b, .{ .sweep = sweep }, true, available);
+            try std.testing.expectEqualSlices(u64, &expected, &got);
+        }
+    }
+}
+
+test "parallel profile paths preserve pool descriptors and history byte for byte" {
+    const bounds = e.Bounds{ .lo = .{ -2, -2, -0.2 }, .hi = .{ 2.1, 2.2, 2.1 } };
+    const tool = e.Tool{ .kind = .profile, .radius = 1.4, .length = 1.3, .profile = &.{ .{ .z = 0, .radius = 1.4 }, .{ .z = 0.6, .radius = 0.5 }, .{ .z = 1.3, .radius = 1.4 } } };
+    for ([_]usize{ 2, 4, 8 }) |workers| {
+        var serial = try e.stock(a, bounds, 0.08, &.{.{ .box = bounds }});
+        defer serial.deinit();
+        var parallel = try e.stock(a, bounds, 0.08, &.{.{ .box = bounds }});
+        defer parallel.deinit();
+        var one = e.Changes{};
+        defer one.deinit(a);
+        var many = e.Changes{ .workers = workers };
+        defer many.deinit(a);
+        var used: usize = 1;
+        for (0..3) |cut| {
+            var sweeps: [9]e.Sweep = undefined;
+            for (&sweeps, 0..) |*s, i| {
+                const t = @as(f64, @floatFromInt(i)) * 0.02;
+                const axis: e.V = .{ @sin(t), 0, @cos(t) };
+                s.* = .{ .tool = tool, .a = .{ .position = .{ t + @as(f64, @floatFromInt(cut)) * 0.4, 0.07, 0 }, .axis = axis }, .b = .{ .position = .{ t + @as(f64, @floatFromInt(cut)) * 0.4 + 0.01, 0.07, 0 }, .axis = axis }, .tolerance_mm = 0.02 };
+            }
+            try e.subtract(&serial, .{ .path = &sweeps }, &one, false);
+            try e.subtract(&parallel, .{ .path = &sweeps }, &many, false);
+            used = @max(used, many.work.workers_used);
+            try std.testing.expectEqualSlices(u32, serial.blocks, parallel.blocks);
+            try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(serial.pool.items), std.mem.sliceAsBytes(parallel.pool.items));
+            try std.testing.expectEqualSlices(u8, one.bytes.items, many.bytes.items);
+            try std.testing.expectEqual(one.removed, many.removed);
+            try std.testing.expectEqual(one.work.point_pose_evaluations, many.work.point_pose_evaluations);
+        }
+        try std.testing.expect(used > 1);
+        many.workers = 0;
+        try std.testing.expectError(error.InvalidWorkerCount, e.subtract(&parallel, .{ .primitive = .{ .box = bounds } }, &many, false));
+        try std.testing.expectEqualSlices(u32, serial.blocks, parallel.blocks);
+    }
+}
+
+fn parallelAllocationFailure(allocator: std.mem.Allocator) !void {
+    const bounds = e.Bounds{ .lo = .{ -2, -2, -2 }, .hi = .{ 2, 2, 2 } };
+    var grid = try e.stock(allocator, bounds, 0.1, &.{.{ .box = bounds }});
+    defer grid.deinit();
+    var changes = e.Changes{ .workers = 4 };
+    defer changes.deinit(allocator);
+    const before = try state.encode(a, grid);
+    defer a.free(before);
+    const sweep = e.Sweep{ .tool = .{ .kind = .ball, .radius = 1.5, .length = 2 }, .a = .{ .position = .{ 0, 0, -1 } }, .b = .{ .position = .{ 0.1, 0.1, -1 } }, .tolerance_mm = 0.02 };
+    e.subtract(&grid, .{ .path = &.{ sweep, sweep } }, &changes, false) catch |err| {
+        const after = try state.encode(a, grid);
+        defer a.free(after);
+        try std.testing.expectEqualSlices(u8, before, after);
+        return err;
+    };
+}
+test "parallel preflight allocation failure leaves encoded state byte exact" {
+    try std.testing.checkAllAllocationFailures(a, parallelAllocationFailure, .{});
+}
