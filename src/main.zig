@@ -114,7 +114,7 @@ fn execute() !void {
     const args = try std.process.argsAlloc(a);
     defer std.process.argsFree(a, args);
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help")) {
-        std.debug.print("menkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--provenance all_frames|final_surface|off] [--no-provenance] [--voxel MM] [--out DIR] [--progress FILE] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
+        std.debug.print("menkh scene FILE --out NEW_DIR\nmenkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--provenance all_frames|final_surface|off] [--no-provenance] [--voxel MM] [--out DIR] [--progress FILE] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
         return;
     }
     const command = args[1];
@@ -172,6 +172,11 @@ fn execute() !void {
     if (std.mem.eql(u8, command, "tiles-bench")) {
         if (args.len != 3) return error.ExpectedOutputDirectory;
         try @import("tiles.zig").benchmark(a, args[2]);
+        return;
+    }
+    if (std.mem.eql(u8, command, "scene")) {
+        if (args.len != 5 or !std.mem.eql(u8, args[3], "--out")) return error.SceneUsage;
+        try @import("scene.zig").run(a, args[2], args[4]);
         return;
     }
     if (std.mem.eql(u8, command, "job")) {

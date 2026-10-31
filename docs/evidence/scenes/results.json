@@ -1,0 +1,33 @@
+[
+  {
+    "object_id": "left",
+    "initial_voxels": 4096,
+    "remaining_voxels": 3616,
+    "operation_ids": [
+      "left-groove",
+      "left-hole"
+    ],
+    "target_comparison": {
+      "excess": 1144,
+      "missing": 88,
+      "common": 2472,
+      "excess_mm3": 17.875,
+      "missing_mm3": 1.375
+    }
+  },
+  {
+    "object_id": "right",
+    "initial_voxels": 4096,
+    "remaining_voxels": 3648,
+    "operation_ids": [
+      "right-groove"
+    ],
+    "target_comparison": {
+      "excess": 1176,
+      "missing": 248,
+      "common": 2472,
+      "excess_mm3": 18.375,
+      "missing_mm3": 3.875
+    }
+  }
+]

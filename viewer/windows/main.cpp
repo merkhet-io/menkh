@@ -1,6 +1,7 @@
 #include "Renderer.hpp"
 #include "JobRunner.hpp"
 #include "LiveReader.hpp"
+#include "Scene.hpp"
 #include <psapi.h>
 #pragma comment(lib, "psapi.lib")
 #include <chrono>
@@ -274,7 +275,7 @@ int wmain(int argc, wchar_t **argv) {
     try {
         fs::path input = argc < 2 ? chooseInput() : fs::path(argv[1]);
         if(input.empty()) return 0;
-        if(input==L"--help") {std::cout << "menkh-viewer.exe [JOB_OR_HISTORY.json] [--engine PATH | --library DLL] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--live-evidence DIR] [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";return 0;}
+        if(input==L"--help") {std::cout << "menkh-viewer.exe [SCENE_RESULT.json | JOB_OR_HISTORY.json] [--workpiece ID] [--engine PATH | --library DLL] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--live-evidence DIR] [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";return 0;}
         fs::path engine, jobOutput, workingDirectory, library;
         bool runOnly=false, frameExplicit=false, live=false;
         fs::path liveEvidence;
@@ -285,9 +286,11 @@ int wmain(int argc, wchar_t **argv) {
         bool compare=false,showTarget=false,hideFixtures=false,hideStock=false,hideTool=false,pickCenter=false;
         float section=1;uint32_t sectionAxis=2;
         size_t frame = 0;
+        std::string workpiece, sceneLabel;
         for (int i = 2; i < argc; i++) {
             std::wstring a = argv[i];
-            if(a==L"--compare-target")compare=true;
+            if(a==L"--workpiece" && i+1<argc)workpiece=fs::path(argv[++i]).u8string();
+            else if(a==L"--compare-target")compare=true;
             else if(a==L"--show-target")showTarget=true;
             else if(a==L"--hide-fixtures")hideFixtures=true;
             else if(a==L"--hide-stock")hideStock=true;
@@ -332,7 +335,14 @@ int wmain(int argc, wchar_t **argv) {
             } else
                 throw std::runtime_error("Unknown or incomplete option");
         }
-        const auto header=Json::parse(read(input,64<<20));
+        auto header=Json::parse(read(input,64<<20));
+        if(header.value("format",std::string())=="menkh-scene-result-v1") {
+            auto scene=selectScene(input,workpiece);input=scene.history;
+            sceneLabel="Workpiece "+scene.id+" | local coordinates | scene translation "+Json(scene.translation).dump()+" mm | ";
+            std::cout<<sceneLabel<<'\n';header=Json::parse(read(input,64<<20));
+        }
+
+        require(header.value("format",std::string())!="menkh-scene-v1","Run menkh scene FILE --out NEW_DIR first, then open NEW_DIR/scene.json");
         const bool calculated=header.contains("version") && !header.contains("format");
         require(liveEvidence.empty() || live,"--live-evidence requires --live");
         if(calculated) {
@@ -346,6 +356,7 @@ int wmain(int argc, wchar_t **argv) {
         }
         else require(!live && !runOnly && engine.empty() && library.empty() && jobOutput.empty() && workingDirectory.empty() && cancelAfter<0,"Calculation options require a job JSON");
         App app{input};
+        app.liveBanner=wide(sceneLabel);
         if(colorMode) {require(app.history.hasProvenance,"Enable export_provenance in the job first");app.camera.colorMode=colorMode;if(!frameExplicit)frame=app.history.steps.size();}
         if(calculated && !frameExplicit)frame=app.history.steps.size();
         if(runOnly){app.history.verify();std::cout << "Calculation and complete history verification passed\n";return 0;}

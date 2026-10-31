@@ -173,3 +173,11 @@ the producer continues. Both DLL and explicit `--engine` modes are supported.
 See [the live inspection contract](../../docs/LIVE-INSPECTION.md) for resource
 bounds, measurements and failure behavior. [Live overlays](../../docs/LIVE-OVERLAYS.md) include target/fixture grids, exposure
 colors and operation-labeled contacts; connected defect regions remain final-only. Windows still does not draw non-flat cutters.
+
+### Scene results
+
+Open a completed `menkh-scene-result-v1` catalog with
+`menkh-viewer.exe out/two-parts/scene.json --workpiece right`. Each workpiece is
+inspected in its own local coordinates; the status identifies its scene translation.
+This is a workpiece selector, not a combined assembly viewport.
+See [scenes](../../docs/SCENES.md) for commands and restrictions.

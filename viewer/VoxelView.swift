@@ -400,7 +400,7 @@ extension Delegate {
         }
         let controller=VoxelController(renderer)
         let window=NSWindow(contentRect:NSRect(x:0,y:0,width:1280,height:900),styleMask:[.titled,.closable,.miniaturizable,.resizable],backing:.buffered,defer:false)
-        window.title="menkh — \(renderer.history.grid[0])³ voxel removal";window.contentViewController=controller;window.center();window.makeKeyAndOrderFront(nil);self.window=window;NSApp.activate(ignoringOtherApps:true)
+        window.title=sceneContext.isEmpty ? "menkh — \(renderer.history.grid[0])³ voxel removal":sceneContext;window.contentViewController=controller;window.center();window.makeKeyAndOrderFront(nil);self.window=window;NSApp.activate(ignoringOtherApps:true)
     }
 }
 

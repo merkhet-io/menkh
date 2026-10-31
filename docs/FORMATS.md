@@ -134,3 +134,10 @@ Jobs may opt into `live_inspection`. Its version-1 latest pointer, leased slot
 protocol, additional history-manifest fields, control files and resource limits
 are specified in [LIVE-INSPECTION.md](LIVE-INSPECTION.md). Ordinary completed
 history files retain their existing format.
+
+## Static scene and result catalogs
+
+`menkh-scene-v1` adds named geometry/tool resources and translated workpiece, target
+and fixture objects. `menkh-scene-result-v1` maps stable workpiece IDs to separate
+ordinary histories and states. See the [scene schema and coordinate contract](SCENES.md).
+Existing job/history/state formats are unchanged.
