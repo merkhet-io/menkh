@@ -88,11 +88,26 @@ fn quadratic(interval: Interval, a: f64, b: f64, c: f64) !?Interval {
 /// Ray origin + t*direction; direction must be a unit vector. Closed cutter
 /// intervals include tangency; zero-length cuts do not affect volume.
 pub fn ray(profile: Profile, pose: Pose, origin: e.V, direction: e.V, limits: Interval) !?Interval {
+    return rayRetained(false, profile, pose, origin, direction, limits, &.{});
+}
+fn trimMaterial(material: []const Interval, interval: Interval) []const Interval {
+    var first: usize = 0;
+    var end = material.len;
+    while (first < end and material[first].hi <= interval.lo) first += 1;
+    while (end > first and material[end - 1].lo >= interval.hi) end -= 1;
+    return material[first..end];
+}
+fn rayRetained(comptime filter: bool, profile: Profile, pose: Pose, origin: e.V, direction: e.V, limits: Interval, retained: []const Interval) !?Interval {
+    var active = retained;
     const q = e.sub(origin, pose.base);
     const z = e.dot(q, pose.axis);
     const vz = e.dot(direction, pose.axis);
     var interval = positive(limits, vz, z + pose.offset) orelse return null;
     interval = positive(interval, -vz, profile.length + pose.offset - z) orelse return null;
+    if (filter) {
+        active = trimMaterial(active, interval);
+        if (active.len == 0) return null;
+    }
     const qr = e.sub(q, e.scale(pose.axis, z));
     const vr = e.sub(direction, e.scale(pose.axis, vz));
     const aa = e.dot(vr, vr);
@@ -102,7 +117,14 @@ pub fn ray(profile: Profile, pose: Pose, origin: e.V, direction: e.V, limits: In
         const r = side.intercept + side.slope * z + pose.offset * side.normal_length;
         const v = side.slope * vz;
         interval = positive(interval, v, r) orelse return null;
-        interval = (try quadratic(interval, aa - v * v, bb - 2 * r * v, cc - r * r)) orelse return null;
+        const qa = aa - v * v;
+        const qb = bb - 2 * r * v;
+        const qc = cc - r * r;
+        interval = (try quadratic(interval, qa, qb, qc)) orelse return null;
+        if (filter) {
+            active = trimMaterial(active, interval);
+            if (active.len == 0) return null;
+        }
     }
     return interval;
 }
@@ -158,14 +180,18 @@ pub const Tree = struct {
             t.nodes.items[index].right = right;
             t.nodes.items[index].count = 0;
         }
-        // Euclidean displacement bound to one anchor pose, converted to the
-        // conic offset envelope. Rejection only: leaves retain original poses.
+        // Compare each offset body to the SAME offset body at the anchor.
+        // Translation + rotation displaces its points by at most margin-offset;
+        // its radius about the base is <= rho + offset*miter. Each normalized
+        // conic/cap constraint is 1-Lipschitz, so adding this displacement to
+        // the original offset encloses it. No extra miter on the offset itself.
+        // Rejection only: leaves retain original poses.
         if (count <= 256) {
             const anchor = t.poses[start];
             const rho = @sqrt(t.profile.radius * t.profile.radius + t.profile.length * t.profile.length);
             var margin: f64 = 0;
             for (t.poses[start .. start + count]) |pose| {
-                margin = @max(margin, pose.offset * t.profile.miter + e.norm(e.sub(pose.base, anchor.base)) + rho * e.norm(e.sub(pose.axis, anchor.axis)));
+                margin = @max(margin, pose.offset + e.norm(e.sub(pose.base, anchor.base)) + (rho + pose.offset * t.profile.miter) * e.norm(e.sub(pose.axis, anchor.axis)));
             }
             t.nodes.items[index].envelope_offset = margin + 1e-8 * (1 + rho + margin);
         }
@@ -247,7 +273,7 @@ fn visit(tree: Tree, profile: Profile, index: u32, x: f64, y: f64, material: *st
         envelope.offset = node.envelope_offset;
         const limits = Interval{ .lo = node.bounds.lo[2], .hi = node.bounds.hi[2] };
         work.envelope_tests += 1;
-        const cut = (try ray(profile, envelope, .{ x, y, 0 }, .{ 0, 0, 1 }, limits)) orelse return;
+        const cut = (try rayRetained(true, profile, envelope, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse return;
         if (!overlaps(material.items, cut)) {
             work.skipped_removed_nodes += 1;
             return;
@@ -262,7 +288,7 @@ fn visit(tree: Tree, profile: Profile, index: u32, x: f64, y: f64, material: *st
         const limits = Interval{ .lo = @max(material.items[0].lo, pose.bounds.lo[2]), .hi = @min(material.items[material.items.len - 1].hi, pose.bounds.hi[2]) };
         if (limits.lo > limits.hi or !overlaps(material.items, limits)) continue;
         work.ray_pose_tests += 1;
-        if (try ray(profile, pose, .{ x, y, 0 }, .{ 0, 0, 1 }, limits)) |cut| {
+        if (try rayRetained(true, profile, pose, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) |cut| {
             work.cutting_intervals += 1;
             subtractIntervals(material, cut);
         }

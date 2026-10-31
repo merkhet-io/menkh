@@ -1,0 +1,8 @@
+{
+  "faces": 337248,
+  "mesh_volume_mm3": 3602.772184931836,
+  "interval_volume_mm3": 3602.7721849318336,
+  "oriented_edge_coverage_checked": true,
+  "export_seconds": 4.155401249998249,
+  "note": "Column-solid surface, no smoothing. Geometric edge coverage allows collinear T-junctions; not a conforming indexed mesh guarantee."
+}

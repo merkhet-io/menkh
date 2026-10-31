@@ -223,3 +223,112 @@ test "analytic conic ray interval matches independent meridional distance at ran
         }
     }
 }
+
+test "retained interval pruning and tighter envelopes match exhaustive randomized unions" {
+    var rng = std.Random.DefaultPrng.init(0x7ab93f21);
+    const random = rng.random();
+    const profile = try d.Profile.init(a, crown);
+    defer profile.deinit();
+    for (0..16) |trial| {
+        var poses: [65]d.Pose = undefined;
+        for (&poses, 0..) |*pose, i| {
+            var axis = e.V{ 2 * random.float(f64) - 1, 2 * random.float(f64) - 1, 2 * random.float(f64) - 1 };
+            // Include horizontal, nearly horizontal and near-identical axes,
+            // exercising near-degenerate axial clipping and rotated envelopes.
+            if (trial % 4 == 0) axis = .{ 1, 0, if (i % 2 == 0) 0 else 1e-10 };
+            if (trial % 4 == 1) axis = .{ 1e-10 * random.float(f64), 0, 1 };
+            axis = e.scale(axis, 1 / e.norm(axis));
+            pose.* = try d.Pose.init(profile, .{ .position = .{ 4 * random.float(f64) - 2 + 0.17, 4 * random.float(f64) - 2 - 0.23, 6 * random.float(f64) - 1 }, .axis = axis }, 0.15 * random.float(f64));
+        }
+        var tree = try d.Tree.init(a, profile, &poses);
+        defer tree.deinit();
+        var fast = try d.finishCylinder(a, profile, tree, .{ 0.17, -0.23, 0.31 }, 2.1, 4.7, 0.3, false);
+        defer fast.deinit();
+        var slow = try d.finishCylinder(a, profile, tree, .{ 0.17, -0.23, 0.31 }, 2.1, 4.7, 0.3, true);
+        defer slow.deinit();
+        try std.testing.expectEqualSlices(d.Column, slow.columns.items, fast.columns.items);
+        // Roots retain the same arithmetic; pruning must not change endpoints.
+        try std.testing.expectEqualSlices(d.Interval, slow.intervals.items, fast.intervals.items);
+    }
+}
+
+test "axisymmetric rotary bound covers independent surfaces including spin and interior tilt extrema" {
+    const motion = @import("motion.zig");
+    const planner = @import("raydexel_motion.zig");
+    const profile = try d.Profile.init(a, crown);
+    defer profile.deinit();
+    const lines = [_]motion.RotaryLine{
+        .{ .a = .{ .position = .{ 0.1, -0.3, 1 }, .a_deg = 0, .c_deg = 0 }, .b = .{ .position = .{ 0.1, -0.3, 1 }, .a_deg = 0, .c_deg = 720 } },
+        .{ .a = .{ .position = .{ 0.1, -0.3, 1 }, .a_deg = 14, .c_deg = -5 }, .b = .{ .position = .{ 0.4, -0.1, 1.1 }, .a_deg = 14, .c_deg = 25 } },
+        .{ .a = .{ .position = .{ 0, 0, 1 }, .a_deg = 80, .c_deg = -5 }, .b = .{ .position = .{ 0.2, 0.1, 1.3 }, .a_deg = 100, .c_deg = 25 } },
+        .{ .a = .{ .position = .{ 0, 0, 1 }, .a_deg = -100, .c_deg = 25 }, .b = .{ .position = .{ 0.2, 0.1, 1.3 }, .a_deg = -80, .c_deg = -5 } },
+        .{ .a = .{ .position = .{ 0, 0, 1 }, .a_deg = 0.001, .c_deg = 0 }, .b = .{ .position = .{ 0, 0, 1 }, .a_deg = 0.001, .c_deg = 720 } },
+    };
+    for (lines, 0..) |line, case| {
+        var poses: std.ArrayList(d.Pose) = .empty;
+        defer poses.deinit(a);
+        const bound = try planner.appendAxisymmetric(a, &poses, profile, crown, line, 0.04);
+        try std.testing.expect(bound.total_mm <= 0.04);
+        if (case == 0) try std.testing.expectEqual(@as(usize, 1), poses.items.len);
+        for (0..121) |it| {
+            const actual = line.at(@as(f64, @floatFromInt(it)) / 120);
+            const axis = actual.axis();
+            const raw_u = e.cross(axis, if (@abs(axis[0]) < 0.8) .{ 1, 0, 0 } else .{ 0, 1, 0 });
+            const u = e.scale(raw_u, 1 / e.norm(raw_u));
+            const v = e.cross(axis, u);
+            for ([_]f64{ 0, 0.4, 0.8, 1.2, 1.6, 2 }) |z| {
+                const radius = @min(@min(1 + 1.25 * z, 2), 3.5 - 1.25 * z);
+                for (0..12) |azimuth| {
+                    const angle = @as(f64, @floatFromInt(azimuth)) * 2 * std.math.pi / 12;
+                    const radial = e.add(e.scale(u, radius * @cos(angle)), e.scale(v, radius * @sin(angle)));
+                    const point = e.add(actual.position, e.add(e.scale(axis, z - 1), radial));
+                    var covered = false;
+                    for (poses.items) |pose| {
+                        const q = e.sub(point, pose.base);
+                        const local_z = e.dot(q, pose.axis);
+                        const local_r = e.norm(e.sub(q, e.scale(pose.axis, local_z)));
+                        // Independent meridional distance, not ray/conic clipping.
+                        if (crown.distance(local_r, local_z) <= pose.offset + 1e-12) {
+                            covered = true;
+                            break;
+                        }
+                    }
+                    try std.testing.expect(covered);
+                }
+            }
+        }
+    }
+}
+
+test "axisymmetric midpoint envelope endpoints respect independent sampled motion distance" {
+    const motion = @import("motion.zig");
+    const profile = try d.Profile.init(a, crown);
+    defer profile.deinit();
+    const line = motion.RotaryLine{ .a = .{ .position = .{ -0.3, 0.1, 1.2 }, .a_deg = 14, .c_deg = -10 }, .b = .{ .position = .{ 0.4, -0.1, 1.4 }, .a_deg = 17, .c_deg = 20 } };
+    var poses: std.ArrayList(d.Pose) = .empty;
+    defer poses.deinit(a);
+    const bound = try @import("raydexel_motion.zig").appendAxisymmetric(a, &poses, profile, crown, line, 0.04);
+    // Distance to a finite true-time sample set overestimates distance to the
+    // continuous union. Allow a separate conservative sampling half-gap.
+    const steps = 512;
+    const rho = @sqrt(crown.radius * crown.radius + crown.length * crown.length / 4);
+    const angular = (3.0 + 30.0) * (std.math.pi / 180.0);
+    const sampling = (e.norm(e.sub(line.b.position, line.a.position)) + rho * angular) / (2 * steps);
+    for (poses.items) |pose| for (0..8) |ix| for (0..8) |iy| {
+        const origin = e.V{ -2 + 0.57 * @as(f64, @floatFromInt(ix)), -2 + 0.57 * @as(f64, @floatFromInt(iy)), 0 };
+        const hit = try d.ray(profile, pose, origin, .{ 0, 0, 1 }, .{ .lo = -5, .hi = 5 }) orelse continue;
+        for ([_]f64{ hit.lo, hit.hi }) |z| {
+            const point = e.V{ origin[0], origin[1], z };
+            var nearest = std.math.inf(f64);
+            for (0..steps + 1) |i| {
+                const actual = line.at(@as(f64, @floatFromInt(i)) / steps);
+                const axis = actual.axis();
+                const q = e.sub(point, e.sub(actual.position, e.scale(axis, crown.length / 2)));
+                const axial = e.dot(q, axis);
+                const radial = e.norm(e.sub(q, e.scale(axis, axial)));
+                nearest = @min(nearest, crown.distance(radial, axial));
+            }
+            try std.testing.expect(nearest <= bound.total_mm + sampling + 1e-10);
+        }
+    };
+}

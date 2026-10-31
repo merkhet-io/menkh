@@ -1,0 +1,72 @@
+[
+  {
+    "spacing_mm": 0.1,
+    "method": "fixed",
+    "workers": 1,
+    "metrics": {
+      "planning_seconds": {
+        "median": 0.013711167,
+        "min": 0.012398541,
+        "max": 0.013960459
+      },
+      "hierarchy_seconds": {
+        "median": 0.052486208,
+        "min": 0.048032209,
+        "max": 0.053315625
+      },
+      "cut_including_stock_init_seconds": {
+        "median": 2.90784175,
+        "min": 2.835782417,
+        "max": 3.239691583
+      },
+      "kernel_total_seconds": {
+        "median": 2.974930709,
+        "min": 2.90231625,
+        "max": 3.304865041
+      },
+      "export_seconds": {
+        "median": 0.001346292,
+        "min": 0.0011515,
+        "max": 0.00173675
+      }
+    },
+    "peak_rss_bytes": 25542656,
+    "intervals": 63472,
+    "interval_sha256": "530f53ab3b89c106607a80870331b8a3a3843e1ffb3b853ebeea2df18c23558f"
+  },
+  {
+    "spacing_mm": 0.1,
+    "method": "axis",
+    "workers": 1,
+    "metrics": {
+      "planning_seconds": {
+        "median": 0.002607667,
+        "min": 0.00232125,
+        "max": 0.00378375
+      },
+      "hierarchy_seconds": {
+        "median": 0.018912833,
+        "min": 0.016252208,
+        "max": 0.025271791
+      },
+      "cut_including_stock_init_seconds": {
+        "median": 1.809650083,
+        "min": 1.755661667,
+        "max": 1.964005875
+      },
+      "kernel_total_seconds": {
+        "median": 1.830519375,
+        "min": 1.777240333,
+        "max": 1.9906075
+      },
+      "export_seconds": {
+        "median": 0.001184,
+        "min": 0.001109917,
+        "max": 0.001485834
+      }
+    },
+    "peak_rss_bytes": 13123584,
+    "intervals": 63664,
+    "interval_sha256": "445f1c4d5f97d32fc1f30cdd9e565d08261290cb5cb4ade6ce8415ef54c8509a"
+  }
+]

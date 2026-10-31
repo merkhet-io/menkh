@@ -9,8 +9,9 @@ implementation. The existing demos and job backend remain available.
 The [frozen protocol](ANALYTIC-DEXEL-PROTOCOL.md) uses the same 12 × 40 mm screw,
 1,024 continuous XYZAC segments and 0.01 mm motion budget. Actual repeated
 [measurements, regressions and inspected images](evidence/analytic-dexels/README.md)
-are retained. On the measured M5 Max, the fixed method takes 9.10 s median cutting
-at 25 µm with eight workers. This is a no-history kernel measurement, not an
+are retained. The initial fixed-method baseline measured 9.10 s median cutting
+at 25 µm with eight workers on the M5 Max. The opt-in axisymmetric continuation
+and its matched comparisons are documented below. This is a no-history kernel measurement, not an
 end-to-end replacement for the production demo or a comparison with Jens's
 unspecified 0.3-second workload.
 
@@ -23,7 +24,9 @@ Zig 0.15.2; no new engine dependency or global installation:
 zig-out/bin/menkh raydexel-bench --spacing 0.025 --workers 8 --out out/rays-25um
 # Smaller complete-path smoke configuration:
 zig-out/bin/menkh raydexel-bench --spacing 0.25 --workers 4 --out out/rays-smoke
-# Explicit alternate algorithm, same requested motion budget:
+# Symmetry-aware midpoint planning, same requested motion budget:
+zig-out/bin/menkh raydexel-bench --spacing 0.025 --workers 8 --method axis --out out/rays-axis
+# Explicit adaptive algorithm, same requested motion budget:
 zig-out/bin/menkh raydexel-bench --spacing 0.025 --workers 8 --method adaptive --out out/rays-adaptive
 ```
 
@@ -183,3 +186,53 @@ repetitions at 250/100/50/25 µm, validates deterministic serialized endpoints,
 and records source/binary/job identifiers. Raw unfavorable intermediate results
 and the slower adaptive results are retained. Jens's reported time cannot be
 turned into a speed ratio without his resolution, workload and measurement scope.
+
+## Axisymmetric midpoint planner (opt-in)
+
+`--method axis` uses the same continuous interval material, conic intersection
+kernel and declared motion tolerance. It changes motion preparation. The old
+`fixed` default remains reproducible; production voxel jobs are unaffected.
+
+For a solid of revolution, only the unit axis matters, not spin about that axis.
+For linear XYZAC motion, the axis on the unit sphere has speed
+`sqrt(A'² + sin²(A) * C'²)`, with angles in radians. The planner bounds the absolute
+sine over the entire A interval, including interior extrema and multiple turns.
+It does not use just the endpoint orientation difference, which would miss full
+revolutions. Let `omega` be this axis path-length bound, `D` the center translation
+length and `rho = sqrt(radius² + (length/2)²)`. Every tool point is within
+`(D + rho*omega)/(2*N)` of some point in its interval's true midpoint solid.
+Rotational symmetry permits the shortest rotation aligning the axes; the axis
+path length bounds that rotation even when the path loops.
+
+Each midpoint is evaluated at its actual XYZAC parameter, including its actual
+axis. Inflate it by `delta = (D + rho*omega)/(2*N) + numerical_guard`. The union
+covers the continuous motion. Conversely, each inflated tool lies within
+`miter*delta` of a true tool pose (its midpoint is on the actual path). Choose
+`N` to keep this bound within the requested motion tolerance. This avoids the
+old extra orientation-restoration term for intermediate translation samples.
+The frozen screw needs 39,936 poses rather than 90,112; its bound is 9.81437 µm
+at a 10 µm requested tolerance. These are geometric bounds in ideal arithmetic,
+with the same separately reported practical floating-point guard.
+
+This policy changes which conservative material is removed. **It is not an
+exact-occupancy optimization of `fixed`.** Differences and runtime are reported
+in the [axisymmetric experiment](evidence/axisymmetric-rays/README.md). Neither
+motion bound includes transverse sampling or column-surface reconstruction error.
+The planner and kernel remain outside the Lean model.
+
+Independent tests cover true-tool surface samples, distances from inflated
+interval endpoints to densely sampled actual motion (with a separate sampling
+allowance), pure spin, nearly axial spin, changing tilt, interior sine extrema
+and reversed C direction. Existing fixed-mode occupancy is separately compared
+byte for byte after kernel pruning changes; random small unions also agree
+exactly with exhaustive traversal.
+
+The kernel additionally stops evaluating an intersection when its current
+interval has no overlap with remaining material. Constraints only shrink an
+interval, so later constraints cannot make it relevant again. The active slice
+of sorted material intervals shrinks monotonically during each query. A tighter
+group envelope compares already-offset bodies before adding pose displacement,
+including the offset body's radius in its rotational bound. This changes only
+rejection, not leaf cutter geometry or the fixed method's motion approximation.
+`cutting_intervals` now excludes intersections rejected inside already removed
+material; `ray_pose_tests` still counts queries, not individual quadratic roots.

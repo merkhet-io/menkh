@@ -7,7 +7,7 @@ p.add_argument('--engine', type=Path, default=Path('zig-out/bin/menkh' + ('.exe'
 p.add_argument('--workers', type=int, default=8)
 p.add_argument('--repeats', type=int, default=3)
 p.add_argument('--spacings', nargs='+', type=float, default=[.25, .1, .05, .025])
-p.add_argument('--methods', nargs='+', choices=['fixed','adaptive'], default=['fixed','adaptive'])
+p.add_argument('--methods', nargs='+', choices=['fixed','adaptive','axis'], default=['fixed','adaptive'])
 p.add_argument('--tolerance', type=float, default=.01)
 p.add_argument('--out', type=Path, default=Path('out/raydexel-benchmark'))
 a = p.parse_args()

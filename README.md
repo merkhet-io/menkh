@@ -29,10 +29,15 @@ thread profile or a claim of 16k³ cutting capability. An experimental
 comparison; it is currently slower and is not the default.
 
 An [experimental continuous ray-interval kernel](docs/ANALYTIC-DEXELS.md) evaluates
-the complete screw without history. With eight workers on the measured M5 Max,
-25 µm cutting takes 9.10 s median; a complete 6.25 µm qualification takes 122.52 s.
+the complete screw without history. Initial fixed-method measurements on the
+M5 Max with eight workers gave 9.10 s median at 25 µm and 122.52 s for a complete
+6.25 µm qualification.
 It changes motion-approximation semantics and is not the production viewer/history
-backend. Raw results, accuracy checks and unsuccessful approaches are included.
+backend. An opt-in `--method axis` planner exploits wheel rotational symmetry,
+reducing prepared poses from 90,112 to 39,936 at the same requested motion budget.
+[Comparisons and limits](docs/evidence/axisymmetric-rays/README.md) distinguish
+its changed approximation from byte-identical kernel optimizations. Raw results,
+accuracy checks and unsuccessful approaches are included.
 
 ## Why “Menkh”?
 

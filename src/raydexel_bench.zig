@@ -86,6 +86,7 @@ pub fn run(a: std.mem.Allocator, args: []const [:0]u8) !void {
     var check: ?[]const u8 = null;
     var limit: ?usize = null;
     var adaptive = false;
+    var axisymmetric = false;
     var workers: usize = 1;
     var i: usize = 0;
     while (i < args.len) : (i += 2) {
@@ -93,7 +94,16 @@ pub fn run(a: std.mem.Allocator, args: []const [:0]u8) !void {
         const key = args[i];
         const value = args[i + 1];
         if (std.mem.eql(u8, key, "--spacing")) spacing = try std.fmt.parseFloat(f64, value) else if (std.mem.eql(u8, key, "--tolerance")) tolerance = try std.fmt.parseFloat(f64, value) else if (std.mem.eql(u8, key, "--out")) out = value else if (std.mem.eql(u8, key, "--check-state")) check = value else if (std.mem.eql(u8, key, "--workers")) workers = try std.fmt.parseInt(usize, value, 10) else if (std.mem.eql(u8, key, "--method")) {
-            if (std.mem.eql(u8, value, "adaptive")) adaptive = true else if (std.mem.eql(u8, value, "fixed")) adaptive = false else return error.UnknownRayMethod;
+            if (std.mem.eql(u8, value, "adaptive")) {
+                adaptive = true;
+                axisymmetric = false;
+            } else if (std.mem.eql(u8, value, "fixed")) {
+                adaptive = false;
+                axisymmetric = false;
+            } else if (std.mem.eql(u8, value, "axis")) {
+                adaptive = false;
+                axisymmetric = true;
+            } else return error.UnknownRayMethod;
         } else if (std.mem.eql(u8, key, "--operations")) limit = try std.fmt.parseInt(usize, value, 10) else return error.UnknownOption;
     }
     if (workers < 1 or workers > 64) return error.InvalidWorkerCount;
@@ -126,7 +136,7 @@ pub fn run(a: std.mem.Allocator, args: []const [:0]u8) !void {
         bound = tolerance;
         guard = adaptive_plan.?.guard;
     } else for (job.operations[0..count]) |op| {
-        const added = try @import("raydexel_motion.zig").append(a, &poses, profile, tool, op.rotary.?, tolerance);
+        const added = if (axisymmetric) try @import("raydexel_motion.zig").appendAxisymmetric(a, &poses, profile, tool, op.rotary.?, tolerance) else try @import("raydexel_motion.zig").append(a, &poses, profile, tool, op.rotary.?, tolerance);
         bound = @max(bound, added.total_mm);
         guard = @max(guard, added.numerical_guard_mm);
     }
@@ -136,7 +146,7 @@ pub fn run(a: std.mem.Allocator, args: []const [:0]u8) !void {
     defer tree.deinit();
     poses.clearAndFree(a);
     const hierarchy_ns = timer.lap();
-    std.debug.print("Analytic Z rays ({s}): {d} operations, {d} prepared nodes/poses, {d} mm spacing, bound {d} mm\n", .{ if (adaptive) "adaptive" else "fixed", count, pose_count, spacing, bound });
+    std.debug.print("Analytic Z rays ({s}): {d} operations, {d} prepared nodes/poses, {d} mm spacing, bound {d} mm\n", .{ if (adaptive) "adaptive" else if (axisymmetric) "axis" else "fixed", count, pose_count, spacing, bound });
     var adaptive_work: ?adaptive_module.Work = null;
     const finished = try @import("raydexel_parallel.zig").finish(a, profile, if (adaptive_plan) |*p| p else null, tree, .{ 0, 0, 0 }, 6, 40, spacing, workers);
     if (adaptive) adaptive_work = finished.work;
@@ -153,6 +163,6 @@ pub fn run(a: std.mem.Allocator, args: []const [:0]u8) !void {
     const export_ns = timer.lap();
     const comparison = if (check) |path| try compare(a, result, path) else null;
     const comparison_ns = timer.lap();
-    try jobs.json(a, dir, "report.json", .{ .format = "menkh-analytic-ray-experiment-v1", .zig = @import("builtin").zig_version_string, .mode = @tagName(@import("builtin").mode), .workers = workers, .method = if (adaptive) "adaptive" else "fixed", .adaptive_work = adaptive_work, .operations = count, .poses = pose_count, .spacing_mm = spacing, .requested_motion_tolerance_mm = tolerance, .motion_over_removal_bound_mm = bound, .offset_miter_factor = profile.miter, .floating_point_guard_mm = guard, .columns = result.columns.items.len, .intervals = result.intervals.items.len, .remaining_volume_mm3 = volume, .analytic_initial_volume_mm3 = std.math.pi * 36 * 40, .initial_volume_mm3 = @as(f64, @floatFromInt(result.columns.items.len)) * spacing * spacing * 40, .volume_is_transverse_ray_quadrature = true, .result_capacity_bytes = result.bytes(), .scratch_bytes = result.scratch_bytes, .hierarchy_bytes = tree.bytes() + (if (adaptive_plan) |p| p.bytes() else @as(usize, 0)), .peak_rss_before_export_and_oracle_bytes = kernel_peak, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .work = result.work, .timing = .{ .planning_ns = planning_ns, .hierarchy_ns = hierarchy_ns, .cut_including_stock_init_ns = cut_ns, .statistics_ns = statistics_ns, .kernel_total_ns = kernel_total_ns, .export_ns = export_ns, .comparison_ns = comparison_ns, .total_before_report_ns = total.read() }, .comparison = comparison, .note = "Experimental continuous Z intervals, convex profile only. Midpoint/conic offset semantics differ from production. No history, native viewer, engagement or resume. Kernel time is not end-to-end parity." });
+    try jobs.json(a, dir, "report.json", .{ .format = "menkh-analytic-ray-experiment-v1", .zig = @import("builtin").zig_version_string, .mode = @tagName(@import("builtin").mode), .workers = workers, .method = if (adaptive) "adaptive" else if (axisymmetric) "axis" else "fixed", .adaptive_work = adaptive_work, .operations = count, .poses = pose_count, .spacing_mm = spacing, .requested_motion_tolerance_mm = tolerance, .motion_over_removal_bound_mm = bound, .offset_miter_factor = profile.miter, .floating_point_guard_mm = guard, .columns = result.columns.items.len, .intervals = result.intervals.items.len, .remaining_volume_mm3 = volume, .analytic_initial_volume_mm3 = std.math.pi * 36 * 40, .initial_volume_mm3 = @as(f64, @floatFromInt(result.columns.items.len)) * spacing * spacing * 40, .volume_is_transverse_ray_quadrature = true, .result_capacity_bytes = result.bytes(), .scratch_bytes = result.scratch_bytes, .hierarchy_bytes = tree.bytes() + (if (adaptive_plan) |p| p.bytes() else @as(usize, 0)), .peak_rss_before_export_and_oracle_bytes = kernel_peak, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .work = result.work, .timing = .{ .planning_ns = planning_ns, .hierarchy_ns = hierarchy_ns, .cut_including_stock_init_ns = cut_ns, .statistics_ns = statistics_ns, .kernel_total_ns = kernel_total_ns, .export_ns = export_ns, .comparison_ns = comparison_ns, .total_before_report_ns = total.read() }, .comparison = comparison, .note = "Experimental continuous Z intervals, convex profile only. Midpoint/conic offset semantics differ from production. No history, native viewer, engagement or resume. Kernel time is not end-to-end parity." });
     std.debug.print("Completed: {d:.3} s interval cutting, {d:.3} s kernel total; {d} intervals, {d} ray-pose tests\n", .{ @as(f64, @floatFromInt(cut_ns)) / 1e9, @as(f64, @floatFromInt(kernel_total_ns)) / 1e9, result.intervals.items.len, if (adaptive_work) |w| w.analytic_ray_tests else result.work.ray_pose_tests });
 }
