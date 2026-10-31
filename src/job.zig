@@ -17,6 +17,7 @@ pub const Operation = struct { id: []const u8, tool: ?usize = null, line: ?Line 
 pub const Query = struct { point: e.V };
 pub const Ray = struct { origin: e.V, direction: e.V, max_distance_mm: f64 };
 pub const Job = struct {
+    live_inspection: ?@import("live.zig").Options = null,
     version: u32,
     units: []const u8,
     bounds: e.Bounds,
@@ -79,6 +80,7 @@ pub fn initialize(a: std.mem.Allocator, j: Job, s: Stock, timing: *InputTiming, 
     return g;
 }
 pub fn validate(a: std.mem.Allocator, j: Job) !void {
+    if (j.live_inspection) |options| try options.validate();
     if (j.version != 1) return error.UnsupportedJobVersion;
     if (!std.mem.eql(u8, j.units, "mm")) return error.UnitsMustBeMillimeters;
     try j.bounds.validate();
@@ -261,8 +263,18 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
     var provenance_extract_ns: u64 = 0;
     var provenance_capacity_bytes: usize = 0;
     var provenance_entries: usize = 0;
+    var live: ?@import("live.zig").Publisher = if (j.live_inspection) |options| try @import("live.zig").Publisher.init(a, dir, options, g, initial) else null;
+    defer if (live) |*p| p.deinit();
+    errdefer |err| if (live) |*p| {
+        @import("live.zig").atomicJson(a, p.dir, "status.json", .{ .state = if (err == error.Cancelled) "cancelled" else "failed", .error_name = @errorName(err) }) catch {};
+    };
+    if (live) |*p| try p.publish(dir, g, frames[0..0], occupied, j.motion_tolerance_mm, j.operations.len, true);
     try progress.emit("ready", 0, null);
     for (j.operations, 0..) |op, index| {
+        if (live) |*p| {
+            if (try p.exists("pause")) try p.publish(dir, g, frames[0..index], occupied, j.motion_tolerance_mm, j.operations.len, true);
+            try p.control(index, j.operations.len, hooks);
+        }
         var shape: e.Shape = undefined;
         var toolpos: e.V = .{ 0, 0, 0 };
         var bound: f64 = 0;
@@ -324,8 +336,10 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
         reports[index] = .{ .work = changes.work, .id = op.id, .removed_voxels = changes.removed, .engagement_volume_mm3 = volume, .remaining_voxels = occupied, .affected_region = changes.affected, .motion_over_removal_bound_mm = bound, .sweep_pieces = if (arc_plan) |plan| plan.segments.len else 1, .cut_ns = cut_ns, .collision_ns = collision_ns, .history_write_ns = history_ns, .shank_stock = shank, .holder_stock = holder, .shank_fixture = sf, .holder_fixture = hf, .cutter_fixture = cf, .geometric_feed_time_min = minutes, .average_removal_mm3_min = if (minutes != null and minutes.? > 0) volume / minutes.? else null };
         frames[index] = .{ .file = name, .stage = op.id, .occupied = occupied, .changed_blocks = changes.blocks, .delta_bytes = changes.bytes.items.len, .tool = toolpos, .axis = if (op.line) |l| l.b.axis else if (op.arc) |arc| arc.axis else if (op.rotary) |r| r.b.axis() else .{ 0, 0, 1 }, .shank = if (op.tool) |t| j.tools[t].shank else null, .holder = if (op.tool) |t| j.tools[t].holder else null, .cutter = if (op.tool) |t| j.tools[t].cutter else null };
         if (hooks == null) std.debug.print("{s}: removed {d} voxels, {d:.3} ms\n", .{ op.id, changes.removed, @as(f64, @floatFromInt(cut_ns)) / 1e6 });
+        if (live) |*p| try p.publish(dir, g, frames[0 .. index + 1], occupied, j.motion_tolerance_mm, j.operations.len, index + 1 == j.operations.len or try p.exists("pause"));
         try progress.emit("cutting", index + 1, op.id);
     }
+    if (live) |*p| try p.control(j.operations.len, j.operations.len, hooks);
     try progress.emit("finalizing", j.operations.len, null);
     timer.reset();
     const stats = g.stats();
@@ -421,7 +435,8 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
     const checkpoint_write_ns = timer.lap();
     const export_ns = image_export_ns + checkpoint_encode_ns + checkpoint_write_ns;
     try json(a, dir, "voxel-animation.json", .{ .format = "menkh-voxel-history-v1", .grid = g.n, .block_grid = g.nb, .origin_mm = g.origin, .voxel_mm = g.h, .stock_min = j.bounds.lo, .stock_max = j.bounds.hi, .initial_occupied = initial, .final_occupied = occupied, .initial_pool_slots = initial_slots, .pool_slots = g.pool.items.len, .motion_tolerance_mm = j.motion_tolerance_mm, .frames = frames });
-    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .input_voxel_mm = parsed.value.voxel_mm, .voxel_override_mm = voxel_override, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .provenance_capacity_bytes = provenance_capacity_bytes, .provenance_entries = provenance_entries, .provenance_scope = if (j.export_provenance) @tagName(j.provenance_scope) else null, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .defects_ns = defects_ns, .provenance_ns = provenance_ns, .provenance_extract_ns = provenance_extract_ns, .provenance_finalize_ns = provenance_finalize_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
+    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .input_voxel_mm = parsed.value.voxel_mm, .voxel_override_mm = voxel_override, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .live_publication = if (live) |p| .{ .publications = p.sequence, .skipped = p.skipped, .write_ns = p.write_ns, .base_capacity_bytes = p.blocks.len + p.pool.capacity, .peak_payload_bytes = p.peak_payload_bytes } else null, .provenance_capacity_bytes = provenance_capacity_bytes, .provenance_entries = provenance_entries, .provenance_scope = if (j.export_provenance) @tagName(j.provenance_scope) else null, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .defects_ns = defects_ns, .provenance_ns = provenance_ns, .provenance_extract_ns = provenance_extract_ns, .provenance_finalize_ns = provenance_finalize_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
+    if (live) |*p| try @import("live.zig").atomicJson(a, p.dir, "status.json", .{ .state = "complete", .completed_operations = j.operations.len });
     try progress.emit("complete", j.operations.len, null);
 }
 

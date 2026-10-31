@@ -38,3 +38,22 @@ bad=copy.deepcopy(job);bad['version']=99;invalid=source/'invalid.json';invalid.w
 # Separate calls use their supplied working directory without changing process cwd.
 assert Path.cwd()==Path(__file__).resolve().parents[1]
 print('Shared/static ABI, copied history, whole-job CLI equality, relative paths and cancellation boundaries passed')
+# A live job paused before its first cut must still honor callback cancellation.
+import ctypes, threading
+library=ctypes.CDLL(str(Path('zig-out/bin/menkh.dll' if os.name=='nt' else 'zig-out/lib/libmenkh.dylib').resolve()))
+callback_type=ctypes.CFUNCTYPE(ctypes.c_uint32,ctypes.c_void_p,ctypes.c_uint32,ctypes.c_uint64,ctypes.c_uint64)
+ready=[]
+@callback_type
+def cancel_paused(context,phase,done,total):
+    if phase==6:ready.append(done)
+    return int(len(ready)>=2)
+library.menkh_run_job_v1.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,callback_type,ctypes.c_void_p]
+library.menkh_run_job_v1.restype=ctypes.c_int
+live_file=source/'live.json';live_file.write_text(json.dumps(dict(job,live_inspection=dict(start_paused=True))))
+live_out=root/'live-callback-cancel';result=[]
+thread=threading.Thread(target=lambda:result.append(library.menkh_run_job_v1(str(live_file).encode(),str(live_out).encode(),str(source).encode(),cancel_paused,None)),daemon=True)
+thread.start();thread.join(10)
+assert not thread.is_alive() and result==[8] and ready==[0,0],(result,ready)
+assert json.loads((live_out/'live/status.json').read_text())['state']=='cancelled'
+assert not (live_out/'voxel-animation.json').exists()
+print('Whole-job callback cancellation remains responsive while live calculation is paused')

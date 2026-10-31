@@ -1,0 +1,32 @@
+{
+  "source_commit": "a0dfa51cec0a68a5fa97944800a6cd224d0dbb26",
+  "cli_sha256": "56024514d1da188c909142945c1fdfb943c0a230933b1302763fc2febf9bcfd9",
+  "viewer_sha256": "ad92182c076c6c962d91f724748f50e750e9923bf3c82fbe73dcae8d134d3281",
+  "shader_sha256": "5edb34bcfa0a958c33b9d9eec8940b6e5eb77d25017e382aabc17c224e792c50",
+  "job_sha256": "94f3b6137463f70849952d7a76cf56443fba99d511b7b7ab09043b03a0b2c21a",
+  "final_state_sha256": "82b6009af31ed117bc665a0a445d413e2911a69b21eed3c37441d5359ef4949a",
+  "native_run_completed": true,
+  "operations": 2501,
+  "voxel_mm": 0.025,
+  "final_remaining_occupied": 124282033,
+  "retained_replay": {
+    "final_occupied": 217225124,
+    "final_replay_byte_exact": true,
+    "forward_replay_validated": true,
+    "grid": [
+      960,
+      720,
+      320
+    ],
+    "initial_occupied": 221184000,
+    "replay_seconds": 0.04849410057067871,
+    "reverse_descriptors_byte_exact": true,
+    "reverse_initial_pool_byte_exact": true,
+    "shared_buffer_bytes": 2062080
+  },
+  "early_cancel_status": {
+    "state": "cancelled",
+    "error_name": "Cancelled"
+  },
+  "note": "Final implementation validation. This additional GUI run is not part of the repeated overhead benchmark; its in-progress image was inspected too."
+}

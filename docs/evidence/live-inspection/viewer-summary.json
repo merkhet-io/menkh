@@ -1,0 +1,43 @@
+{
+  "engine_total_seconds": 42.372822125,
+  "cut_seconds": 39.671246414,
+  "engine_peak_rss_bytes": 96960512,
+  "cut_scratch_capacity_bytes": 709382,
+  "history_bytes": 77544744,
+  "live_publication": {
+    "publications": 275,
+    "skipped": 0,
+    "write_ns": 1695216208,
+    "base_capacity_bytes": 13753408,
+    "peak_payload_bytes": 14521364
+  },
+  "remaining_occupied": 124282033,
+  "stats": {
+    "occupied": 124282033,
+    "empty_blocks": 179282,
+    "full_blocks": 233223,
+    "mixed_blocks": 19495,
+    "descriptor_bytes": 1728000,
+    "pool_bytes": 12158720,
+    "pool_used_bytes": 12154304
+  },
+  "viewer_windows": 68,
+  "viewer_peak_rss_bytes": 150044672,
+  "final_state_sha256": "82b6009af31ed117bc665a0a445d413e2911a69b21eed3c37441d5359ef4949a",
+  "note": "One native live-viewer run; includes a requested pause, rendering and replay verification. Publication timer in this first capture excludes base rebasing (repeated benchmark includes it).",
+  "load_upload_ms": {
+    "median": 2.4775266647338867,
+    "min": 1.3020038604736328,
+    "max": 10.361909866333008
+  },
+  "seek_ms": {
+    "median": 1.2199878692626953,
+    "min": 0,
+    "max": 13.800978660583496
+  },
+  "gpu_material_bytes": {
+    "median": 8392096.0,
+    "min": 1728064,
+    "max": 13814336
+  }
+}

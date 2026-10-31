@@ -1,0 +1,32 @@
+{
+  "operations": 1200,
+  "validated_windows": [
+    {
+      "first": 0,
+      "last": 0,
+      "sequence": 2
+    },
+    {
+      "first": 0,
+      "last": 1,
+      "sequence": 3
+    },
+    {
+      "first": 0,
+      "last": 2,
+      "sequence": 4
+    }
+  ],
+  "rotating_windows_checked": 80,
+  "rebased_windows_checked": 79,
+  "final_state_identical": true,
+  "lease_backpressure": {
+    "publications": 4,
+    "skipped": 1198,
+    "write_ns": 53298538,
+    "base_capacity_bytes": 6804,
+    "peak_payload_bytes": 3949
+  },
+  "peak_rss_bytes": 27082752,
+  "pause_cancel_failure": true
+}

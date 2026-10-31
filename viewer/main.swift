@@ -127,7 +127,7 @@ class Delegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
             if CommandLine.arguments.dropFirst().first == "--help" {
-                print("menkh-viewer [JOB_OR_HISTORY.json | MESH.obj] [--engine PATH] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--snapshot FILE.png]\nJobs run in the background and open at the final state. Relative resources default to the job directory.")
+                print("menkh-viewer [JOB_OR_HISTORY.json | MESH.obj] [--engine PATH] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--snapshot FILE.png]\nJobs run in the background and open at the final state. --live enables bounded completed-operation inspection on macOS. Relative resources default to the job directory.")
                 NSApp.terminate(nil);return
             }
             var file: URL

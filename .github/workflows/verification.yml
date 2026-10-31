@@ -46,6 +46,8 @@ jobs:
           ./zig build sdk-test --summary all
           ./zig build sdk-test -Doptimize=ReleaseFast --summary all
           python3 scripts/test-sdk.py
+      - name: Consistent live publication, leases and cancellation
+        run: python3 scripts/test-live-inspection.py
       - name: Job CLI voxel overrides
         run: python3 scripts/test-job-options.py
       - name: Independent final-surface provenance oracle
@@ -87,6 +89,11 @@ jobs:
       - name: ReleaseFast tests
         shell: pwsh
         run: ./zig.ps1 build test -Doptimize=ReleaseFast --summary all
+      - name: Live publication and reader leases
+        shell: pwsh
+        run: |
+          python scripts/test-live-inspection.py
+          if ($LASTEXITCODE -ne 0) { throw 'Live publication tests failed' }
       - name: C embedding DLL and independent host
         shell: pwsh
         run: |
@@ -179,6 +186,7 @@ jobs:
         with:
           name: windows-d3d12-viewer
           path: |
+            out/live-test/
             out/windows-viewer/menkh.exe
             out/windows-viewer/menkh-viewer.exe
             out/windows-viewer/Voxel.hlsl

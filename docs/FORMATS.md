@@ -126,3 +126,10 @@ Optional exposure metadata: `export_provenance: true` plus
 `provenance_scope: "final_surface"` (default) or `"all_frames"`. The latter records
 all historical surface exposures for playback, with a 1 GiB index limit and
 explicit resource failure. See [surface attribution](SURFACE-PROVENANCE.md).
+
+## Live completed-operation windows
+
+Jobs may opt into `live_inspection`. Its version-1 latest pointer, leased slot
+protocol, additional history-manifest fields, control files and resource limits
+are specified in [LIVE-INSPECTION.md](LIVE-INSPECTION.md). Ordinary completed
+history files retain their existing format.
