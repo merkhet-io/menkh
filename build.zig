@@ -5,6 +5,12 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
     const exe = b.addExecutable(.{ .name = "menkh", .root_module = b.createModule(.{ .root_source_file = b.path("src/main.zig"), .target = target, .optimize = optimize }) });
     b.installArtifact(exe);
+    const library = b.addLibrary(.{ .name = "menkh", .linkage = .dynamic, .root_module = b.createModule(.{ .root_source_file = b.path("src/c_api.zig"), .target = target, .optimize = optimize, .link_libc = true }) });
+    b.step("sdk", "Build the synchronous C ABI shared library and header").dependOn(&b.addInstallArtifact(library, .{}).step);
+    library.installHeader(b.path("include/menkh.h"), "menkh.h");
+    const sdk_tests = b.addTest(.{ .root_module = b.createModule(.{ .root_source_file = b.path("src/c_api.zig"), .target = target, .optimize = optimize, .link_libc = true }) });
+    b.step("sdk-test", "Test C boundary allocation and failure contracts").dependOn(&b.addRunArtifact(sdk_tests).step);
+
     const viewer = b.addSystemCommand(&.{ "sh", "scripts/build-viewer.sh" });
     b.step("viewer", "Build standalone native macOS viewer (requires Apple Swift)").dependOn(&viewer.step);
     const tests = b.addTest(.{ .root_module = b.createModule(.{ .root_source_file = b.path("src/tests.zig"), .target = target, .optimize = optimize }) });
