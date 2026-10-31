@@ -124,12 +124,22 @@ voxel-based; this does not add a mesh renderer or a spherical demo-tool display.
 
 ### Exposure colors during playback
 
+The CI demo ZIP includes the color index. `open-demo.bat` starts with operation
+colors enabled at frame zero (uncut stock stays neutral); `open-colors.bat` opens
+the colored final result directly. Click the 3D view and press **C** to cycle
+material, operation and tool colors. A one-tool demo has only one tool color.
+Older ZIPs omitted these data files; updating only the executable cannot restore
+missing attribution. Download and extract the complete new package.
+
 Generate a job with `"export_provenance": true` and
 `"provenance_scope": "all_frames"`, then open its history with
 `--color-operation` or `--color-tool`. Press **C** to cycle material, operation
 and tool colors while staying at the current frame. Colors remain active during
 playback and reverse scrubbing. The default `final_surface` scope retains the
 older final-frame-only behavior. Initial/prehistory faces and section interiors remain neutral.
+Keep both `surface-provenance.json` and `surface-provenance.bin` beside
+`voxel-animation.json`. If no color index is loaded, pressing C explains why.
+Live windows currently omit the index; inspect the completed result for colors.
 
 The metadata reader validates grid/origin/spacing, operation IDs, sorted 64-bit
 cell keys and tool mappings. Rendering looks up the removed neighbor of the hit

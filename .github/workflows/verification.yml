@@ -108,7 +108,9 @@ jobs:
       - name: Execute pocket demo and inspect its surface
         shell: pwsh
         run: |
-          ./zig-out/bin/menkh.exe job examples/pocket-25um.json --out out/windows-pocket
+          python -c "import json,pathlib; j=json.loads(pathlib.Path('examples/pocket-25um.json').read_text()); j.update(export_provenance=True,provenance_scope='all_frames'); pathlib.Path('out/windows-pocket-job.json').write_text(json.dumps(j))"
+          if ($LASTEXITCODE -ne 0) { throw 'Color demo job generation failed' }
+          ./zig-out/bin/menkh.exe job out/windows-pocket-job.json --out out/windows-pocket
           if ($LASTEXITCODE -ne 0) { throw 'Simulation failed' }
           ./zig-out/bin/menkh.exe inspect-state out/windows-pocket/final.menkh | Out-File -Encoding utf8 out/windows-surface.json
           if ($LASTEXITCODE -ne 0) { throw 'Inspection failed' }
@@ -184,7 +186,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "D3D12 window smoke test failed: exit $LASTEXITCODE" }
       - name: Package ready-to-run viewer and pocket history
         shell: pwsh
-        run: python scripts/package-windows-viewer.py --binary-dir out/windows-viewer --history out/windows-pocket/voxel-animation.json --out out/menkh-windows-viewer-demo.zip --engine zig-out/bin/menkh.exe --job examples/pocket-25um.json
+        run: |
+          python scripts/package-windows-viewer.py --binary-dir out/windows-viewer --history out/windows-pocket/voxel-animation.json --out out/menkh-windows-viewer-demo.zip --engine zig-out/bin/menkh.exe --job out/windows-pocket-job.json
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer package failed' }
+          python scripts/test-windows-package.py --zip out/menkh-windows-viewer-demo.zip --out out/windows-package-test --render
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged viewer colors failed' }
       - name: Upload Windows viewer and rendered evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -197,6 +203,7 @@ jobs:
             out/windows-viewer/menkh-viewer.exe
             out/windows-viewer/Voxel.hlsl
             out/windows-viewer-smoke/
+            out/windows-package-test/images/
             out/windows-job-render-images/
             out/windows-provenance.ppm
             out/windows-profile.ppm

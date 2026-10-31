@@ -33,6 +33,12 @@ def main():
         files.append((args.job, 'demo/job.json'))
     files.append((args.history, 'demo/voxel-animation.json'))
     names = {'initial.blocks', 'initial.pool'}
+    provenance_names = {'surface-provenance.json', 'surface-provenance.bin'}
+    present = {name for name in provenance_names if (args.history.parent / name).is_file()}
+    if present and present != provenance_names:
+        parser.error('Incomplete color data: both surface-provenance.json and .bin are required')
+    colors = bool(present)
+    names.update(present)
     names.update(frame['file'] for frame in history['frames'])
     for name in sorted(names):
         if not isinstance(name, str) or '/' in name or '\\' in name or ':' in name or name in ('.', '..'):
@@ -45,9 +51,13 @@ def main():
     with ZipFile(args.out, 'w', ZIP_DEFLATED) as archive:
         for source, destination in files:
             archive.write(source, destination)
-        archive.writestr('open-demo.bat', '@echo off\r\n"%~dp0menkh-viewer.exe" "%~dp0demo\\voxel-animation.json"\r\nif errorlevel 1 pause\r\n')
+        color_args = ' --color-operation --frame 0' if colors else ''
+        archive.writestr('open-demo.bat', '@echo off\r\n"%~dp0menkh-viewer.exe" "%~dp0demo\\voxel-animation.json"' + color_args + '\r\nif errorlevel 1 pause\r\n')
+        if colors:
+            archive.writestr('open-colors.bat', '@echo off\r\n"%~dp0menkh-viewer.exe" "%~dp0demo\\voxel-animation.json" --color-operation\r\nif errorlevel 1 pause\r\n')
         if args.job:
-            archive.writestr('calculate-demo.bat', '@echo off\r\n"%~dp0menkh-viewer.exe" "%~dp0demo\\job.json"\r\nif errorlevel 1 pause\r\n')
+            job_colors = ' --color-operation' if job.get('export_provenance') else ''
+            archive.writestr('calculate-demo.bat', '@echo off\r\n"%~dp0menkh-viewer.exe" "%~dp0demo\\job.json"' + job_colors + '\r\nif errorlevel 1 pause\r\n')
         if args.engine:
             archive.writestr('CALCULATION.txt', '''The engine is bundled as menkh.exe. No Zig/compiler installation is needed.
 Double-click menkh-viewer.exe and select a job JSON to calculate and inspect it.
@@ -58,7 +68,8 @@ Relative STL/state paths are resolved from the job directory; --working-dir over
 When menkh.dll is included beside the viewer, calculation runs in process on a worker
 thread. Otherwise the viewer runs the bundled CLI as a supervised background process.
 Use --library PATH or --engine PATH to select explicitly. DLL cancellation waits for
-an operation boundary. Only completed results are loaded; live inspection is not implemented.
+an operation boundary. Add --live to inspect consistent material during calculation.
+Live windows do not yet carry exposure colors; colors are available in completed history.
 ''')
         archive.writestr('README.txt', '''Menkh Windows D3D12 viewer
 Extract the entire ZIP, then double-click open-demo.bat.
@@ -67,6 +78,10 @@ Requires Windows x64 and a D3D12 graphics adapter. No Zig or Visual Studio neede
 Left drag: orbit. Right drag: pan. Wheel: zoom. R: reset.
 Space: play/pause. Slider: scrub. Left/Right: step. Home/End: first/last.
 B: background. T: tool visibility. A: antialiasing. [ / ]: Z section.
+C: cycle material / exposing operation / exposing tool colors when data is included.
+open-colors.bat (when included) opens the colored final result directly.
+Initial stock faces stay neutral. Colors mark cut faces, not all material.
+One tool gives one tool color; operation colors distinguish individual cuts.
 Playback is recorded geometry, not physical machining time.
 If CALCULATION.txt is included, this package also runs jobs from the viewer.
 

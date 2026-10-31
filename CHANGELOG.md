@@ -11,6 +11,10 @@ mathematical models, not the complete executable.
 
 ## In review
 
+- **Windows demo colors:** include exposure metadata/buffers in the ZIP, enable
+  playback-wide attribution for the bundled pocket, and add `open-colors.bat`.
+  The default demo starts in operation-color mode; C explains missing data.
+  CI renders operation/tool colors from the extracted package. ([#37](https://github.com/merkhet-io/menkh/pull/37))
 - **Windows live inspection:** `--live` follows leased completed-operation
   windows in DLL and subprocess mode, with pause/resume, held-history seeking,
   cooperative cancellation and handoff to full-history playback. Native Win32
