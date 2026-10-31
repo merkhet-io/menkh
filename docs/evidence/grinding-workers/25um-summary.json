@@ -1,0 +1,14 @@
+{
+  "voxel_mm": 0.025,
+  "total_seconds": 93.300078375,
+  "cut_seconds": 91.501056503,
+  "history_write_seconds": 0.367323427,
+  "peak_rss_bytes": 497238016,
+  "workers": 8,
+  "scratch_bytes": 543701,
+  "remaining_occupied": 230838212,
+  "history_bytes": 70641640,
+  "final_sha256": "6d769f5336f7f4c93804b53154381505d48dcedde4b5962b665820d680a39a01",
+  "all_1024_deltas_byte_exact": true,
+  "qualification": "Single completed run, no concurrent tests/builds/rendering. Older 25um baseline was not a matched repeat."
+}

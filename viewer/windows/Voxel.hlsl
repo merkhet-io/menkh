@@ -3,6 +3,7 @@ cbuffer Uniforms : register(b0) {
     float4 eye, forward, right, up, low, high, settings;
     uint4 dimensions, blockDimensions, flags;
     float4 shank, shankAxis, holder, holderAxis, cutter, cutterAxis;
+    float4 wheelProfile[256];
 };
 StructuredBuffer<uint> blocks : register(t0);
 StructuredBuffer<uint> pool : register(t1);
@@ -70,6 +71,50 @@ float3 category(uint id) {
     uint h=id*2654435761u;h^=h>>16;
     return .25+.7*float3(h&255,(h>>8)&255,(h>>16)&255)/255;
 }
+// Display-only intersection with the exact recorded piecewise-conical profile.
+// Only the two external caps are surfaces; internal segment caps are omitted.
+void profileSideCandidate(inout Hit hit,float t,float3 q,float3 ray,float3 axis,float z0,float z1,float slope,float radius0) {
+    if(!isfinite(t)||t<0 || t>=hit.t)return;
+    float3 p=q+t*ray;float z=dot(p,axis);
+    if(z<z0 || z>z1)return;
+    float radius=radius0+slope*(z-z0);
+    if(radius<0)return;
+    float3 normal=p-axis*z-axis*(slope*radius);
+    if(dot(normal,normal)<1e-20f)return;
+    hit.found=true;hit.t=t;hit.normal=normalize(normal);
+}
+Hit profileHit(float3 ray,float4 part,float4 axial,uint count) {
+    Hit hit;hit.found=false;hit.t=1e30;hit.normal=float3(0,0,1);hit.cell=int3(0);
+    if(count<2 || part.w<=0 || axial.w<=0)return hit;
+    float3 q=eye.xyz-part.xyz,axis=axial.xyz;
+    float z=dot(q,axis),vz=dot(ray,axis);
+    float3 qr=q-axis*z,vr=ray-axis*vz;
+    for(uint j=0;j+1<count;j++) {
+        float2 p=wheelProfile[j].xy,next=wheelProfile[j+1].xy;
+        float slope=(next.y-p.y)/(next.x-p.x);
+        float radius=p.y+slope*(z-p.x),rv=slope*vz;
+        float A=dot(vr,vr)-rv*rv,B=dot(qr,vr)-radius*rv,C=dot(qr,qr)-radius*radius;
+        if(abs(A)<1e-7f*max(1.0f,dot(vr,vr)+rv*rv)) {
+            if(abs(B)>1e-12f)profileSideCandidate(hit,-C/(2*B),q,ray,axis,p.x,next.x,slope,p.y);
+        } else {
+            float disc=B*B-A*C;
+            if(disc>=0) {
+                float root=-B-(B<0?-sqrt(disc):sqrt(disc));
+                if(root==0)profileSideCandidate(hit,-B/A,q,ray,axis,p.x,next.x,slope,p.y);
+                else {
+                    profileSideCandidate(hit,root/A,q,ray,axis,p.x,next.x,slope,p.y);
+                    profileSideCandidate(hit,C/root,q,ray,axis,p.x,next.x,slope,p.y);
+                }
+            }
+        }
+    }
+    if(abs(vz)>1e-12f)for(uint cap=0;cap<2;cap++) {
+        float2 p=wheelProfile[cap==0?0:count-1].xy;float t=(p.x-z)/vz;
+        float3 radial=qr+t*vr;
+        if(t>=0 && t<hit.t && dot(radial,radial)<=p.y*p.y) {hit.found=true;hit.t=t;hit.normal=cap==0?-axis:axis;}
+    }
+    return hit;
+}
 float3 shade(float2 pixel) {
     float2 uv=pixel/settings.yz*2-1;uv.y=-uv.y;uv.x*=settings.y/settings.z;
     float3 ray=normalize(forward.xyz+settings.w*(uv.x*right.xyz+uv.y*up.xyz));Hit hit=trace(ray,0);
@@ -78,12 +123,21 @@ float3 shade(float2 pixel) {
     if((blockDimensions.w&9)!=0){Hit th=trace(ray,1);if(th.found&&(!hit.found||th.t<hit.t-.01)){hit=th;missing=(blockDimensions.w&1)!=0&&!filled(th.cell);target=true;}}
     if((blockDimensions.w&2)!=0){Hit fh=trace(ray,2);if(fh.found&&(!hit.found||fh.t<hit.t)){hit=fh;fixture=true;}}
     float3 bg=flags.x==0?float3(.83,.47,.25):float3(.055,.07,.095);
-    Hit part=cylinderHit(ray,cutter,cutterAxis),s=cylinderHit(ray,shank,shankAxis),h=cylinderHit(ray,holder,holderAxis);
+    Hit part=eye.w>0?profileHit(ray,cutter,cutterAxis,uint(eye.w)):cylinderHit(ray,cutter,cutterAxis),s=cylinderHit(ray,shank,shankAxis),h=cylinderHit(ray,holder,holderAxis);
     if(s.found&&s.t<part.t)part=s;if(h.found&&h.t<part.t)part=h;
     float3 key=normalize(float3(-.4,-.55,.8));
     if(part.found&&(!hit.found||part.t<hit.t))return float3(.65,.68,.72)*(.45+.55*max(0,dot(part.normal,key)));
     if(!hit.found)return bg;
     float3 normal=hit.normal;
+    // Lighting only. Ray hits, silhouettes, picking and exposure IDs use the
+    // original voxel face. Optional because 125 occupancy reads cost GPU time.
+    if((flags.y&2)!=0 && !target && !fixture) {
+        float3 gradient=float3(0,0,0);
+        [loop] for(int z=-2;z<=2;z++) [loop] for(int y=-2;y<=2;y++) [loop] for(int x=-2;x<=2;x++) {
+            int3 d=int3(x,y,z);if(filled(hit.cell+d))gradient-=float3(d);
+        }
+        if(dot(gradient,gradient)>.01)normal=normalize(gradient);
+    }
     float light=.46+.32*max(0,dot(normal,key))+.22*max(0,dot(normal,-forward.xyz));
     float spec=pow(max(0,dot(normal,normalize(key-ray))),48)*.10;
     float3 material=float3(.32,.50,.82);
@@ -91,9 +145,9 @@ float3 shade(float2 pixel) {
     else if(target)material=float3(.3,.75,.75);
     if(flags.z!=0 && !fixture && !target) {
         float3 facePosition=eye.xyz+ray*hit.t;
-        uint axis=abs(normal.x)>.5?0:(abs(normal.y)>.5?1:2);
+        uint axis=abs(hit.normal.x)>.5?0:(abs(hit.normal.y)>.5?1:2);
         // Clip-plane interiors have no exposure attribution.
-        uint id=0;if(abs(facePosition[axis]-round(facePosition[axis]))<.01)id=exposure(hit.cell+int3(round(normal)));
+        uint id=0;if(abs(facePosition[axis]-round(facePosition[axis]))<.01)id=exposure(hit.cell+int3(round(hit.normal)));
         material=category(id);
     }
     if(fixture)material=float3(.25,.7,.4);
@@ -102,6 +156,6 @@ float3 shade(float2 pixel) {
 [numthreads(8,8,1)] void main(uint3 pixel:SV_DispatchThreadID) {
     if(pixel.x>=uint(settings.y)||pixel.y>=uint(settings.z))return;
     float3 color=shade(float2(pixel.xy)+.5);
-    if(flags.y!=0)color=(shade(float2(pixel.xy)+float2(.25,.25))+shade(float2(pixel.xy)+float2(.75,.25))+shade(float2(pixel.xy)+float2(.25,.75))+shade(float2(pixel.xy)+float2(.75,.75)))*.25;
+    if((flags.y&1)!=0)color=(shade(float2(pixel.xy)+float2(.25,.25))+shade(float2(pixel.xy)+float2(.75,.25))+shade(float2(pixel.xy)+float2(.25,.75))+shade(float2(pixel.xy)+float2(.75,.75)))*.25;
     image[pixel.xy]=float4(color,1);
 }

@@ -45,7 +45,7 @@ call(['job', root/'second.json', '--out', root/'second'])
 assert cells(out/'result/final.menkh') == cells(root/'second/final.menkh')
 # Output protection and explicit invalid parameters.
 call(['grinding-demo', '--out', out, '--generate-only'], ok=False)
-for args in [['--voxel', '0'], ['--tolerance', 'nan'], ['--steps-per-turn', '1'], ['--world-grid', '16383']]:
+for args in [['--voxel', '0'], ['--tolerance', 'nan'], ['--steps-per-turn', '1'], ['--world-grid', '16383'], ['--workers', '0'], ['--workers', '65']]:
     call(['grinding-demo', *args, '--out', root/'invalid'], ok=False)
 assert not (root/'invalid').exists()
 print('Native screw demo: 128 continuous cuts, exhaustive occupancy equality, resume, bounds and input failures passed')

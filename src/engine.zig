@@ -537,8 +537,17 @@ pub const Shape = union(enum) {
     }
 };
 pub const FlatColumn = struct { coverage: Coverage, bits: u64 = 0, ready: bool = false };
-pub const Work = struct { candidate_blocks: u64 = 0, partial_blocks: u64 = 0, voxel_tests: u64 = 0, point_pose_evaluations: u64 = 0 };
+pub const Work = struct { candidate_blocks: u64 = 0, partial_blocks: u64 = 0, voxel_tests: u64 = 0, point_pose_evaluations: u64 = 0, workers_used: usize = 1 };
+pub const PartialMask = struct {
+    block: [3]usize,
+    bits: core.Bits = @splat(0),
+    work: Work = .{},
+};
 pub const Changes = struct {
+    /// Maximum workers; reference and flat XY paths remain serial.
+    workers: usize = 1,
+    partial_masks: std.ArrayList(PartialMask) = .empty,
+    envelopes: std.ArrayList(?Sweep) = .empty,
     work: Work = .{},
     bytes: std.ArrayList(u8) = .empty,
     // One byte per candidate-range block, reused between operations. Geometry
@@ -552,6 +561,8 @@ pub const Changes = struct {
         c.bytes.deinit(a);
         c.coverage.deinit(a);
         c.flat_columns.deinit(a);
+        c.partial_masks.deinit(a);
+        c.envelopes.deinit(a);
     }
 };
 pub const Range = struct { lo: [3]usize, hi: [3]usize };
@@ -718,9 +729,9 @@ pub fn blockBounds(g: core.Grid, b: [3]usize) Bounds {
     return out;
 }
 pub fn mask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, available: core.Bits) core.Bits {
-    return classifiedMask(g, b, s, reference, available, if (reference) .partial else s.classify(blockBounds(g, b)), null);
+    return classifiedMask(g, b, s, reference, available, if (reference) .partial else s.classify(blockBounds(g, b)), null, null);
 }
-fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, available: core.Bits, coverage: Coverage, work: ?*Work) core.Bits {
+fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, available: core.Bits, coverage: Coverage, work: ?*Work, envelopes: ?[]const ?Sweep) core.Bits {
     switch (coverage) {
         .outside => return @splat(0),
         .inside => return available,
@@ -728,6 +739,7 @@ fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, availabl
     }
     if (!reference and s == .sweep) {
         if (FlatZ.init(s.sweep)) |flat| return flat.mask(g, b, available);
+        if (s.sweep.tool.kind == .profile) return @import("profile_simd.zig").mask(g, b, s.sweep, available, work);
     }
     // A path is a union. Reject segments once per block, then test only material
     // not covered by earlier segments. This preserves the scalar union exactly.
@@ -742,15 +754,15 @@ fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, availabl
         while (first < s.path.len) : (first += 8) {
             const group = s.path[first..@min(first + 8, s.path.len)];
             var candidates = remaining;
-            if (group.len > 1) if (pathEnvelope(group)) |envelope| {
-                candidates = classifiedMask(g, b, .{ .sweep = envelope }, false, remaining, (Shape{ .sweep = envelope }).classify(box), work);
+            if (group.len > 1) if (if (envelopes) |cached| cached[first / 8] else pathEnvelope(group)) |envelope| {
+                candidates = classifiedMask(g, b, .{ .sweep = envelope }, false, remaining, (Shape{ .sweep = envelope }).classify(box), work, null);
             };
             if (count(candidates) == 0) continue;
             for (group) |segment| {
                 const part = Shape{ .sweep = segment };
                 const part_coverage = part.classify(box);
                 if (part_coverage == .outside) continue;
-                const removed = classifiedMask(g, b, part, false, candidates, part_coverage, work);
+                const removed = classifiedMask(g, b, part, false, candidates, part_coverage, work, null);
                 for (&result, &remaining, &candidates, removed) |*out, *left, *possible, v| {
                     out.* |= v;
                     left.* &= ~v;
@@ -806,9 +818,23 @@ fn writeChange(c: *Changes, i: usize, old: u32, new: u32, before: core.Bits, aft
     if (old < core.full) c.bytes.appendSliceAssumeCapacity(std.mem.asBytes(&before));
     if (new < core.full) c.bytes.appendSliceAssumeCapacity(std.mem.asBytes(&after));
 }
+fn calculateMasks(g: core.Grid, shape: Shape, records: []PartialMask, envelopes: []const ?Sweep) void {
+    for (records) |*record| {
+        record.bits = classifiedMask(g, record.block, shape, false, g.bits(g.blockIndex(record.block)), .partial, &record.work, envelopes);
+    }
+}
 pub fn subtract(g: *core.Grid, s: Shape, c: *Changes, reference: bool) !void {
     try s.validate();
+    if (c.workers == 0 or c.workers > 64) return error.InvalidWorkerCount;
     c.work = .{};
+    c.envelopes.clearRetainingCapacity();
+    if (!reference and s == .path) {
+        try c.envelopes.ensureTotalCapacityPrecise(g.allocator, (s.path.len + 7) / 8);
+        var first: usize = 0;
+        while (first < s.path.len) : (first += 8) {
+            c.envelopes.appendAssumeCapacity(pathEnvelope(s.path[first..@min(first + 8, s.path.len)]));
+        }
+    }
     var bounds = if (reference) s.bounds() else s.cuttingBounds();
     if (g.material_bounds) |mb| for (0..3) |j| {
         bounds.lo[j] = @max(bounds.lo[j], mb[0][j]);
@@ -860,6 +886,36 @@ pub fn subtract(g: *core.Grid, s: Shape, c: *Changes, reference: bool) !void {
     const capacity = try std.math.add(usize, g.pool.items.len, needed);
     if (capacity >= core.full) return error.PoolTooLarge;
     try g.pool.ensureTotalCapacityPrecise(g.allocator, capacity);
+    // All fallible preparation, including thread creation, precedes mutation.
+    // Workers read the original grid and own disjoint scratch records. Pool slot
+    // assignment and history publication remain serial in traversal order.
+    const worker_count = if (!reference and flat == null) @min(c.workers, @max(1, c.work.partial_blocks / 32)) else 1;
+    c.partial_masks.clearRetainingCapacity();
+    if (worker_count > 1) {
+        try c.partial_masks.ensureTotalCapacityPrecise(g.allocator, @intCast(c.work.partial_blocks));
+        var ci: usize = 0;
+        for (r.lo[2]..r.hi[2]) |z| for (r.lo[1]..r.hi[1]) |y| for (r.lo[0]..r.hi[0]) |x| {
+            if (c.coverage.items[ci] == .partial) c.partial_masks.appendAssumeCapacity(.{ .block = .{ x, y, z } });
+            ci += 1;
+        };
+        var threads: [63]std.Thread = undefined;
+        var started: usize = 0;
+        {
+            defer for (threads[0..started]) |thread| thread.join();
+            const records = c.partial_masks.items;
+            for (0..worker_count - 1) |i| {
+                threads[i] = try std.Thread.spawn(.{ .stack_size = 1024 * 1024 }, calculateMasks, .{ g.*, s, records[records.len * i / worker_count .. records.len * (i + 1) / worker_count], c.envelopes.items });
+                started += 1;
+            }
+            calculateMasks(g.*, s, records[records.len * (worker_count - 1) / worker_count ..], c.envelopes.items);
+        }
+        c.work.workers_used = worker_count;
+        for (c.partial_masks.items) |record| {
+            c.work.voxel_tests += record.work.voxel_tests;
+            c.work.point_pose_evaluations += record.work.point_pose_evaluations;
+        }
+    }
+    var partial_index: usize = 0;
     c.bytes.clearRetainingCapacity();
     c.removed = 0;
     c.blocks = 0;
@@ -874,14 +930,18 @@ pub fn subtract(g: *core.Grid, s: Shape, c: *Changes, reference: bool) !void {
         if (d == core.empty or coverage == .outside) continue;
         const before = g.bits(i);
         var after = before;
-        const m = if (coverage == .partial and flat != null) blk: {
+        const m = if (coverage == .partial and worker_count > 1) blk: {
+            const bits = c.partial_masks.items[partial_index].bits;
+            partial_index += 1;
+            break :blk bits;
+        } else if (coverage == .partial and flat != null) blk: {
             const column = &c.flat_columns.items[(y - r.lo[1]) * row_count + x - r.lo[0]];
             if (!column.ready) {
                 column.bits = flat.?.xyMask(g.*, b, g.validBits(b)[0]);
                 column.ready = true;
             }
             break :blk flat.?.maskWithXY(g.*, b, before, column.bits);
-        } else classifiedMask(g.*, b, s, reference, before, coverage, &c.work);
+        } else classifiedMask(g.*, b, s, reference, before, coverage, &c.work, c.envelopes.items);
         for (&after, m) |*w, v| w.* &= ~v;
         if (std.mem.eql(u64, &before, &after)) continue;
         const remaining = count(after);

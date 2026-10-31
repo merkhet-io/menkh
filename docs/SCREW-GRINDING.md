@@ -27,7 +27,8 @@ certified manufacturing process. The original grinding demo remains available.
 Save checkpoints, reversible operation history, PPM, report and all-frame
 surface-exposure provenance; no full mesh export. Count occupied voxels,
 boundary voxels and exposed voxel faces separately. Output coloring identifies
-exposure operations, not accuracy. Profile-wheel display is currently unavailable.
+exposure operations, not accuracy. Recorded profile-wheel display is available in both native viewers; see
+[performance and inspection](GRINDING-PERFORMANCE.md) for validation limits.
 
 Compare the pre-optimization ReleaseFast binary with the new binary on the
 same job. Require identical final occupancy and history material states. Keep
@@ -112,3 +113,7 @@ changes playback timing, not machining feed, simulation precision or geometry.
 Actual runs, memory, geometry checks and the final 30 fps video are in the
 [evidence report](evidence/screw-grinding/README.md). The permitted alternate
 structure trial is documented in [DEXEL-EXPERIMENT.md](DEXEL-EXPERIMENT.md).
+
+Optional `--workers 8` enables disjoint-block CPU mask calculation. See
+[GRINDING-PERFORMANCE.md](GRINDING-PERFORMANCE.md) for exact semantics,
+Windows phase diagnostics and matched measurement commands.

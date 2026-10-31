@@ -1,0 +1,11 @@
+{
+  "base_commit": "b5f648d51a227351f12009e8313445ca059e6938",
+  "hardware": "Apple M5 Max",
+  "ram_bytes": 137438953472,
+  "macos": "27.0.1 (26A434)",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "history_deltas_per_run": 1024,
+  "history_byte_exact": true,
+  "notes": "Working-tree changes; binary identifiers in summary. Warm-up overlapped tests/builds; measured repetitions did not."
+}

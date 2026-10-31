@@ -20,7 +20,10 @@ Use a fresh output directory; `--voxel 0.025` requests 25 µm spacing.
 `--generate-only` writes a reusable JSON job without running it. The
 [two-start screw protocol](SCREW-GRINDING.md) records geometry, continuous-motion
 approximations, benchmark commands and the unsupported 16k³ world case.
-The wheel profile cuts material but is not yet drawn by the viewer.
+The recorded piecewise-conical wheel profile is now drawn by the viewer.
+Optional `--smooth-lighting` (or **L**) averages lighting normals during playback;
+voxel geometry and exposure colors remain unchanged. Native D3D12 validation
+for these changes is covered by CI; local macOS checks do not establish Windows runtime success.
 
 ## Native viewer
 
@@ -104,3 +107,15 @@ cooperative cancellation with the subprocess runner. The completed result opens
 automatically after success. See [live controls and measurements](LIVE-INSPECTION.md). Output directories
 must be new. For static embedding, build `sdk-static` and follow the
 [C host examples and ownership contract](C-API.md).
+
+## Diagnose screw-grinding time
+
+```powershell
+.\scripts\summarize-grinding.ps1 out/screw/result/report.json
+```
+
+This reads the recorded phase timings without repeating the simulation. Include
+the CPU model and source commit when sharing it. The new optional
+`grinding-demo --workers 8` requests up to eight CPU workers; default is one.
+See [grinding performance](GRINDING-PERFORMANCE.md) for comparable settings
+and the distinction between voxel spacing and display lighting.

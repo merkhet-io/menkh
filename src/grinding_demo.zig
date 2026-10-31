@@ -33,6 +33,7 @@ pub fn run(parent: std.mem.Allocator, args: []const [:0]u8) !void {
     var h: f64 = 0.1;
     var tolerance: f64 = 0.01;
     var steps: usize = 128;
+    var workers: usize = 1;
     var world: ?u32 = null;
     var generate_only = false;
     var provenance = true;
@@ -49,16 +50,17 @@ pub fn run(parent: std.mem.Allocator, args: []const [:0]u8) !void {
         }
         if (i + 1 >= args.len) return error.MissingArgument;
         i += 1;
-        if (std.mem.eql(u8, option, "--out")) out = args[i] else if (std.mem.eql(u8, option, "--voxel")) h = try std.fmt.parseFloat(f64, args[i]) else if (std.mem.eql(u8, option, "--tolerance")) tolerance = try std.fmt.parseFloat(f64, args[i]) else if (std.mem.eql(u8, option, "--steps-per-turn")) steps = try std.fmt.parseInt(usize, args[i], 10) else if (std.mem.eql(u8, option, "--world-grid")) world = try std.fmt.parseInt(u32, args[i], 10) else return error.UnknownOption;
+        if (std.mem.eql(u8, option, "--out")) out = args[i] else if (std.mem.eql(u8, option, "--voxel")) h = try std.fmt.parseFloat(f64, args[i]) else if (std.mem.eql(u8, option, "--tolerance")) tolerance = try std.fmt.parseFloat(f64, args[i]) else if (std.mem.eql(u8, option, "--steps-per-turn")) steps = try std.fmt.parseInt(usize, args[i], 10) else if (std.mem.eql(u8, option, "--workers")) workers = try std.fmt.parseInt(usize, args[i], 10) else if (std.mem.eql(u8, option, "--world-grid")) world = try std.fmt.parseInt(u32, args[i], 10) else return error.UnknownOption;
     }
-    const job = try makeJob(a, h, tolerance, steps, provenance, world);
+    var job = try makeJob(a, h, tolerance, steps, provenance, world);
+    job.workers = workers;
     try jobs.validate(a, job);
     if (std.fs.path.dirname(out)) |path| try std.fs.cwd().makePath(path);
     try std.fs.cwd().makeDir(out);
     var dir = try std.fs.cwd().openDir(out, .{});
     defer dir.close();
     try jobs.json(a, dir, "job.json", job);
-    try jobs.json(a, dir, "protocol.json", .{ .format = "menkh-screw-grinding-protocol-v1", .starts = 2, .turns_per_start = 4, .lead_mm = 8, .blank_diameter_mm = 12, .blank_length_mm = 40, .nominal_root_radius_mm = 4, .wheel_max_radius_mm = 8, .wheel_width_mm = 2, .steps_per_turn = steps, .operations = job.operations.len, .voxel_mm = h, .motion_tolerance_mm = tolerance, .centerline_chord_bound_mm = 12 * (1 - @cos(std.math.pi / @as(f64, @floatFromInt(steps)))), .virtual_grid = world, .export_provenance = provenance, .note = "Continuous piecewise-linear XYZAC grinding. Nominal screw dimensions describe the path, not a certified thread profile. Chord error, motion approximation and voxelization are separate." });
+    try jobs.json(a, dir, "protocol.json", .{ .format = "menkh-screw-grinding-protocol-v1", .starts = 2, .turns_per_start = 4, .lead_mm = 8, .blank_diameter_mm = 12, .blank_length_mm = 40, .nominal_root_radius_mm = 4, .wheel_max_radius_mm = 8, .wheel_width_mm = 2, .steps_per_turn = steps, .workers = workers, .operations = job.operations.len, .voxel_mm = h, .motion_tolerance_mm = tolerance, .centerline_chord_bound_mm = 12 * (1 - @cos(std.math.pi / @as(f64, @floatFromInt(steps)))), .virtual_grid = world, .export_provenance = provenance, .note = "Continuous piecewise-linear XYZAC grinding. Nominal screw dimensions describe the path, not a certified thread profile. Chord error, motion approximation and voxelization are separate." });
     const file = try std.fs.path.join(a, &.{ out, "job.json" });
     std.debug.print("Screw workload: {d} operations, {d} mm voxels, {d} mm motion tolerance. Job: {s}\n", .{ job.operations.len, h, tolerance, file });
     if (!generate_only) try jobs.run(parent, file, try std.fs.path.join(a, &.{ out, "result" }), false, null, null, null);

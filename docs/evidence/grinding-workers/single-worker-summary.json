@@ -1,0 +1,36 @@
+{
+  "voxel_mm": 0.1,
+  "repeats": 3,
+  "warmups": 1,
+  "baseline_workers": 1,
+  "optimized_workers": 1,
+  "optimized_job_sha256": "7c12836b13a98d6c0bdb4a53c748acaaf0380121ed7022aeeee135eff1cea6ac",
+  "job_sha256": "089b4f3adef50fb979371f39a4697dc86151e4942e5a87eada11f70d9b36bc10",
+  "binary_sha256": {
+    "optimized": "962b5edaa219bd6221ff70dd3203fafc3a47026193ca97c87e5e5a3b592d7ef7"
+  },
+  "results": {
+    "optimized": {
+      "wall_seconds": {
+        "median": 13.046602208982222,
+        "min": 12.949479458009591,
+        "max": 13.230465417000232
+      },
+      "total_seconds": {
+        "median": 12.995733209,
+        "min": 12.93627225,
+        "max": 13.216043
+      },
+      "cut_seconds": {
+        "median": 12.622495951,
+        "min": 12.557938217,
+        "max": 12.831237581
+      },
+      "peak_rss_bytes": {
+        "median": 45432832,
+        "min": 45432832,
+        "max": 45432832
+      }
+    }
+  }
+}
