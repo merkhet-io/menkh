@@ -74,8 +74,11 @@ publish a final result manifest. After phase 5, cancellation cannot roll back th
 completed job and its return value is ignored. Failures have stable status codes
 and a best-effort per-run diagnostic log.
 
-Progress is not live material inspection. The whole-job API publishes completed
-results; #24 separately tracks bounded live snapshots and retained-range seeking.
+Progress callbacks do not expose mutable material. Jobs can opt into the separate
+[leased live-publication channel](LIVE-INSPECTION.md) with `live_inspection`.
+The file transport also supports retained-range seeking. During a requested pause,
+callbacks repeat at the completed-operation boundary so hosts can still cancel.
+The Windows viewer currently opens only the completed result.
 
 ## Windows viewer
 

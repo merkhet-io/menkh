@@ -1,0 +1,18 @@
+{
+  "status": {
+    "state": "paused",
+    "completed_operations": 2283
+  },
+  "publication": {
+    "version": 1,
+    "sequence": 247,
+    "slot": 2,
+    "first_operation": 2277,
+    "completed_operations": 2283,
+    "total_operations": 2501,
+    "payload_bytes": 13091527,
+    "base_capacity_bytes": 12929024,
+    "skipped_publications": 0
+  },
+  "stable_for_ms": 400
+}

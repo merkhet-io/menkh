@@ -2,8 +2,8 @@ import AppKit
 import Foundation
 import Darwin
 
-/// Runs the existing engine out of process. Only a successful, complete result
-/// is published to the viewer; cancelled/failed directories are retained as logs.
+/// Runs the engine out of process; optional leased live windows are independent
+/// of the final archive. Cancel/failure retains the last consistent live window.
 final class JobRunner:NSObject,NSWindowDelegate {
     let process=Process()
     let window=NSWindow(contentRect:NSRect(x:0,y:0,width:660,height:260),styleMask:[.titled,.closable],backing:.buffered,defer:false)
@@ -18,6 +18,10 @@ final class JobRunner:NSObject,NSWindowDelegate {
     var finished=false
     var onSuccess:((URL)->Void)?
     var automated=false
+    var live:LiveInspection?
+    let follow=NSButton(checkboxWithTitle:"Follow latest (uncheck to seek)",target:nil,action:nil)
+    let pause=NSButton(title:"Pause calculation",target:nil,action:nil)
+    var paused=false
     var isRunning:Bool {!finished && process.isRunning}
     static func argument(_ name:String) throws -> String? {
         let args=CommandLine.arguments
@@ -57,6 +61,16 @@ final class JobRunner:NSObject,NSWindowDelegate {
         log=try FileHandle(forWritingTo:logURL)
         process.executableURL=executable;process.currentDirectoryURL=cwd
         process.arguments=["job",job.path,"--out",output.path,"--progress",output.appendingPathComponent("progress.jsonl").path]
+        if args.contains("--live") {
+            guard var config=try JSONSerialization.jsonObject(with:Data(contentsOf:job)) as? [String:Any] else {throw MeshError.invalidOBJ("Expected a JSON job object")}
+            if config["live_inspection"] == nil {config["live_inspection"]=[String:Any]()}
+            paused=(config["live_inspection"] as? [String:Any])?["start_paused"] as? Bool ?? false
+            pause.title=paused ? "Resume calculation":"Pause calculation"
+            let liveJob=output.appendingPathComponent("live-job.json")
+            try JSONSerialization.data(withJSONObject:config,options:[.sortedKeys]).write(to:liveJob)
+            process.arguments![1]=liveJob.path
+            live=LiveInspection(output:output)
+        }
         process.standardOutput=log;process.standardError=log;process.standardInput=FileHandle.nullDevice
         window.isReleasedWhenClosed=false
         window.title="Menkh — calculating \(job.lastPathComponent)";window.delegate=self
@@ -66,6 +80,11 @@ final class JobRunner:NSObject,NSWindowDelegate {
         button.target=self;button.action=#selector(cancelOrClose)
         let openLog=NSButton(title:"Open log",target:self,action:#selector(openLogFile))
         let buttons=NSStackView(views:[button,openLog])
+        if live != nil {
+            follow.state = .on;follow.target=self;follow.action=#selector(toggleFollow)
+            pause.target=self;pause.action=#selector(toggleCalculation)
+            buttons.addArrangedSubview(pause);buttons.addArrangedSubview(follow)
+        }
         let stack=NSStackView(views:[status,progress,location,buttons]);stack.orientation = .vertical;stack.alignment = .leading;stack.spacing=16;stack.translatesAutoresizingMaskIntoConstraints=false
         window.contentView!.addSubview(stack)
         NSLayoutConstraint.activate([stack.leadingAnchor.constraint(equalTo:window.contentView!.leadingAnchor,constant:24),stack.trailingAnchor.constraint(equalTo:window.contentView!.trailingAnchor,constant:-24),stack.topAnchor.constraint(equalTo:window.contentView!.topAnchor,constant:24),status.widthAnchor.constraint(equalTo:stack.widthAnchor),location.widthAnchor.constraint(equalTo:stack.widthAnchor),progress.widthAnchor.constraint(equalTo:stack.widthAnchor)])
@@ -80,7 +99,24 @@ final class JobRunner:NSObject,NSWindowDelegate {
         timer=Timer.scheduledTimer(withTimeInterval:0.1,repeats:true) { [weak self] _ in self?.update() }
         if let delay=cancelDelay {DispatchQueue.main.asyncAfter(deadline:.now()+delay) { [weak self] in self?.cancel() }}
     }
+    @objc func toggleFollow() {if follow.state == .on {live?.window?.makeKeyAndOrderFront(nil)}}
+    @objc func toggleCalculation() {
+        guard !finished,live != nil else {return}
+        do {
+            let path=output.appendingPathComponent("live/pause")
+            if paused {try FileManager.default.removeItem(at:path)}
+            else {try Data().write(to:path)}
+            paused.toggle();pause.title=paused ? "Resume calculation":"Pause calculation"
+        } catch {status.stringValue="Cannot change pause: \(error)"}
+    }
     func update() {
+        if cancelled,live != nil {try? Data().write(to:output.appendingPathComponent("live/cancel"))}
+        if follow.state == .on {do {try live?.update()}catch {follow.state = .off;status.stringValue="Live inspection stopped: \(error)";fputs("Live inspection: \(error)\n",stderr)}}
+        if !cancelled,let data=try? Data(contentsOf:output.appendingPathComponent("live/status.json")),
+           let state=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any],state["state"] as? String == "paused" {
+            status.stringValue="Paused after operation \(state["completed_operations"] as? Int ?? 0). Live history is safe to inspect."
+            return
+        }
         guard !cancelled,let p=Self.progressRecord(output.appendingPathComponent("progress.jsonl")),p["version"] as? Int==1,let phase=p["phase"] as? String,let done=p["completed_operations"] as? Int,let total=p["total_operations"] as? Int,done>=0,done<=total else {return}
         if phase=="cutting" {
             progress.isIndeterminate=false;progress.minValue=0;progress.maxValue=Double(max(1,total));progress.doubleValue=Double(done)
@@ -93,6 +129,13 @@ final class JobRunner:NSObject,NSWindowDelegate {
     func cancel() {
         guard !finished else {return}
         cancelled=true;button.isEnabled=false;status.stringValue="Cancelling calculation…"
+        if live != nil {
+            // Cooperative cancellation at an operation boundary; no arbitrary
+            // kill timeout for a potentially long individual cut.
+            try? Data().write(to:output.appendingPathComponent("live/cancel"))
+            status.stringValue="Cancelling after the current operation…"
+            return
+        }
         if process.isRunning {process.terminate()}
         DispatchQueue.main.asyncAfter(deadline:.now()+2) { [weak self] in
             guard let s=self,!s.finished,s.process.isRunning else {return}
@@ -103,10 +146,10 @@ final class JobRunner:NSObject,NSWindowDelegate {
     @objc func openLogFile() {NSWorkspace.shared.open(output.appendingPathComponent("simulation.log"))}
     func windowShouldClose(_ sender:NSWindow)->Bool {if finished{return true};cancel();return false}
     func complete() {
-        guard !finished else {return};finished=true;timer?.invalidate();try? log?.close();progress.stopAnimation(nil)
+        guard !finished else {return};finished=true;pause.isEnabled=false;timer?.invalidate();try? log?.close();progress.stopAnimation(nil)
         if quitRequested {NSApp.reply(toApplicationShouldTerminate:true);return}
         if cancelled {
-            status.stringValue="Calculation cancelled. Partial files and logs were retained; no result was loaded."
+            status.stringValue="Calculation cancelled. Logs and the last live window were retained; no final result was loaded."
             button.title="Close";button.isEnabled=true
             if automated {fputs("Simulation cancelled\n",stderr);exit(2)}
             return
@@ -121,7 +164,89 @@ final class JobRunner:NSObject,NSWindowDelegate {
             return
         }
         onSuccess?(manifest)
+        live?.close()
         // Create the result window before closing the last progress window.
         window.close()
+    }
+}
+
+
+/// A lease remains held for the entire lifetime of a lazily read history window.
+/// Read pointer -> lock -> verify sequence: slot rotation cannot race loading.
+final class LiveLease {
+    let fd:Int32
+    init?(_ url:URL) {
+        fd=Darwin.open(url.path,O_RDONLY)
+        guard fd>=0 else {return nil}
+        if flock(fd,LOCK_SH|LOCK_NB) != 0 {Darwin.close(fd);return nil}
+    }
+    deinit {flock(fd,LOCK_UN);Darwin.close(fd)}
+}
+final class LiveInspection {
+    let output:URL
+    var lease:LiveLease?
+    var window:NSWindow?
+    var controller:VoxelController?
+    var sequence=0
+    var lastLoad=Date.distantPast
+    var savedSnapshot=false
+    var verifiedHistory=false
+    init(output:URL) {self.output=output}
+    func close() {
+        controller?.timer?.invalidate();controller?.metal.isPaused=true
+        window?.close();window=nil;controller=nil;lease=nil
+    }
+    func update() throws {
+        guard Date().timeIntervalSince(lastLoad)>=0.5 else {return}
+        let root=output.appendingPathComponent("live")
+        guard let data=try? Data(contentsOf:root.appendingPathComponent("latest.json")),
+              let info=try JSONSerialization.jsonObject(with:data) as? [String:Any],
+              info["version"] as? Int == 1,let next=info["sequence"] as? Int,next>sequence,
+              let slot=info["slot"] as? Int,(0..<3).contains(slot),
+              let first=info["first_operation"] as? Int,let completed=info["completed_operations"] as? Int,
+              let held=LiveLease(root.appendingPathComponent("slot-\(slot).lock")) else {return}
+        let file=root.appendingPathComponent("slot-\(slot)/voxel-animation.json")
+        let meta=try JSONSerialization.jsonObject(with:Data(contentsOf:file)) as? [String:Any]
+        guard meta?["live_sequence"] as? Int == next else {return}
+        let start=CFAbsoluteTimeGetCurrent()
+        let renderer=try VoxelRenderer(file)
+        let loaded=CFAbsoluteTimeGetCurrent()
+        try renderer.seek(renderer.history.frames.count)
+        let sought=CFAbsoluteTimeGetCurrent()
+        if let old=controller?.renderer {
+            renderer.yaw=old.yaw;renderer.elevation=old.elevation;renderer.roll=old.roll
+            renderer.target=old.target;renderer.distance=old.distance
+            renderer.sectionAxis=old.sectionAxis;renderer.sectionFraction=old.sectionFraction
+            renderer.smoothLighting=old.smoothLighting;renderer.darkBackground=old.darkBackground
+            renderer.showStock=old.showStock;renderer.showHolder=old.showHolder
+        }
+        let nextController=VoxelController(renderer);nextController.playing=false
+        controller?.timer?.invalidate();controller?.metal.isPaused=true
+        let firstWindow = window == nil
+        if firstWindow {
+            let w=NSWindow(contentRect:NSRect(x:0,y:0,width:1280,height:900),styleMask:[.titled,.closable,.miniaturizable,.resizable],backing:.buffered,defer:false)
+            w.isReleasedWhenClosed=false;w.center();window=w
+        }
+        window!.contentViewController=nextController
+        window!.title="Menkh — LIVE · retained operations \(first)…\(completed) · uncheck Follow latest to seek"
+        if firstWindow {window!.makeKeyAndOrderFront(nil)}
+        controller=nextController;lease=held;sequence=next;lastLoad=Date()
+        var usage=rusage();getrusage(RUSAGE_SELF,&usage)
+        let record:[String:Any]=["process_peak_rss_bytes":usage.ru_maxrss,"sequence":next,"first_operation":first,"completed_operations":completed,"load_upload_ms":(loaded-start)*1000,"seek_ms":(sought-loaded)*1000,"gpu_material_bytes":renderer.blocks.length+renderer.pool.length,"publication":info]
+        let line=try JSONSerialization.data(withJSONObject:record,options:[.sortedKeys])+Data([10])
+        let log=output.appendingPathComponent("live-viewer.jsonl")
+        if !FileManager.default.fileExists(atPath:log.path) {try Data().write(to:log)}
+        let handle=try FileHandle(forWritingTo:log);defer {try? handle.close()}
+        try handle.seekToEnd();try handle.write(contentsOf:line)
+        // Reproducible evidence captured while the producer is still running.
+        if !verifiedHistory,renderer.history.frames.count>0,let path=try JobRunner.argument("--live-verify-history") {
+            try renderer.verifyHistory(to:URL(fileURLWithPath:path));verifiedHistory=true
+        }
+        let snapshotOperation=Int(try JobRunner.argument("--live-snapshot-operation") ?? "1") ?? 1
+        if !savedSnapshot,completed>=snapshotOperation,let path=try JobRunner.argument("--live-snapshot") {
+            let image=try renderer.image()
+            guard let tiff=image.tiffRepresentation,let bitmap=NSBitmapImageRep(data:tiff),let png=bitmap.representation(using:.png,properties:[:]) else {throw MeshError.imageEncoding}
+            try png.write(to:URL(fileURLWithPath:path));savedSnapshot=true
+        }
     }
 }

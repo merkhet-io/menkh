@@ -445,3 +445,27 @@ test "boundary voxel and face counts match independent six-neighbor oracle" {
 test {
     _ = @import("sparse.zig");
 }
+
+fn liveAllocations(allocator: std.mem.Allocator) !void {
+    var temp = std.testing.tmpDir(.{});
+    defer temp.cleanup();
+    var g = try c.Grid.init(a, .{ 8.25, 7.75, 4.25 }, 0.25);
+    defer g.deinit();
+    const count = g.stats().occupied;
+    var publisher = try @import("live.zig").Publisher.init(allocator, temp.dir, .{}, g, count);
+    defer publisher.deinit();
+    const frames: []const struct { file: []const u8, delta_bytes: usize } = &.{};
+    try publisher.publish(temp.dir, g, frames, count, 0.01, 0, true);
+    try std.testing.expectEqual(count, g.stats().occupied);
+    try std.testing.expectEqual(@as(usize, 1), publisher.sequence);
+}
+test "live publication allocation failures clean up without changing material" {
+    try std.testing.checkAllAllocationFailures(a, liveAllocations, .{});
+}
+test "live publication options have explicit limits" {
+    const Options = @import("live.zig").Options;
+    try (Options{}).validate();
+    try std.testing.expectError(error.InvalidLiveOptions, (Options{ .history_operations = 0 }).validate());
+    try std.testing.expectError(error.InvalidLiveOptions, (Options{ .publish_every_operations = 33 }).validate());
+    try std.testing.expectError(error.InvalidLiveOptions, (Options{ .max_snapshot_bytes = std.math.maxInt(usize) }).validate());
+}
