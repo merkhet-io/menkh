@@ -11,7 +11,7 @@ else:
     compiler=['xcrun','clang'];suffix='';extra=['-Wl,-rpath,'+str(Path('zig-out/lib').resolve())]
 def build(source,name,static=False):
     exe=out/(name+suffix)
-    subprocess.run(compiler+['-std=c11','-Wall','-Wextra','-Werror',source,'-Izig-out/include','-Lzig-out/lib','-lmenkh-static' if static else '-lmenkh',*extra,'-o',str(exe)],check=True)
+    subprocess.run(compiler+['-std=c11','-Wall','-Wextra','-Werror',source,'-Izig-out/include','-Lzig-out/lib','-lmenkh-static' if static else '-lmenkh',*extra,*(['-municode'] if os.name=='nt' and name=='run-job' else []),'-o',str(exe)],check=True)
     return exe.resolve()
 for static in [False,True]:
     exe=build('examples/embed.c','embed-static' if static else 'embed',static)
