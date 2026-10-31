@@ -123,7 +123,10 @@ float3 shade(float2 pixel) {
     if((blockDimensions.w&9)!=0){Hit th=trace(ray,1);if(th.found&&(!hit.found||th.t<hit.t-.01)){hit=th;missing=(blockDimensions.w&1)!=0&&!filled(th.cell);target=true;}}
     if((blockDimensions.w&2)!=0){Hit fh=trace(ray,2);if(fh.found&&(!hit.found||fh.t<hit.t)){hit=fh;fixture=true;}}
     float3 bg=flags.x==0?float3(.83,.47,.25):float3(.055,.07,.095);
-    Hit part=eye.w>0?profileHit(ray,cutter,cutterAxis,uint(eye.w)):cylinderHit(ray,cutter,cutterAxis),s=cylinderHit(ray,shank,shankAxis),h=cylinderHit(ray,holder,holderAxis);
+    Hit part=miss();
+    if(eye.w>0)part=profileHit(ray,cutter,cutterAxis,uint(eye.w));
+    else part=cylinderHit(ray,cutter,cutterAxis);
+    Hit s=cylinderHit(ray,shank,shankAxis),h=cylinderHit(ray,holder,holderAxis);
     if(s.found&&s.t<part.t)part=s;if(h.found&&h.t<part.t)part=h;
     float3 key=normalize(float3(-.4,-.55,.8));
     if(part.found&&(!hit.found||part.t<hit.t))return float3(.65,.68,.72)*(.45+.55*max(0,dot(part.normal,key)));

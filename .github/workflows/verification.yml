@@ -86,6 +86,14 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Compile the viewer shader with the native SM5 compiler
+        shell: pwsh
+        run: |
+          $fxc = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\fxc.exe" | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $fxc) { throw 'Windows SDK FXC compiler not found' }
+          New-Item -ItemType Directory -Force out | Out-Null
+          & $fxc.FullName /nologo /Ges /O3 /T cs_5_0 /E main /Fo out/voxel-shader.cso viewer/windows/Voxel.hlsl
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer shader compilation failed' }
       - name: Install pinned repository-local Zig
         shell: pwsh
         run: ./scripts/bootstrap-zig.ps1
@@ -242,6 +250,8 @@ jobs:
             out/windows-job-render-images/
             out/windows-provenance.ppm
             out/windows-profile.ppm
+            out/windows-grinding-render/
+            out/screw-summary.json
 
             out/windows-playback-provenance/
             out/windows-job-runner/
