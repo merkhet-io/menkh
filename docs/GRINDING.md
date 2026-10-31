@@ -113,7 +113,8 @@ starting material. Saved states are byte-identical between versions. This is
 about a 6% cutting-time improvement; it is not a cross-machine comparison.
 
 The **25 µm** run completed with the same 80-operation path and **0.05 mm motion
-budget** on a 960 × 960 × 4000 grid. One completed run, not a repeated benchmark:
+budget** on a 960 × 960 × 4000 grid. One completed development run while other validation
+work was ongoing, not an isolated repeated benchmark:
 
 - Reported total: **783.592 s**, cutting: **780.108 s**.
 - Peak process RSS: **334,675,968 bytes** (319.17 MiB).

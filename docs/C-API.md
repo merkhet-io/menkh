@@ -62,3 +62,8 @@ final checkpoint. Zig failure-injection tests run every allocation site through
 creation, cut, serialization and restoration and check failed-cut atomicity.
 These tests supplement the engine suite; they do not prove ABI correctness or
 floating-point behavior. The existing Lean scope is unchanged.
+
+Actual macOS dynamic-library and Windows DLL host runs passed in
+[CI for the reviewed SDK commit](https://github.com/merkhet-io/menkh/actions/runs/41148405936).
+The Windows cross-build also completed locally, but native CI execution—not the
+cross-build—is the evidence that the host can load and call the DLL.
