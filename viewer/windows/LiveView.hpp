@@ -30,6 +30,9 @@ public:
         const auto prepared=std::chrono::steady_clock::now();
         renderer->uploadMaterial(history);
         const auto uploaded=std::chrono::steady_clock::now();
+        // Keep both leases across handover, including an attach/allocation error.
+        // Once history changes, its lazy files must remain pinned during cleanup.
+        auto previousLease=std::move(lease);lease=std::move(incoming->lease);
         if(!app) {
             app=std::make_unique<App>(incoming->manifest);app->live=true;
             app->history=std::move(history);app->renderer=std::move(renderer);
@@ -41,7 +44,7 @@ public:
             app->renderer.reset();app->history=std::move(history);app->renderer=std::move(renderer);
             app->renderer->attach(app->viewport);
         }
-        lease=std::move(incoming->lease);sequence=incoming->pointer.at("sequence").get<uint64_t>();
+        sequence=incoming->pointer.at("sequence").get<uint64_t>();
         const auto first=incoming->metadata.at("first_operation").get<uint64_t>(),end=incoming->metadata.at("completed_operations").get<uint64_t>();
         app->playing=false;app->dirty=true;
         app->liveBanner=L"LIVE "+std::to_wstring(first)+L"…"+std::to_wstring(end)+L" | ";
@@ -74,7 +77,7 @@ public:
         std::ofstream log(output/"live-viewer.jsonl",std::ios::app);log<<record.dump()<<'\n';require(bool(log),"Cannot write live viewer metrics");
     }
     void finish(const std::string &message,bool automated) {
-        if(!app || automated)return;
+        if(!app || !app->window || automated)return;
         app->liveBanner=wide(message)+L" | ";app->playing=false;app->refresh();
         SetWindowTextW(app->window,L"Menkh — stopped calculation · last consistent window");
         app->onScrub={};app->live=false;ShowWindow(app->window,SW_SHOW);

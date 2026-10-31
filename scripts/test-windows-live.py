@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Actual Win32 controls, leased D3D12/WARP views and independent occupancy oracle."""
-import argparse, atexit, ctypes, hashlib, json, math, os, shutil, statistics, struct, subprocess, time
+import argparse, atexit, ctypes, hashlib, json, math, os, platform, shutil, statistics, struct, subprocess, time
 from pathlib import Path
 assert os.name=='nt','Run on Windows with the native viewer'
 p=argparse.ArgumentParser();p.add_argument('--viewer',type=Path,required=True);p.add_argument('--engine',type=Path,required=True);p.add_argument('--library',type=Path,required=True);p.add_argument('--voxel',type=float,default=.025);p.add_argument('--out',type=Path,default=Path('out/windows-live'));a=p.parse_args()
@@ -100,7 +100,9 @@ for mode in ['process','library']:
  for action in ['complete','cancel','failure']:
   name=f'{mode}-{action}';out=root/name;evidence=root/(name+'-images')
   with (root/(name+'.stdout')).open('w') as stdout,(root/(name+'.stderr')).open('w') as stderr:
-   proc=subprocess.Popen([viewer,str(file),'--engine' if mode=='process' else '--library',engine if mode=='process' else library,'--job-output',str(out),'--live','--run-only','--warp','--debug','--live-evidence',str(evidence)],stdout=stdout,stderr=stderr);children.append(proc)
+   command=[viewer,str(file),'--engine' if mode=='process' else '--library',engine if mode=='process' else library,'--job-output',str(out),'--live','--warp','--debug','--live-evidence',str(evidence)]
+   command+=['--verify-history','--window-smoke',str(evidence/'completed-window')] if action=='complete' else ['--run-only']
+   proc=subprocess.Popen(command,stdout=stdout,stderr=stderr);children.append(proc)
   run=wait(lambda:window(proc.pid,'MenkhCalculation'),proc)
   wait(lambda:read(out/'live/status.json').get('state')=='paused',proc)
   wait(lambda:records(out/'live-viewer.jsonl'),proc)
@@ -124,6 +126,7 @@ for mode in ['process','library']:
    click(run,3) # Follow latest again.
    code=proc.wait(timeout=240);assert code==0,(name,code,(root/(name+'.stderr')).read_text()[-5000:])
    assert (out/'final.menkh').read_bytes()==(expected/'final.menkh').read_bytes()
+   assert (evidence/'completed-window/window-final.ppm').is_file()
   elif action=='cancel':
    click(run,1);assert proc.wait(timeout=60)==2
    assert read(out/'live/status.json')['state']=='cancelled' and not (out/'voxel-animation.json').exists()
@@ -142,5 +145,5 @@ for mode in ['process','library']:
   assert 'D3D12: ' not in errors,errors[-6000:]
   summary.append(dict(case=name,paused_operation=completed,windows_checked=len(rows),metrics={key:dict(median=statistics.median(r[key] for r in rows),min=min(r[key] for r in rows),max=max(r[key] for r in rows)) for key in ['load_seek_ms','renderer_setup_ms','upload_ms','attach_render_ms','process_peak_rss_bytes']}))
 assert file.read_bytes()==source_bytes
-(root/'validation.json').write_text(json.dumps(dict(cases=summary,operations=len(job['operations']),voxel_mm=job['voxel_mm'],independent_occupancy=True,rendered_replay_exact=True,cli_final_state_exact=True,actual_ui_controls=True,note='D3D12 WARP software renderer; times include evidence-mode replay checks, not hardware FPS. DLL RSS includes engine and viewer in one process.'),indent=2))
+(root/'validation.json').write_text(json.dumps(dict(platform=platform.platform(),processor=platform.processor(),logical_cpus=os.cpu_count(),source_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),viewer_sha256=hashlib.sha256(Path(viewer).read_bytes()).hexdigest(),engine_sha256=hashlib.sha256(Path(engine).read_bytes()).hexdigest(),compiler=read(expected/'report.json').get('zig'),build_mode=read(expected/'report.json').get('mode'),workers=read(expected/'report.json').get('workers'),cases=summary,operations=len(job['operations']),voxel_mm=job['voxel_mm'],independent_occupancy=True,rendered_replay_exact=True,cli_final_state_exact=True,actual_ui_controls=True,note='D3D12 WARP software renderer; times include evidence-mode replay checks, not hardware FPS. DLL RSS includes engine and viewer in one process.'),indent=2))
 print(json.dumps(summary,indent=2))

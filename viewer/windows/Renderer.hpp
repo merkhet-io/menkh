@@ -138,7 +138,7 @@ class Renderer {
         Buffer b;
         b.size = bytes;
         b.gpu =
-            buffer(bytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            buffer(bytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
         b.upload = buffer(bytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
         D3D12_RANGE range{0, 0};
         hr(b.upload->Map(0, &range, reinterpret_cast<void **>(&b.mapped)), "Map staging buffer");
@@ -186,7 +186,9 @@ class Renderer {
     void update(Buffer &b, const void *source, std::vector<size_t> &dirty, size_t stride) {
         if (!initial && dirty.empty())
             return;
-        transition(b.gpu.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        // Buffers start in COMMON and decay back to COMMON after each completed
+        // ExecuteCommandLists. submit() fences every batch before the next update.
+        transition(b.gpu.Get(), D3D12_RESOURCE_STATE_COMMON,
                    D3D12_RESOURCE_STATE_COPY_DEST);
         if (initial) {
             std::memcpy(b.mapped, source, b.size);

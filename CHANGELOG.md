@@ -9,25 +9,15 @@ Benchmark results remain tied to their documented hardware, workload and build.
 Voxel spacing is not a guaranteed surface-error bound; Lean proofs cover selected
 mathematical models, not the complete executable.
 
-## In review — not yet on main
-
-### Live inspection ([#33])
-
-- Inspect completed-operation material windows while a job runs in the macOS
-  viewer. Added independent follow/hold controls, calculation pause/resume,
-  cooperative cancellation and scrubbing within the retained history range.
-- Publish bounded history windows through three leased file slots. Slow readers
-  cause skipped publications rather than an expanding queue or overwritten data.
-- Added a reproducible 25 µm ball-end live demo, final-state equivalence checks,
-  native replay evidence and measured publication overhead.
-- Handle Windows file-sharing conflicts during atomic pointer replacement, with
-  regression tests and retained CI failure diagnostics. Windows live-follow UI
-  and live target/fixture/defect/provenance overlays remain outstanding.
-
 ## 2026-10-31
 
 ### Added
 
+- **Live inspection on macOS:** completed-operation material windows, independent
+  follow/hold controls, pause/resume, cooperative cancellation and retained-range
+  scrubbing. Three leased slots bound publication; a 25 µm ball-end demo and
+  byte-exact replay checks document the workflow. Windows pointer replacement
+  handles file-sharing conflicts explicitly. ([#33])
 - **C embedding API:** shared and static libraries, opaque material handles,
   geometric operations and queries, copied-history undo/redo, and saved-state
   loading/writing. Added complete JSON-job execution with progress and
