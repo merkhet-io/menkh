@@ -12,6 +12,7 @@
 #include <dxgi1_6.h>
 #include <iostream>
 #include <sstream>
+#include <mutex>
 #include <windows.h>
 #include <wrl/client.h>
 namespace menkh {
@@ -213,9 +214,12 @@ class Renderer {
   public:
     Renderer(const History &history, const fs::path &shader, bool warp, bool debug) {
         if (debug) {
-            ComPtr<ID3D12Debug> layer;
-            hr(D3D12GetDebugInterface(IID_PPV_ARGS(&layer)), "D3D12 debug layer unavailable");
-            layer->EnableDebugLayer();
+            static std::once_flag enabled;
+            std::call_once(enabled, [] {
+                ComPtr<ID3D12Debug> layer;
+                hr(D3D12GetDebugInterface(IID_PPV_ARGS(&layer)), "D3D12 debug layer unavailable");
+                layer->EnableDebugLayer();
+            });
         }
         hr(CreateDXGIFactory1(IID_PPV_ARGS(&factory)), "Create DXGI factory");
         ComPtr<IDXGIAdapter1> adapter;

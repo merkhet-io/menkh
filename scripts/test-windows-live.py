@@ -3,10 +3,10 @@
 import argparse, atexit, ctypes, hashlib, json, math, os, shutil, statistics, struct, subprocess, time
 from pathlib import Path
 assert os.name=='nt','Run on Windows with the native viewer'
-p=argparse.ArgumentParser();p.add_argument('--viewer',type=Path,required=True);p.add_argument('--engine',type=Path,required=True);p.add_argument('--library',type=Path,required=True);p.add_argument('--out',type=Path,default=Path('out/windows-live'));a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--viewer',type=Path,required=True);p.add_argument('--engine',type=Path,required=True);p.add_argument('--library',type=Path,required=True);p.add_argument('--voxel',type=float,default=.025);p.add_argument('--out',type=Path,default=Path('out/windows-live'));a=p.parse_args()
 root=a.out.resolve();root.mkdir(parents=True,exist_ok=True);source=root/'inputs café';source.mkdir(exist_ok=True)
 viewer=str(a.viewer.resolve());engine=str(a.engine.resolve());library=str(a.library.resolve())
-job=dict(version=1,units='mm',bounds=dict(lo=[-3,-2,0],hi=[3,2,3]),voxel_mm=.05,stock=dict(primitives=[dict(box=dict(lo=[-3,-2,0],hi=[3,2,3]))]),tools=[dict(cutter=dict(kind='ball',radius=.45,length=2))],motion_tolerance_mm=.01,export_mesh=False,operations=[])
+job=dict(version=1,units='mm',bounds=dict(lo=[-3,-2,0],hi=[3,2,3]),voxel_mm=a.voxel,stock=dict(primitives=[dict(box=dict(lo=[-3,-2,0],hi=[3,2,3]))]),tools=[dict(cutter=dict(kind='ball',radius=.45,length=2))],motion_tolerance_mm=.01,export_mesh=False,operations=[])
 position=[-2.5,-1.5,1.7]
 for row in range(40):
  for col in range(61):

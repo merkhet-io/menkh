@@ -75,6 +75,25 @@ inline Json lastProgress(const fs::path &path) {
     const auto previous = text.rfind('\n', end - 1); const auto begin = previous == std::string::npos ? 0 : previous + 1;
     try { return Json::parse(text.substr(begin, end - begin)); } catch (...) { return {}; }
 }
+// Published control files are atomically replaced. Share DELETE so an open
+// reader does not block the producer; tolerate the brief rename-open race.
+inline std::optional<Json> readPublishedJson(const fs::path &path) {
+    for(int attempt=0;attempt<20;++attempt) {
+        WinHandle file;
+        file.value=CreateFileW(path.c_str(),GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);
+        if(file.value==INVALID_HANDLE_VALUE) {
+            const auto error=GetLastError();
+            if(error==ERROR_FILE_NOT_FOUND || error==ERROR_PATH_NOT_FOUND)return std::nullopt;
+            if(error==ERROR_ACCESS_DENIED || error==ERROR_SHARING_VIOLATION){Sleep(1);continue;}
+            throw std::runtime_error("Cannot open live publication metadata");
+        }
+        LARGE_INTEGER size{};require(GetFileSizeEx(file.value,&size)!=FALSE && size.QuadPart>=0 && size.QuadPart<=65536,"Invalid live metadata size");
+        std::string data(size_t(size.QuadPart),'\0');DWORD count=0;
+        require(ReadFile(file.value,data.data(),DWORD(data.size()),&count,nullptr)!=FALSE && count==data.size(),"Cannot read live metadata");
+        return Json::parse(data);
+    }
+    throw std::runtime_error("Live metadata remained inaccessible during replacement");
+}
 struct RunWindow {
     HWND window = nullptr, status = nullptr, progress = nullptr, cancel = nullptr;
     HANDLE group = nullptr; bool cancelled = false;
@@ -91,10 +110,9 @@ struct RunWindow {
     void liveControls() {
         if (liveOutput.empty()) return;
         if(cancelled)controlFile("cancel", true);
-        if (!cancelled && fs::is_regular_file(liveOutput/"live/status.json")) {
-            const auto state=Json::parse(read(liveOutput/"live/status.json"));
-            if (state.value("state", "") == "paused") {
-                SetWindowTextW(status,(L"Paused after operation "+std::to_wstring(state.at("completed_operations").get<uint64_t>())+L". Retained history is safe to inspect.").c_str());
+        if (!cancelled) if(const auto state=readPublishedJson(liveOutput/"live/status.json")) {
+            if (state->value("state", "") == "paused") {
+                SetWindowTextW(status,(L"Paused after operation "+std::to_wstring(state->at("completed_operations").get<uint64_t>())+L". Retained history is safe to inspect.").c_str());
             }
         }
         if (pause) EnableWindow(pause, !cancelled && fs::is_directory(liveOutput/"live"));

@@ -1,5 +1,5 @@
 #pragma once
-#include "History.hpp"
+#include "JobRunner.hpp"
 #include <windows.h>
 #include <memory>
 namespace menkh {
@@ -28,8 +28,8 @@ struct LiveWindow {
 };
 inline std::optional<LiveWindow> nextLiveWindow(const fs::path &output, uint64_t sequence) {
     const auto root=output/"live";
-    if(!fs::is_regular_file(root/"latest.json"))return std::nullopt;
-    const auto pointer=Json::parse(read(root/"latest.json",65536));
+    const auto published=readPublishedJson(root/"latest.json");if(!published)return std::nullopt;
+    const auto &pointer=*published;
     require(pointer.at("version")==1,"Unsupported live pointer");
     const auto next=pointer.at("sequence").get<uint64_t>();
     if(next<=sequence)return std::nullopt;

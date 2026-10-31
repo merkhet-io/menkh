@@ -78,7 +78,7 @@ Progress callbacks do not expose mutable material. Jobs can opt into the separat
 [leased live-publication channel](LIVE-INSPECTION.md) with `live_inspection`.
 The file transport also supports retained-range seeking. During a requested pause,
 callbacks repeat at the completed-operation boundary so hosts can still cancel.
-The Windows viewer currently opens only the completed result.
+The Windows viewer can consume these leased windows with `--live`, including while the DLL worker is paused. It still opens the normal completed result after success.
 
 ## Windows viewer
 
