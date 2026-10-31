@@ -84,6 +84,11 @@ zig-out/bin/menkh-viewer out/live-demo-job.json --live \
   --live-verify-history out/live-replay-new.json
 ```
 
+The final implementation was run again at 25 µm after the platform/control fixes.
+`final-validation.json` records its source and binary identifiers, identical final
+checkpoint, byte-exact retained replay and an additional early native cancellation
+check. Its in-progress image was also visually inspected.
+
 ## Regression evidence and boundaries
 
 - **68/68** engine tests in Debug and ReleaseFast, including live allocation failure
