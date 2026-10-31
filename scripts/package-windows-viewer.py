@@ -63,7 +63,7 @@ def main():
         if colors:
             archive.writestr('open-colors.bat', '@echo off\r\n"%~dp0menkh-viewer.exe" "%~dp0demo\\voxel-animation.json" --color-operation\r\nif errorlevel 1 pause\r\n')
         if args.job:
-            job_colors = ' --color-operation' if job.get('export_provenance') else ''
+            job_colors = ' --color-operation' if job.get('export_provenance', True) else ''
             archive.writestr('calculate-demo.bat', '@echo off\r\n"%~dp0menkh-viewer.exe" "%~dp0demo\\job.json"' + job_colors + '\r\nif errorlevel 1 pause\r\n')
         if args.engine:
             archive.writestr('CALCULATION.txt', '''The engine is bundled as menkh.exe. No Zig/compiler installation is needed.

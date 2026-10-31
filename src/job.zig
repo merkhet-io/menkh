@@ -33,8 +33,8 @@ pub const Job = struct {
     rays: []const Ray = &.{},
     export_mesh: bool = true,
     export_defects: bool = false,
-    export_provenance: bool = false,
-    provenance_scope: enum { final_surface, all_frames } = .final_surface,
+    export_provenance: bool = true,
+    provenance_scope: enum { final_surface, all_frames } = .all_frames,
 };
 fn read(a: std.mem.Allocator, path: []const u8) ![]u8 {
     return std.fs.cwd().readFileAlloc(a, path, 1024 * 1024 * 1024);
@@ -160,20 +160,26 @@ const Progress = struct {
         }
     }
 };
-pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: bool, voxel_override: ?f64, progress_path: ?[]const u8) !void {
-    return runControlled(a, path, out, reference, voxel_override, progress_path, null, null);
+pub const ProvenanceMode = enum { off, final_surface, all_frames };
+
+pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: bool, voxel_override: ?f64, progress_path: ?[]const u8, provenance_override: ?ProvenanceMode) !void {
+    return runControlled(a, path, out, reference, voxel_override, progress_path, null, null, provenance_override);
 }
 fn resolveSource(a: std.mem.Allocator, source: *Stock, base: []const u8) !void {
     if (source.state_file) |p| source.state_file = try std.fs.path.resolve(a, &.{ base, p });
     if (source.stl) |*mesh| mesh.path = try std.fs.path.resolve(a, &.{ base, mesh.path });
 }
-pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: bool, voxel_override: ?f64, progress_path: ?[]const u8, working_dir: ?[]const u8, hooks: ?Hooks) !void {
+pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: bool, voxel_override: ?f64, progress_path: ?[]const u8, working_dir: ?[]const u8, hooks: ?Hooks, provenance_override: ?ProvenanceMode) !void {
     var total = try std.time.Timer.start();
     const bytes = try read(a, path);
     defer a.free(bytes);
     const parsed = try std.json.parseFromSlice(Job, a, bytes, .{ .allocate = .alloc_always });
     defer parsed.deinit();
     var j = parsed.value;
+    if (provenance_override) |mode| {
+        j.export_provenance = mode != .off;
+        if (mode != .off) j.provenance_scope = if (mode == .all_frames) .all_frames else .final_surface;
+    }
     if (working_dir) |base| {
         const paths = parsed.arena.allocator();
         try resolveSource(paths, &j.stock, base);

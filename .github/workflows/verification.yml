@@ -49,8 +49,10 @@ jobs:
           python3 scripts/test-sdk.py
       - name: Consistent live publication, leases and cancellation
         run: python3 scripts/test-live-inspection.py
-      - name: Job CLI voxel overrides
-        run: python3 scripts/test-job-options.py
+      - name: Job CLI overrides
+        run: |
+          python3 scripts/test-job-options.py
+          python3 scripts/test-provenance-options.py
       - name: Independent final-surface provenance oracle
         run: |
           python3 scripts/test-provenance.py
@@ -92,6 +94,9 @@ jobs:
       - name: ReleaseFast tests
         shell: pwsh
         run: ./zig.ps1 build test -Doptimize=ReleaseFast --summary all
+      - name: Provenance CLI defaults and overrides
+        shell: pwsh
+        run: python scripts/test-provenance-options.py
       - name: Live publication and reader leases
         shell: pwsh
         run: |

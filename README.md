@@ -271,9 +271,24 @@ The default `drill` command also emits `voxel-animation.json`. Its `animation.js
 continues to open the mesh animation on macOS and now routes the Windows viewer
 to the matching voxel history. Regenerate older mesh-only outputs once.
 
-Optional [surface exposure coloring](docs/SURFACE-PROVENANCE.md) identifies
-the operation that exposed each surviving voxel face. Enable `export_provenance`
-in a job and use `--color-operation` or `--color-tool` in either native voxel viewer. Add `"provenance_scope": "all_frames"` for exact attribution while scrubbing; the default `final_surface` scope uses less memory.
+[Surface exposure coloring](docs/SURFACE-PROVENANCE.md) identifies the operation
+that exposed each voxel face. General JSON jobs now export playback-wide
+provenance by default, including surfaces removed later. Open the result with
+`--color-operation` or `--color-tool` in either native voxel viewer and scrub
+through the history. Original stock faces remain neutral.
+
+```sh
+zig-out/bin/menkh job examples/general.json --out out/colored
+zig-out/bin/menkh-viewer out/colored/voxel-animation.json --color-operation --frame 0
+# Override existing JSON settings without editing the file:
+zig-out/bin/menkh job examples/general.json --provenance all_frames --out out/playback
+zig-out/bin/menkh job examples/general.json --provenance final_surface --out out/final-only
+zig-out/bin/menkh job examples/general.json --no-provenance --out out/no-colors
+```
+
+Playback attribution uses additional memory and export time. Use `final_surface`
+for lower-memory final-result attribution or `off` / `--no-provenance` to disable
+it. Explicit JSON settings remain supported; CLI options take precedence.
 
 ## Further capabilities
 

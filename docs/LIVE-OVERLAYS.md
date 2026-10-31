@@ -22,8 +22,8 @@ It is intentionally different from the curved path's result: excess/missing
 colors are geometric target differences, **not simulation-error measurements**.
 
 For another job, use `menkh-viewer job.json --live`. Target and fixture primitives,
-STL inputs or saved states use the existing job schema. Set
-`"export_provenance": true` for live exposure colors. This works with either
+STL inputs or saved states use the existing job schema. Live exposure colors are exported by default; explicit
+`"export_provenance": false` disables them. This works with either
 completed-history provenance scope; `final_surface` still applies only to the
 completed archive. Live windows always retain attribution throughout their range.
 

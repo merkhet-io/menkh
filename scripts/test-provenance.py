@@ -4,7 +4,7 @@ import argparse,json,struct,subprocess,os
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser();p.add_argument('--out',type=Path,default=ROOT/'out/provenance-test');args=p.parse_args();out=args.out.resolve();out.mkdir(parents=True,exist_ok=True)
-job=json.loads((ROOT/'examples/general.json').read_text());job['export_mesh']=False;job['export_provenance']=True
+job=json.loads((ROOT/'examples/general.json').read_text());job['export_mesh']=False;job['export_provenance']=True;job['provenance_scope']='final_surface'
 (out/'job.json').write_text(json.dumps(job));exe=ROOT/('zig-out/bin/menkh.exe' if os.name=='nt' else 'zig-out/bin/menkh')
 with (out/'run.log').open('w') as log:subprocess.run([str(exe),'job',str(out/'job.json'),'--out',str(out)],check=True,stdout=log,stderr=log)
 h=json.loads((out/'voxel-animation.json').read_text());n=h['grid'];nb=h['block_grid'];full=0xfffffffe;empty=0xffffffff

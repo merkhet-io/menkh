@@ -114,7 +114,7 @@ fn execute() !void {
     const args = try std.process.argsAlloc(a);
     defer std.process.argsFree(a, args);
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help")) {
-        std.debug.print("menkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--voxel MM] [--out DIR] [--progress FILE] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
+        std.debug.print("menkh inspect-defects JOB STATE OUT_DIR\nmenkh inspect-state FILE\nmenkh job FILE [--provenance all_frames|final_surface|off] [--no-provenance] [--voxel MM] [--out DIR] [--progress FILE] [--reference]\nmenkh demo|export|bench|drill [--voxel MM] [--grid N] [--out DIR] [--repeats N] [--reference] [--no-mesh]\n", .{});
         return;
     }
     const command = args[1];
@@ -179,11 +179,22 @@ fn execute() !void {
         var output: []const u8 = "out/job";
         var ref = false;
         var voxel_override: ?f64 = null;
+        var provenance_override: ?@import("job.zig").ProvenanceMode = null;
         var progress_path: ?[]const u8 = null;
         var j: usize = 3;
         while (j < args.len) : (j += 1) {
             if (std.mem.eql(u8, args[j], "--reference")) {
                 ref = true;
+                continue;
+            }
+            if (std.mem.eql(u8, args[j], "--no-provenance")) {
+                provenance_override = .off;
+                continue;
+            }
+            if (std.mem.eql(u8, args[j], "--provenance")) {
+                if (j + 1 >= args.len) return error.MissingArgument;
+                j += 1;
+                provenance_override = std.meta.stringToEnum(@import("job.zig").ProvenanceMode, args[j]) orelse return error.InvalidProvenanceMode;
                 continue;
             }
             if (std.mem.eql(u8, args[j], "--progress")) {
@@ -203,7 +214,7 @@ fn execute() !void {
             j += 1;
             output = args[j];
         }
-        try @import("job.zig").run(a, args[2], output, ref, voxel_override, progress_path);
+        try @import("job.zig").run(a, args[2], output, ref, voxel_override, progress_path, provenance_override);
         return;
     }
     if (!std.mem.eql(u8, command, "demo") and !std.mem.eql(u8, command, "export") and !std.mem.eql(u8, command, "bench") and !std.mem.eql(u8, command, "drill")) return error.InvalidCommand;
