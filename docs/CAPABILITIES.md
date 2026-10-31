@@ -19,7 +19,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Simultaneous orientation change / 5-axis | Restricted cylinder-wheel increment | Explicit unwrapped XYZAC interpolation, continuous conservative coverage and per-operation bound; cylinder only, no machine kinematics or rotary shank/holder. [Contract](GRINDING.md) |
 | Cutting vs shank/holder geometry | Implemented, validated | Separate finite cylindrical noncutting components, offsets above cutting length |
 | Stock/fixture collisions | Implemented, restricted | Swept center contacts plus conservative whole-cell separation; explicit not-checked/unresolved states, independent fixtures, operation IDs and candidate bounds; pre-operation stock conservatism remains |
-| C embedding boundary | Restricted initial API | Shared library, opaque handles, synchronous flat/ball lines and XYZAC cylinder cuts, queries and state buffers; no viewer integration, custom allocator callbacks or mid-cut cancellation. [Contract](C-API.md) |
+| C embedding boundary | Restricted initial API | Shared/static libraries, opaque handles, cuts/queries/state/copied history and cancellable JSON jobs; Windows DLL viewer integration. Cancellation at operation boundaries; no custom allocator callbacks or live material publication. [Contract](C-API.md) |
 | Versioned JSON jobs | Implemented, validated | Strict Zig JSON parsing, units, tool/operation validation, stable IDs, operation history |
 | Resumable state | Implemented, validated | Little-endian checked format, checksums, slot/index/padding validation; same-grid resumption |
 | Reversible history | Implemented, validated | Transactional Zig replay tests; native general-job and full 4096³ forward/backward/forward replay |

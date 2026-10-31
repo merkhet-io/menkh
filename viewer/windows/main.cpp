@@ -191,8 +191,8 @@ int wmain(int argc, wchar_t **argv) {
     try {
         fs::path input = argc < 2 ? chooseInput() : fs::path(argv[1]);
         if(input.empty()) return 0;
-        if(input==L"--help") {std::cout << "menkh-viewer.exe [JOB_OR_HISTORY.json] [--engine PATH] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";return 0;}
-        fs::path engine, jobOutput, workingDirectory;
+        if(input==L"--help") {std::cout << "menkh-viewer.exe [JOB_OR_HISTORY.json] [--engine PATH | --library DLL] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";return 0;}
+        fs::path engine, jobOutput, workingDirectory, library;
         bool runOnly=false, frameExplicit=false;
         int cancelAfter=-1;
         bool warp = false, debug = false, verify = false;
@@ -202,9 +202,9 @@ int wmain(int argc, wchar_t **argv) {
         for (int i = 2; i < argc; i++) {
             std::wstring a = argv[i];
             if (a == L"--run-only") runOnly=true;
-            else if ((a==L"--engine" || a==L"--job-output" || a==L"--working-dir" || a==L"--cancel-after-ms") && i+1<argc) {
+            else if ((a==L"--engine" || a==L"--library" || a==L"--job-output" || a==L"--working-dir" || a==L"--cancel-after-ms") && i+1<argc) {
                 const std::wstring value=argv[++i];
-                if(a==L"--engine")engine=value;else if(a==L"--job-output")jobOutput=value;else if(a==L"--working-dir")workingDirectory=value;
+                if(a==L"--engine")engine=value;else if(a==L"--library")library=value;else if(a==L"--job-output")jobOutput=value;else if(a==L"--working-dir")workingDirectory=value;
                 else {size_t used=0;cancelAfter=std::stoi(value,&used);require(used==value.size() && cancelAfter>=0,"Invalid cancellation delay");}
             }
             else if (a == L"--color-operation") colorMode=1;
@@ -236,8 +236,8 @@ int wmain(int argc, wchar_t **argv) {
         }
         const auto header=Json::parse(read(input,64<<20));
         const bool calculated=header.contains("version") && !header.contains("format");
-        if(calculated) {const auto result=calculateJob(input,engine,jobOutput,workingDirectory,cancelAfter);if(!result)return 2;input=*result;}
-        else require(!runOnly && engine.empty() && jobOutput.empty() && workingDirectory.empty() && cancelAfter<0,"Calculation options require a job JSON");
+        if(calculated) {const auto result=calculateJob(input,engine,jobOutput,workingDirectory,cancelAfter,library);if(!result)return 2;input=*result;}
+        else require(!runOnly && engine.empty() && library.empty() && jobOutput.empty() && workingDirectory.empty() && cancelAfter<0,"Calculation options require a job JSON");
         App app{input};
         if(colorMode) {require(app.history.hasProvenance,"Enable export_provenance in the job first");app.camera.colorMode=colorMode;if(!frameExplicit)frame=app.history.steps.size();}
         if(calculated && !frameExplicit)frame=app.history.steps.size();

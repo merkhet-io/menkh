@@ -134,31 +134,55 @@ pub fn json(a: std.mem.Allocator, dir: std.fs.Dir, name: []const u8, value: anyt
     defer a.free(bytes);
     try dir.writeFile(.{ .sub_path = name, .data = bytes });
 }
+pub const Hooks = struct {
+    context: ?*anyopaque,
+    callback: *const fn (?*anyopaque, u32, u64, u64) callconv(.c) u32,
+};
 const Progress = struct {
     allocator: std.mem.Allocator,
     file: ?std.fs.File,
     total: usize,
+    hooks: ?Hooks = null,
     fn emit(p: Progress, phase: []const u8, completed: usize, operation: ?[]const u8) !void {
-        const file = p.file orelse return;
-        const line = try std.json.Stringify.valueAlloc(p.allocator, .{ .version = 1, .phase = phase, .completed_operations = completed, .total_operations = p.total, .operation = operation }, .{});
-        defer p.allocator.free(line);
-        try file.writeAll(line);
-        try file.writeAll("\n");
+        if (p.file) |file| {
+            const line = try std.json.Stringify.valueAlloc(p.allocator, .{ .version = 1, .phase = phase, .completed_operations = completed, .total_operations = p.total, .operation = operation }, .{});
+            defer p.allocator.free(line);
+            try file.writeAll(line);
+            try file.writeAll("\n");
+        }
+        if (p.hooks) |hooks| {
+            const code: u32 = if (std.mem.eql(u8, phase, "initializing_stock")) 0 else if (std.mem.eql(u8, phase, "initializing_target")) 1 else if (std.mem.eql(u8, phase, "initializing_fixtures")) 2 else if (std.mem.eql(u8, phase, "cutting")) 3 else if (std.mem.eql(u8, phase, "finalizing")) 4 else if (std.mem.eql(u8, phase, "complete")) 5 else 6;
+            const cancel = hooks.callback(hooks.context, code, completed, p.total);
+            if (cancel != 0 and code != 5) return error.Cancelled;
+        }
     }
 };
 pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: bool, voxel_override: ?f64, progress_path: ?[]const u8) !void {
+    return runControlled(a, path, out, reference, voxel_override, progress_path, null, null);
+}
+fn resolveSource(a: std.mem.Allocator, source: *Stock, base: []const u8) !void {
+    if (source.state_file) |p| source.state_file = try std.fs.path.resolve(a, &.{ base, p });
+    if (source.stl) |*mesh| mesh.path = try std.fs.path.resolve(a, &.{ base, mesh.path });
+}
+pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: bool, voxel_override: ?f64, progress_path: ?[]const u8, working_dir: ?[]const u8, hooks: ?Hooks) !void {
     var total = try std.time.Timer.start();
     const bytes = try read(a, path);
     defer a.free(bytes);
     const parsed = try std.json.parseFromSlice(Job, a, bytes, .{ .allocate = .alloc_always });
     defer parsed.deinit();
     var j = parsed.value;
+    if (working_dir) |base| {
+        const paths = parsed.arena.allocator();
+        try resolveSource(paths, &j.stock, base);
+        if (j.target) |*source| try resolveSource(paths, source, base);
+        if (j.fixtures) |*source| try resolveSource(paths, source, base);
+    }
     if (voxel_override) |h| {
         if (!std.math.isFinite(h) or h <= 0) return error.InvalidVoxelSize;
         j.voxel_mm = h;
     }
     try validate(a, j);
-    var progress = Progress{ .allocator = a, .file = null, .total = j.operations.len };
+    var progress = Progress{ .allocator = a, .file = null, .total = j.operations.len, .hooks = hooks };
     if (progress_path) |p| {
         try std.fs.cwd().makePath(std.fs.path.dirname(p) orelse ".");
         progress.file = try std.fs.cwd().createFile(p, .{});
@@ -231,6 +255,7 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
     defer changes.deinit(a);
     var occupied = initial;
     var history_bytes: usize = 0;
+    try progress.emit("ready", 0, null);
     for (j.operations, 0..) |op, index| {
         var shape: e.Shape = undefined;
         var toolpos: e.V = .{ 0, 0, 0 };
@@ -289,7 +314,7 @@ pub fn run(a: std.mem.Allocator, path: []const u8, out: []const u8, reference: b
         const volume = @as(f64, @floatFromInt(changes.removed)) * g.h * g.h * g.h;
         reports[index] = .{ .work = changes.work, .id = op.id, .removed_voxels = changes.removed, .engagement_volume_mm3 = volume, .remaining_voxels = occupied, .affected_region = changes.affected, .motion_over_removal_bound_mm = bound, .sweep_pieces = if (arc_plan) |plan| plan.segments.len else 1, .cut_ns = cut_ns, .collision_ns = collision_ns, .history_write_ns = history_ns, .shank_stock = shank, .holder_stock = holder, .shank_fixture = sf, .holder_fixture = hf, .cutter_fixture = cf, .geometric_feed_time_min = minutes, .average_removal_mm3_min = if (minutes != null and minutes.? > 0) volume / minutes.? else null };
         frames[index] = .{ .file = name, .stage = op.id, .occupied = occupied, .changed_blocks = changes.blocks, .delta_bytes = changes.bytes.items.len, .tool = toolpos, .axis = if (op.line) |l| l.b.axis else if (op.arc) |arc| arc.axis else if (op.rotary) |r| r.b.axis() else .{ 0, 0, 1 }, .shank = if (op.tool) |t| j.tools[t].shank else null, .holder = if (op.tool) |t| j.tools[t].holder else null, .cutter = if (op.tool) |t| j.tools[t].cutter else null };
-        std.debug.print("{s}: removed {d} voxels, {d:.3} ms\n", .{ op.id, changes.removed, @as(f64, @floatFromInt(cut_ns)) / 1e6 });
+        if (hooks == null) std.debug.print("{s}: removed {d} voxels, {d:.3} ms\n", .{ op.id, changes.removed, @as(f64, @floatFromInt(cut_ns)) / 1e6 });
         try progress.emit("cutting", index + 1, op.id);
     }
     try progress.emit("finalizing", j.operations.len, null);

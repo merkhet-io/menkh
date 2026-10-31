@@ -1,69 +1,109 @@
-# Synchronous C embedding increment
+# C embedding API and native viewer integration
 
-Issue #23 remains open: this is a working, deliberately small embedding boundary,
-not the complete SDK integration contract or a replacement of the viewers' job
-runner. The viewers still use a supervised CLI process.
+The version-1 C ABI supports both individual material operations and complete
+JSON jobs. The Windows viewer can load the same DLL as the independent C host;
+no simulation subprocess is needed for this mode. macOS keeps its existing
+process-based viewer runner; its C hosts support both library forms.
 
 ```sh
 ./zig build sdk -Doptimize=ReleaseFast
+./zig build sdk-static -Doptimize=ReleaseFast
 ./zig build sdk-test
 ./zig build sdk-test -Doptimize=ReleaseFast
 python3 scripts/test-sdk.py
 ```
 
-The optional `sdk` target installs `include/menkh.h` and a shared library under
-`zig-out` (dylib on macOS, DLL/import library on Windows). Ordinary CLI/viewer
-builds do not require it. `examples/embed.c` is an independent C11 host: it creates
-stock, cuts, queries all cells against its own oracle, serializes/restores state,
-and cuts both the uninterrupted and resumed handles. It writes a normal
-`MENKHST1` checkpoint that the existing CLI can inspect.
+The shared target installs `include/menkh.h` and a dylib or DLL/import library.
+The static target installs `libmenkh-static.a` or `menkh-static.lib`. The macOS
+static target uses the installed Apple librarian to normalize Mach-O archive
+alignment and includes the Zig runtime helpers needed by an ordinary C linker.
+No global packages are installed. Normal CLI builds remain independent.
 
-## Implemented contract
+## Ownership, concurrency and compatibility
 
-- `menkh_abi_version()` returns 1. Function names have a `_v1` suffix and layouts
-  are fixed in the header; incompatible extensions must use new entry points.
-- Opaque handles own their grids/scratch and must be destroyed using this library.
-  Inputs and caller-owned output buffers are not retained. Do not free a handle
-  with the host's allocator. Internally each handle carries its allocator; this
-  C entry point currently chooses the platform C allocator. Custom allocator
-  callbacks are not exposed yet.
-- Calls on one handle must be serialized; separate handles are independent.
-  There is no shared mutable error buffer. Status messages are immutable strings
-  owned by the library; callers must not free them.
-- Create cuboid stock, or load existing checksummed material-state bytes. The
-  reader accepts at most 1 GiB. No JSON/STL parsing entry point is exposed yet.
-- Apply complete finite flat or ball-end tools along fixed-axis lines; cylindrical
-  wheels additionally accept the [bounded XYZAC contract](GRINDING.md).
-- Point occupancy, cached occupied count, removed/remaining counts, raster volume,
-  motion bound, and wheel sweep-piece count are returned by real operations.
-- A failed cut leaves material unchanged; allocated scratch capacity may grow.
-  Reports are written only on success. Constructors/restorers clear the output
-  handle before attempting work. Null pointer arguments are checked; as with
-  ordinary C APIs, non-null pointers and supplied capacities must refer to valid
-  live objects/buffers of the stated size.
-- State size query returns `MENKH_BUFFER_TOO_SMALL` with the required byte count.
-  Insufficient buffers are not written. Output uses the existing portable state
-  format; loading validates it rather than trusting caller metadata.
+- `menkh_abi_version()` returns 1. Existing `_v1` entry-point layouts remain fixed;
+  the job/history entry points are additive. Hosts must check their required
+  symbols as well as the ABI version. No C++ ABI is exposed.
+- Opaque material handles own grid and scratch allocations. Destroy them with
+  this library, not the host allocator. Inputs and caller-owned output buffers
+  are never retained. The public constructor selects the platform C allocator;
+  custom allocator callbacks are not exposed.
+- Serialize calls on a material handle. Different handles/jobs may be independent
+  provided they use distinct output directories. There is no global mutable
+  error buffer and the job API never changes process working directory.
+- Callbacks run synchronously on the thread calling `menkh_run_job_v1`; they must
+  not unwind across C. Context ownership stays with the caller until return.
+  Immutable status-message strings belong to the library.
+- Buffers/pointers supplied by the host must be valid and live for the call.
+  Null arguments and capacities are checked. State size queries return required
+  bytes without writing an undersized buffer. Constructors clear their output
+  handle on failure; failed cuts preserve occupancy (scratch capacity may grow).
+- State buffers use the existing checksummed `MENKHST1` format, capped at 1 GiB
+  on read. This is compatible with CLI checkpoints. History uses the existing
+  validated delta format; do not apply deltas across compaction/unrelated states.
 
-The host drives one synchronous operation at a time and can report progress or
-cancel **between calls**. Mid-operation cancellation, job-level callbacks,
-borrowed views into occupancy/history, history replay, fixture/holder checks,
-mesh import, and native viewer integration are not part of this API yet. Nothing
-silently substitutes those behaviors. Material is still authoritative binary
-occupancy; these calls do not supply physical machining time.
+## Material operations and copied history
+
+Create cuboid stock or restore checked state bytes. Apply complete flat/ball tools
+along fixed-axis lines, or cylindrical wheels under the [XYZAC contract](GRINDING.md).
+Query occupancy/counts and receive removed volume, remaining cells and declared
+motion bounds. Geometry remains voxel-center occupancy, not a physical time model.
+
+`menkh_history_write_v1` copies the last successful cut's delta into caller storage.
+Copy it before the next cut. `menkh_history_apply_v1` validates then applies it
+forward/backward transactionally, refreshes counts and invalidates the last-delta
+view. The host controls retained history size; the library does not retain all
+past deltas automatically. Checkpoint/resume and replay are distinct operations.
+
+## Whole jobs, progress and cancellation
+
+`menkh_run_job_v1(job, output, working_dir, callback, context)` executes the same
+versioned JSON job implementation as the CLI, including its supported stock,
+target, fixture, tool, motion, query and export features. Paths passed to the API
+must be absolute UTF-8. Relative asset paths resolve against `working_dir` without
+calling `chdir`. Output must be new/empty; the viewer's `launch.json` is allowed.
+Existing material/history output is rejected rather than overwritten.
+
+The optional callback receives phase, completed-operation count and total:
+0 stock, 1 target, 2 fixtures, 3 completed cut, 4 finalizing, 5 complete, 6 ready.
+An initial notification precedes parsing and has total zero. Return nonzero to
+request cancellation. Requests are observed at these consistent boundaries;
+there is no promise to interrupt a long cut or import midway. Cancellation
+retains completed deltas/partial files, returns `MENKH_CANCELLED`, and does not
+publish a final result manifest. After phase 5, cancellation cannot roll back the
+completed job and its return value is ignored. Failures have stable status codes
+and a best-effort per-run diagnostic log.
+
+Progress is not live material inspection. The whole-job API publishes completed
+results; #24 separately tracks bounded live snapshots and retained-range seeking.
+
+## Windows viewer
+
+Place `menkh.dll` beside `menkh-viewer.exe` and open a job; the viewer selects the
+library automatically. Batch/project builds copy an available repository-built
+DLL, and portable packages include it. `--library PATH` selects one explicitly;
+`--engine PATH` explicitly retains the subprocess path. These flags are mutually
+exclusive. Missing or incompatible selected libraries fail clearly.
+
+A worker thread invokes the job API, the UI pumps messages and shows progress,
+and Cancel/close requests cancellation after the current operation. The worker
+is joined before unloading the DLL or destroying its callback context. Only a
+successful job opens the final renderer. `launch.json` identifies library mode
+and the viewer PID; no engine process is created.
 
 ## Validation
 
-The independent C host checks all 12,000 voxel centers of a capsule-groove case,
-zero-error exact-cylinder reporting, idempotence, rejected orientation changes,
-invalid queries, undersized output buffers, corrupt checkpoint rejection and
-byte-identical uninterrupted/resumed rotary cutting. The CLI reads the C host's
-final checkpoint. Zig failure-injection tests run every allocation site through
-creation, cut, serialization and restoration and check failed-cut atomicity.
-These tests supplement the engine suite; they do not prove ABI correctness or
-floating-point behavior. The existing Lean scope is unchanged.
+`examples/embed.c` is compiled independently against shared **and static** builds.
+It checks 12,000 occupancy queries against its own capsule-groove calculation,
+idempotence, invalid inputs, buffer bounds, dense-grid capacity rejection,
+corrupt states, copied-history undo/redo, and byte-identical resumed rotary cuts.
+The CLI reads the resulting checkpoint. Failure injection covers allocation and
+failed-cut atomicity in Debug and ReleaseFast.
 
-Actual macOS dynamic-library and Windows DLL host runs passed in
-[CI for the reviewed SDK commit](https://github.com/merkhet-io/menkh/actions/runs/41148405936).
-The Windows cross-build also completed locally, but native CI execution—not the
-cross-build—is the evidence that the host can load and call the DLL.
+`examples/run_job.c` exercises the callback from a C host. Tests require exact
+material equality with CLI jobs, relative Unicode/spaced asset paths, unchanged
+process working directory, overwrite refusal, invalid jobs, and cancellation
+before work and after operations 1 and 3. Windows CI runs the same viewer lifecycle
+suite against both process and DLL modes, including cancellation with no surviving
+worker/process, errors and automatic D3D12 result rendering. These tests do not
+prove the complete ABI or Zig executable; the existing Lean scope is unchanged.

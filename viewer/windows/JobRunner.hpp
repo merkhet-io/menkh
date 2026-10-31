@@ -6,6 +6,9 @@
 #include <chrono>
 #include <optional>
 #include <iostream>
+#include <atomic>
+#include <thread>
+#include "../../include/menkh.h"
 #pragma comment(lib, "comdlg32.lib")
 namespace menkh {
 struct WinHandle {
@@ -79,7 +82,7 @@ struct RunWindow {
         cancelled = true;
         if (group) TerminateJobObject(group, 2);
         if (cancel) EnableWindow(cancel, FALSE);
-        if (status) SetWindowTextW(status, L"Cancelling calculation…");
+        if (status) SetWindowTextW(status, group ? L"Cancelling calculation…" : L"Cancelling after the current operation…");
     }
     static LRESULT CALLBACK procedure(HWND window, UINT message, WPARAM w, LPARAM l) {
         auto *s = reinterpret_cast<RunWindow *>(GetWindowLongPtrW(window, GWLP_USERDATA));
@@ -119,8 +122,56 @@ struct RunWindow {
         } catch (...) { /* Ignore incomplete/unrecognized progress, never the process exit code. */ }
     }
 };
-inline std::optional<fs::path> calculateJob(const fs::path &input, fs::path engine, fs::path output, fs::path cwd, int cancelAfter) {
-    engine = findEngine(engine); const auto job = fs::absolute(input);
+inline std::optional<fs::path> calculateLibrary(const fs::path &job, const fs::path &library, const fs::path &output, const fs::path &cwd, int cancelAfter) {
+    struct Module { HMODULE h=nullptr; ~Module(){if(h)FreeLibrary(h);} } module;
+    module.h=LoadLibraryExW(library.c_str(),nullptr,LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    require(module.h!=nullptr,"Cannot load selected engine library");
+    const auto run=reinterpret_cast<decltype(&menkh_run_job_v1)>(GetProcAddress(module.h,"menkh_run_job_v1"));
+    const auto version=reinterpret_cast<decltype(&menkh_abi_version)>(GetProcAddress(module.h,"menkh_abi_version"));
+    require(run && version && version()==1,"Incompatible engine job API");
+    struct State {
+        std::atomic<bool> cancel{false},finished{false};
+        std::atomic<uint32_t> phase{0};
+        std::atomic<uint64_t> done{0},total{0};
+        menkh_status result=MENKH_INVALID_ARGUMENT;
+    } state;
+    RunWindow ui;ui.create();
+    if(cancelAfter==0){ui.stop();state.cancel=true;}
+    const auto input=job.u8string(),destination=output.u8string(),base=cwd.u8string();
+    {
+        std::ofstream file(output/"launch.json");
+        file<<Json{{"mode","library"},{"viewer_pid",GetCurrentProcessId()},{"library",library.u8string()},{"job",input},{"working_directory",base}}.dump(2);
+        require(bool(file),"Cannot write library launch metadata");
+    }
+    struct Worker {
+        State &state;std::thread thread;
+        ~Worker(){state.cancel=true;if(thread.joinable())thread.join();}
+    } worker{state,std::thread([&]{
+        state.result=run(input.c_str(),destination.c_str(),base.c_str(),[](void *context,uint32_t phase,uint64_t done,uint64_t total)->uint32_t {
+            auto &s=*static_cast<State*>(context);s.total=total;s.done=done;s.phase=phase;return s.cancel?1u:0u;
+        },&state);
+        state.finished=true;
+    })};
+    const auto began=std::chrono::steady_clock::now();
+    while(!state.finished){
+        MSG message{};while(PeekMessageW(&message,nullptr,0,0,PM_REMOVE)) {if(message.message==WM_QUIT)ui.stop();else{TranslateMessage(&message);DispatchMessageW(&message);}}
+        if(cancelAfter>0 && std::chrono::steady_clock::now()-began>=std::chrono::milliseconds(cancelAfter))ui.stop();
+        if(ui.cancelled)state.cancel=true;
+        const char *phase=state.phase==3?"cutting":state.phase==4?"finalizing":state.phase==5?"complete":"preparing";
+        ui.update(Json{{"version",1},{"phase",phase},{"completed_operations",state.done.load()},{"total_operations",state.total.load()},{"operation",nullptr}});
+        MsgWaitForMultipleObjects(0,nullptr,FALSE,50,QS_ALLINPUT);
+    }
+    worker.thread.join();
+    if(state.result==MENKH_CANCELLED || ui.cancelled)return std::nullopt;
+    if(state.result!=MENKH_OK)throw std::runtime_error("Library calculation failed: "+tail(output/"simulation.log"));
+    require(fs::is_regular_file(output/"voxel-animation.json"),"Library result manifest missing");
+    return output/"voxel-animation.json";
+}
+inline std::optional<fs::path> calculateJob(const fs::path &input, fs::path engine, fs::path output, fs::path cwd, int cancelAfter, fs::path library = {}) {
+    const bool explicitEngine=!engine.empty();
+    if(library.empty() && !explicitEngine && fs::is_regular_file(viewerExecutable().parent_path()/"menkh.dll"))library=viewerExecutable().parent_path()/"menkh.dll";
+    if(library.empty())engine = findEngine(engine);
+    else {require(!explicitEngine,"Choose --engine or --library");library=fs::absolute(library);require(fs::is_regular_file(library),"Selected engine library does not exist");} const auto job = fs::absolute(input);
     cwd = cwd.empty() ? job.parent_path() : fs::absolute(cwd);
     require(fs::is_directory(cwd), "Job working directory does not exist");
     if (output.empty()) {
@@ -132,6 +183,7 @@ inline std::optional<fs::path> calculateJob(const fs::path &input, fs::path engi
     require(!fs::exists(output), "Job output already exists; choose a new --job-output directory");
     fs::create_directories(output);
     std::cout << "Simulation output: " << output.u8string() << '\n';
+    if(!library.empty())return calculateLibrary(job,library,output,cwd,cancelAfter);
     WinHandle group, log, inputHandle, process, thread;
     group.value = CreateJobObjectW(nullptr, nullptr); require(group.value != nullptr, "Cannot create calculation process group");
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{}; limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;

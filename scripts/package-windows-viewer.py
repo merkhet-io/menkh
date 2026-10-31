@@ -20,6 +20,8 @@ def main():
     files = [(args.binary_dir / name, name) for name in ('menkh-viewer.exe', 'Voxel.hlsl')]
     if args.job and not args.engine:
         parser.error('--job requires --engine')
+    if (args.binary_dir / "menkh.dll").is_file():
+        files.append((args.binary_dir / "menkh.dll", "menkh.dll"))
     if args.engine:
         files.append((args.engine, 'menkh.exe'))
     if args.job:

@@ -10,14 +10,14 @@ extern "C" {
  * The library owns its handle/grid allocations; destroy them with this library.
  * Input/output buffers belong to the caller and are never retained.
  * On cut failure material remains unchanged; scratch capacity may have grown.
- * No renderer, file I/O, callbacks, machine kinematics or physical time model.
- * Cancellation/progress: the host schedules individual atomic operation calls.
+ * Material-handle calls have no renderer or file I/O. Whole-job entry points
+ * below have explicit output/callback contracts. No machine kinematics or physics.
  */
 typedef struct menkh_handle menkh_handle;
 typedef enum menkh_status {
     MENKH_OK=0, MENKH_INVALID_ARGUMENT=1, MENKH_OUT_OF_MEMORY=2,
     MENKH_UNSUPPORTED=3, MENKH_INVALID_STATE=4, MENKH_BUFFER_TOO_SMALL=5,
-    MENKH_RESOURCE_LIMIT=6
+    MENKH_RESOURCE_LIMIT=6, MENKH_IO_ERROR=7, MENKH_CANCELLED=8
 } menkh_status;
 typedef struct menkh_box { double origin[3], size[3], voxel_mm; } menkh_box;
 /* kind: 0 finite flat cylinder, 1 complete ball end mill. Others unsupported. */
@@ -42,6 +42,24 @@ menkh_status menkh_count_v1(const menkh_handle *, uint64_t *occupied);
  * Pass NULL,0 to query size. Insufficient buffers are not written. */
 menkh_status menkh_state_write_v1(const menkh_handle *, void *buffer, size_t capacity, size_t *written);
 menkh_status menkh_state_read_v1(const void *buffer, size_t bytes, menkh_handle **out);
+/* Job callback runs synchronously on the calling thread. Return nonzero to cancel.
+ * Phases: 0 stock, 1 target, 2 fixtures, 3 completed cut, 4 finalizing,
+ * 5 complete (return ignored), 6 ready. completed/total are operation counts.
+ * Initialization starts with total=0 before the job is parsed.
+ * All paths must be absolute UTF-8; asset paths resolve against working_dir,
+ * without changing the process working directory. Output uses the CLI formats.
+ * Cancellation retains completed deltas/partial files, but publishes no final
+ * result manifest. Output must be new/empty (viewer launch.json is allowed).
+ * Existing material/history output is rejected without overwriting it.
+ * Re-entry into another independent job is allowed; callbacks must not unwind.
+ */
+typedef uint32_t (*menkh_progress_v1)(void *context, uint32_t phase, uint64_t completed, uint64_t total);
+menkh_status menkh_run_job_v1(const char *job, const char *output, const char *working_dir, menkh_progress_v1 callback, void *context);
+/* Copy the last successful cut's delta; own the returned bytes before the next cut.
+ * Replay is transactional. A successful replay invalidates this handle's last delta.
+ * A restored/compacted unrelated state must not receive old slot-index history. */
+menkh_status menkh_history_write_v1(const menkh_handle *, void *, size_t capacity, size_t *written);
+menkh_status menkh_history_apply_v1(menkh_handle *, const void *, size_t bytes, uint32_t forward);
 #ifdef __cplusplus
 }
 #endif
