@@ -268,6 +268,20 @@ pub const Sweep = struct {
         const e = @sqrt(s.tool.radius * s.tool.radius + s.tool.length * s.tool.length) + s.errorBound();
         return segmentBounds(s.a.position, s.b.position).expanded(e);
     }
+    // Every supported cutter lies inside its finite radius/length cylinder.
+    // Enclose that cylinder at both endpoints and expand by the declared sweep
+    // error. The reference keeps its original broad bounds.
+    pub fn cuttingBounds(s: Sweep) Bounds {
+        const offset = scale(s.a.axis, s.tool.length / 2);
+        var box = segmentBounds(add(s.a.position, offset), add(s.b.position, offset));
+        for (0..3) |k| {
+            const u = s.a.axis[k];
+            const extent = s.tool.radius * @sqrt(@max(0, 1 - u * u)) + s.tool.length / 2 * @abs(u) + s.errorBound() + core.tolerance + (1 + s.tool.radius + s.tool.length) * 1e-8;
+            box.lo[k] -= extent;
+            box.hi[k] += extent;
+        }
+        return box;
+    }
     // Exact finite-cylinder sweep: intersect the time interval admitted by axial caps
     // with the interval admitted by the radial quadratic. Never substitutes a capsule.
     pub fn flatContains(s: Sweep, p: V, margin: f64) bool {
@@ -382,22 +396,22 @@ pub const Shape = union(enum) {
             .sweep => |v| v.bounds(),
         };
     }
-    // Tight bound for the canonical +Z finite cylinder. Other orientations retain
-    // the conservative general bound. Scalar subtraction keeps the original bound.
     pub fn cuttingBounds(s: Shape) Bounds {
-        if (s == .sweep and std.mem.eql(f64, &s.sweep.a.axis, &V{ 0, 0, 1 })) {
-            const v = s.sweep;
-            const eps = core.tolerance + v.errorBound();
-            var b = segmentBounds(v.a.position, v.b.position);
-            for (0..2) |j| {
-                b.lo[j] -= v.tool.radius + eps;
-                b.hi[j] += v.tool.radius + eps;
-            }
-            b.lo[2] -= eps;
-            b.hi[2] += v.tool.length + eps;
-            return b;
-        }
-        return s.bounds();
+        return switch (s) {
+            .primitive => |v| v.bounds(),
+            .sweep => |v| v.cuttingBounds(),
+            .path => |v| blk: {
+                var b = v[0].cuttingBounds();
+                for (v[1..]) |segment| {
+                    const bb = segment.cuttingBounds();
+                    for (0..3) |j| {
+                        b.lo[j] = @min(b.lo[j], bb.lo[j]);
+                        b.hi[j] = @max(b.hi[j], bb.hi[j]);
+                    }
+                }
+                break :blk b;
+            },
+        };
     }
     pub fn contains(s: Shape, p: V) bool {
         return switch (s) {
@@ -477,6 +491,14 @@ pub const Shape = union(enum) {
             if (all) return .inside;
             if (!capsuleContains(cap, mid, -rad - 1e-8)) return .outside;
             return .partial;
+        }
+        if (s == .sweep and !s.sweep.exact()) {
+            // Outside the dilated enclosing cylinder implies outside the cutter.
+            // Use only for rejection: the enclosure cannot establish full removal.
+            var enclosure = s.sweep;
+            enclosure.tool.kind = .flat;
+            enclosure.dilation_mm = s.sweep.errorBound();
+            if (!enclosure.flatContains(mid, -rad - 1e-8)) return .outside;
         }
         if (s == .sweep and s.sweep.exact()) {
             var all = true;
@@ -713,14 +735,28 @@ fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, availabl
         var result: core.Bits = @splat(0);
         var remaining = available;
         const box = blockBounds(g, b);
-        for (s.path) |segment| {
-            const part = Shape{ .sweep = segment };
-            const part_coverage = part.classify(box);
-            if (part_coverage == .outside) continue;
-            const removed = classifiedMask(g, b, part, false, remaining, part_coverage, work);
-            for (&result, &remaining, removed) |*out, *left, v| {
-                out.* |= v;
-                left.* &= ~v;
+        // Cull a short temporal group against one inflated pose before testing
+        // its individual sweeps. This is rejection only; the original predicates
+        // still decide every removed bit. No pose decimation or tolerance change.
+        var first: usize = 0;
+        while (first < s.path.len) : (first += 8) {
+            const group = s.path[first..@min(first + 8, s.path.len)];
+            var candidates = remaining;
+            if (group.len > 1) if (pathEnvelope(group)) |envelope| {
+                candidates = classifiedMask(g, b, .{ .sweep = envelope }, false, remaining, (Shape{ .sweep = envelope }).classify(box), work);
+            };
+            if (count(candidates) == 0) continue;
+            for (group) |segment| {
+                const part = Shape{ .sweep = segment };
+                const part_coverage = part.classify(box);
+                if (part_coverage == .outside) continue;
+                const removed = classifiedMask(g, b, part, false, candidates, part_coverage, work);
+                for (&result, &remaining, &candidates, removed) |*out, *left, *possible, v| {
+                    out.* |= v;
+                    left.* &= ~v;
+                    possible.* &= ~v;
+                }
+                if (count(candidates) == 0) break;
             }
             if (count(remaining) == 0) break;
         }
@@ -736,6 +772,25 @@ fn classifiedMask(g: core.Grid, b: [3]usize, s: Shape, reference: bool, availabl
         if (inside) bits[z] |= @as(u64, 1) << @as(u6, @intCast(y * 8 + x));
     };
     return bits;
+}
+// A solid of revolution at axes u/v moves by at most |u-v|*rho under
+// the shortest aligning rotation, where rho bounds distance from its base.
+// Add endpoint translation and the existing sweep dilation. Signed distance is
+// 1-Lipschitz, so the inflated first pose encloses every group's removed point.
+// Different tools and exact flat sweeps retain their established fast path.
+fn pathEnvelope(path: []const Sweep) ?Sweep {
+    const first = path[0];
+    if (first.exact()) return null;
+    const tool = first.tool;
+    const rho = @sqrt(tool.radius * tool.radius + tool.length * tool.length);
+    var margin: f64 = 0;
+    for (path) |s| {
+        if (s.tool.kind != tool.kind or s.tool.radius != tool.radius or s.tool.length != tool.length or s.tool.corner != tool.corner or s.tool.tip_radius != tool.tip_radius or s.tool.profile.len != tool.profile.len) return null;
+        for (s.tool.profile, tool.profile) |p, q| if (p.z != q.z or p.radius != q.radius) return null;
+        const translation = @max(norm(sub(s.a.position, first.a.position)), norm(sub(s.b.position, first.a.position)));
+        margin = @max(margin, translation + rho * norm(sub(s.a.axis, first.a.axis)) + s.errorBound());
+    }
+    return .{ .tool = tool, .a = first.a, .b = first.a, .tolerance_mm = first.tolerance_mm, .dilation_mm = margin + (1 + rho + margin) * 1e-8 };
 }
 pub fn count(bits: core.Bits) u64 {
     var n: u64 = 0;

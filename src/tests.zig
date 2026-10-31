@@ -490,3 +490,22 @@ test "live publication options have explicit limits" {
     try std.testing.expectError(error.InvalidLiveOptions, (Options{ .publish_every_operations = 33 }).validate());
     try std.testing.expectError(error.InvalidLiveOptions, (Options{ .max_snapshot_bytes = std.math.maxInt(usize) }).validate());
 }
+
+test "native screw generator freezes two continuous starts and validates options" {
+    const demo = @import("grinding_demo.zig");
+    var arena = std.heap.ArenaAllocator.init(a);
+    defer arena.deinit();
+    const job = try demo.makeJob(arena.allocator(), 0.1, 0.01, 128, true, null);
+    try @import("job.zig").validate(arena.allocator(), job);
+    try std.testing.expectEqual(@as(usize, 1024), job.operations.len);
+    try std.testing.expectApproxEqAbs(4, job.operations[0].rotary.?.a.position[2], 1e-12);
+    try std.testing.expectApproxEqAbs(36, job.operations[511].rotary.?.b.position[2], 1e-12);
+    try std.testing.expectApproxEqAbs(180, job.operations[512].rotary.?.a.c_deg, 1e-12);
+    for (0..2) |start| for (0..511) |i| {
+        try std.testing.expectEqualDeep(job.operations[start * 512 + i].rotary.?.b, job.operations[start * 512 + i + 1].rotary.?.a);
+    };
+    try std.testing.expectError(error.InvalidGrindingOptions, demo.makeJob(a, 0, 0.01, 128, false, null));
+    try std.testing.expectError(error.InvalidGrindingOptions, demo.makeJob(a, 0.1, std.math.nan(f64), 128, false, null));
+    try std.testing.expectError(error.InvalidVirtualGrid, demo.makeJob(a, 0.1, 0.01, 128, false, 16383));
+    try std.testing.expectError(error.OutOfMemory, demo.makeJob(std.testing.failing_allocator, 0.1, 0.01, 128, false, null));
+}
