@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Native screw command, exhaustive oracle, checkpoint equality and input errors."""
-import json, os, struct, subprocess
+import argparse, json, os, struct, subprocess, sys
 from pathlib import Path
 
 exe = Path('zig-out/bin/menkh' + ('.exe' if os.name == 'nt' else '')).resolve()
-root = Path('out/screw-cli-test')
+parser = argparse.ArgumentParser()
+parser.add_argument('--out', type=Path, default=Path('out/screw-cli-test'))
+root = parser.parse_args().out
 root.mkdir(parents=True, exist_ok=True)
 
 def call(args, ok=True):
@@ -27,6 +29,10 @@ protocol = json.loads((out / 'protocol.json').read_text())
 assert len(job['operations']) == protocol['operations'] == 128
 report = json.loads((out / 'result/report.json').read_text())
 assert report['remaining_occupied'] < report['initial_occupied']
+subprocess.run([sys.executable, 'scripts/check-screw-geometry.py', str(out/'result/final.menkh')], check=True)
+call(['dexel-bench', '--voxel', '.5', '--tolerance', '.08', '--steps-per-turn', '16', '--check-state', out/'result/final.menkh', '--out', root/'dexel'])
+dexel = json.loads((root/'dexel/report.json').read_text())
+assert dexel['exact_grid_comparison'] and dexel['remaining_occupied'] == report['remaining_occupied']
 assert all(o['motion_over_removal_bound_mm'] <= .08 + 1e-12 for o in report['operations'])
 call(['job', out / 'job.json', '--reference', '--out', root / 'reference'])
 assert cells(out / 'result/final.menkh') == cells(root / 'reference/final.menkh')
