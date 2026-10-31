@@ -84,7 +84,7 @@ void profileSideCandidate(inout Hit hit,float t,float3 q,float3 ray,float3 axis,
     hit.found=true;hit.t=t;hit.normal=normalize(normal);
 }
 Hit profileHit(float3 ray,float4 part,float4 axial,uint count) {
-    Hit hit;hit.found=false;hit.t=1e30;hit.normal=float3(0,0,1);hit.cell=int3(0);
+    Hit hit=miss();
     if(count<2 || part.w<=0 || axial.w<=0)return hit;
     float3 q=eye.xyz-part.xyz,axis=axial.xyz;
     float z=dot(q,axis),vz=dot(ray,axis);
