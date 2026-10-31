@@ -73,7 +73,15 @@ struct App {
             seek(history.steps.size());
         else if (key == 'R')
             camera.reset(history);
-        else if (key == 'C' && history.hasProvenance) { camera.colorMode=(camera.colorMode+1)%3; if(camera.colorMode && !history.provenanceAllFrames) seek(history.steps.size()); }
+        else if (key == 'C') {
+            if(!history.hasProvenance) {
+                SetWindowTextW(status,live ? L"Exposure colors are unavailable in live windows. Open the completed result."
+                    : L"No color data in this result. Recalculate with export_provenance: true; keep both surface-provenance files beside the history.");
+                return;
+            }
+            camera.colorMode=(camera.colorMode+1)%3;
+            if(camera.colorMode && !history.provenanceAllFrames) seek(history.steps.size());
+        }
         else if (key == 'B')
             camera.dark = !camera.dark;
         else if (key == 'T')
