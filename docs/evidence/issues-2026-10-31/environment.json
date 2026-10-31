@@ -1,0 +1,22 @@
+{
+  "hardware": "Apple M5 Max",
+  "physical_memory_bytes": 137438953472,
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "starting_commit": "6725706",
+  "grinding_baseline_commit": "d533609",
+  "path_optimization_commit": "b95b21a",
+  "notes": [
+    "250um: 1 warm-up + 3 measured repetitions, identical final state bytes",
+    "25um: one completed run, motion tolerance 0.05 mm; not a repeated benchmark",
+    "Sparse: 1 warm-up + 4 measured repetitions; RSS includes dense comparison",
+    "The Zig executable, new rotary algorithm and sparse hierarchy are not formally verified"
+  ],
+  "sha256": {
+    "out/grinding/job-25um.json": "f22e3d3f1e90a30492527da95cacf489b7d5e6793e5aa8aa910409bd429a3b4e",
+    "out/grinding/25um/final.menkh": "e55534f157ef4fbfd33e2a4c539aec5fb006ae6e8bc684561f280a909d2a28ee"
+  },
+  "binary_sha256": "9a9f478fc1e53b96f711a81ca7a9caad98db56d60e8e4b1bf43e71123e7e6908",
+  "derived_sweep_pieces": 11156
+}

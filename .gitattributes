@@ -1,1 +1,4 @@
 viewer/windows/vendor/* linguist-vendored
+
+# Raw reproducibility records; keep implementation diffs readable on GitHub.
+docs/evidence/**/*.json linguist-generated=true

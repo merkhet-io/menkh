@@ -1,0 +1,5299 @@
+{
+  "format": "menkh-job-report-v1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "reference": false,
+  "input_voxel_mm": 0.025,
+  "voxel_override_mm": null,
+  "voxel_mm": 0.025,
+  "origin_mm": [
+    -12,
+    -12,
+    0
+  ],
+  "bounds": {
+    "lo": [
+      -12,
+      -12,
+      0
+    ],
+    "hi": [
+      12,
+      12,
+      100
+    ]
+  },
+  "raster_approximation": true,
+  "initial_occupied": 2895216000,
+  "remaining_occupied": 2326266772,
+  "remaining_volume_mm3": 36347.918312500005,
+  "stats": {
+    "occupied": 2326266772,
+    "empty_blocks": 2561706,
+    "full_blocks": 4442628,
+    "mixed_blocks": 195666,
+    "descriptor_bytes": 28800000,
+    "pool_bytes": 53908480,
+    "pool_used_bytes": 53844736
+  },
+  "history_bytes": 139048168,
+  "cut_scratch_capacity_bytes": 28300940,
+  "process_peak_rss_bytes": 334675968,
+  "timing": {
+    "job_parse_validate_ns": 788417,
+    "image_export_ns": 8167500,
+    "checkpoint_encode_ns": 10735125,
+    "checkpoint_write_ns": 6699916,
+    "metadata_write_ns": 233167,
+    "init_ns": 103171583,
+    "stock_input": {
+      "read_ns": 0,
+      "parse_bvh_ns": 0,
+      "voxelization_ns": 103169709,
+      "state_decode_ns": 0,
+      "parse_validate_ns": 0,
+      "bvh_ns": 0,
+      "intersection_validate_ns": 0,
+      "ray_cache_ns": 0,
+      "ray_cache_bytes": 0,
+      "uniform_blocks": 0,
+      "scanlines": 0,
+      "scanline_fallbacks": 0,
+      "scanline_scratch_bytes": 0,
+      "point_queries": 0
+    },
+    "auxiliary_input": {
+      "read_ns": 0,
+      "parse_bvh_ns": 0,
+      "voxelization_ns": 0,
+      "state_decode_ns": 0,
+      "parse_validate_ns": 0,
+      "bvh_ns": 0,
+      "intersection_validate_ns": 0,
+      "ray_cache_ns": 0,
+      "ray_cache_bytes": 0,
+      "uniform_blocks": 0,
+      "scanlines": 0,
+      "scanline_fallbacks": 0,
+      "scanline_scratch_bytes": 0,
+      "point_queries": 0
+    },
+    "auxiliary_voxelization_ns": 292,
+    "initial_history_write_ns": 17568875,
+    "statistics_ns": 12534083,
+    "defects_ns": 42,
+    "provenance_ns": 3049910125,
+    "inspection_ns": 291,
+    "surface_ns": 167,
+    "surface_analysis_ns": 42,
+    "export_ns": 25602541,
+    "total_ns": 783591526875
+  },
+  "operations": [
+    {
+      "work": {
+        "candidate_blocks": 150721,
+        "partial_blocks": 19814,
+        "voxel_tests": 563901897,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-001",
+      "removed_voxels": 66640486,
+      "engagement_volume_mm3": 1041.2575937500003,
+      "remaining_voxels": 2828575514,
+      "affected_region": {
+        "lo": [
+          8.400000000000002,
+          -8,
+          0
+        ],
+        "hi": [
+          12,
+          8.400000000000002,
+          44.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049975378993803624,
+      "cut_ns": 5250239792,
+      "collision_ns": 17958,
+      "history_write_ns": 3100958,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26166,
+        "partial_blocks": 14964,
+        "voxel_tests": 449440199,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-002",
+      "removed_voxels": 5743689,
+      "engagement_volume_mm3": 89.74514062500002,
+      "remaining_voxels": 2822831825,
+      "affected_region": {
+        "lo": [
+          8.000000000000004,
+          -5.3999999999999995,
+          0
+        ],
+        "hi": [
+          12,
+          9,
+          45.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049946199024549345,
+      "cut_ns": 5124296334,
+      "collision_ns": 8416,
+      "history_write_ns": 400000,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 25870,
+        "partial_blocks": 14746,
+        "voxel_tests": 449725458,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-003",
+      "removed_voxels": 5745331,
+      "engagement_volume_mm3": 89.770796875,
+      "remaining_voxels": 2817086494,
+      "affected_region": {
+        "lo": [
+          7.6000000000000005,
+          -4.8,
+          0
+        ],
+        "hi": [
+          12,
+          9.400000000000002,
+          47.400000000000006
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04988801899025426,
+      "cut_ns": 5979585750,
+      "collision_ns": 10375,
+      "history_write_ns": 441917,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26184,
+        "partial_blocks": 15025,
+        "voxel_tests": 457643470,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-004",
+      "removed_voxels": 5738348,
+      "engagement_volume_mm3": 89.66168750000003,
+      "remaining_voxels": 2811348146,
+      "affected_region": {
+        "lo": [
+          6.999999999999999,
+          -4.2,
+          0
+        ],
+        "hi": [
+          12,
+          9.8,
+          49.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04980119759017665,
+      "cut_ns": 6943879458,
+      "collision_ns": 10625,
+      "history_write_ns": 397750,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26539,
+        "partial_blocks": 15451,
+        "voxel_tests": 462915219,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-005",
+      "removed_voxels": 5730317,
+      "engagement_volume_mm3": 89.53620312500003,
+      "remaining_voxels": 2805617829,
+      "affected_region": {
+        "lo": [
+          6.6000000000000005,
+          -3.6000000000000005,
+          1.2000000000000002
+        ],
+        "hi": [
+          12,
+          10,
+          50.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04968627010711957,
+      "cut_ns": 8068516250,
+      "collision_ns": 10541,
+      "history_write_ns": 443667,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26788,
+        "partial_blocks": 15598,
+        "voxel_tests": 461985854,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-006",
+      "removed_voxels": 5726506,
+      "engagement_volume_mm3": 89.47665625,
+      "remaining_voxels": 2799891323,
+      "affected_region": {
+        "lo": [
+          5.999999999999999,
+          -2.999999999999999,
+          3
+        ],
+        "hi": [
+          12,
+          10.400000000000002,
+          52.400000000000006
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04989040626182859,
+      "cut_ns": 8999515458,
+      "collision_ns": 10833,
+      "history_write_ns": 392375,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26813,
+        "partial_blocks": 15745,
+        "voxel_tests": 463506838,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-007",
+      "removed_voxels": 5715437,
+      "engagement_volume_mm3": 89.30370312500003,
+      "remaining_voxels": 2794175886,
+      "affected_region": {
+        "lo": [
+          5.400000000000001,
+          -2.3999999999999995,
+          4.8
+        ],
+        "hi": [
+          12,
+          10.8,
+          54.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049720380491548644,
+      "cut_ns": 10152152833,
+      "collision_ns": 9375,
+      "history_write_ns": 5106167,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26905,
+        "partial_blocks": 15875,
+        "voxel_tests": 461886419,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-008",
+      "removed_voxels": 5711642,
+      "engagement_volume_mm3": 89.24440625000003,
+      "remaining_voxels": 2788464244,
+      "affected_region": {
+        "lo": [
+          4.8,
+          -1.7999999999999996,
+          6.6000000000000005
+        ],
+        "hi": [
+          12,
+          11,
+          55.800000000000004
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04987346297133197,
+      "cut_ns": 11168190750,
+      "collision_ns": 10709,
+      "history_write_ns": 447416,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27115,
+        "partial_blocks": 16047,
+        "voxel_tests": 460458483,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-009",
+      "removed_voxels": 5703575,
+      "engagement_volume_mm3": 89.11835937500001,
+      "remaining_voxels": 2782760669,
+      "affected_region": {
+        "lo": [
+          4.400000000000001,
+          -1.2,
+          8.4
+        ],
+        "hi": [
+          12,
+          11.2,
+          57.400000000000006
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049651778963451784,
+      "cut_ns": 12206067541,
+      "collision_ns": 10125,
+      "history_write_ns": 3005042,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27199,
+        "partial_blocks": 16148,
+        "voxel_tests": 460357584,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-010",
+      "removed_voxels": 5702182,
+      "engagement_volume_mm3": 89.09659375000001,
+      "remaining_voxels": 2777058487,
+      "affected_region": {
+        "lo": [
+          3.8,
+          -0.5999999999999985,
+          10.200000000000001
+        ],
+        "hi": [
+          12,
+          11.400000000000002,
+          59.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04975724185981184,
+      "cut_ns": 13292823541,
+      "collision_ns": 9417,
+      "history_write_ns": 4392709,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27314,
+        "partial_blocks": 16229,
+        "voxel_tests": 457680533,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-011",
+      "removed_voxels": 5698109,
+      "engagement_volume_mm3": 89.032953125,
+      "remaining_voxels": 2771360378,
+      "affected_region": {
+        "lo": [
+          3.2,
+          0.0000000000000010651202142497596,
+          12.000000000000002
+        ],
+        "hi": [
+          12,
+          11.600000000000001,
+          60.800000000000004
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04984215464126994,
+      "cut_ns": 14149462042,
+      "collision_ns": 10958,
+      "history_write_ns": 389708,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27383,
+        "partial_blocks": 16281,
+        "voxel_tests": 454878781,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-012",
+      "removed_voxels": 5695918,
+      "engagement_volume_mm3": 88.99871875000002,
+      "remaining_voxels": 2765664460,
+      "affected_region": {
+        "lo": [
+          2.6000000000000005,
+          0.6000000000000008,
+          13.8
+        ],
+        "hi": [
+          12,
+          11.8,
+          62.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049907753476332875,
+      "cut_ns": 15125055375,
+      "collision_ns": 8292,
+      "history_write_ns": 366000,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27476,
+        "partial_blocks": 16401,
+        "voxel_tests": 452328618,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-013",
+      "removed_voxels": 5694627,
+      "engagement_volume_mm3": 88.97854687500002,
+      "remaining_voxels": 2759969833,
+      "affected_region": {
+        "lo": [
+          2.000000000000001,
+          1.2000000000000004,
+          15.600000000000001
+        ],
+        "hi": [
+          12,
+          12,
+          64.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04995543789144049,
+      "cut_ns": 15579775666,
+      "collision_ns": 8417,
+      "history_write_ns": 719875,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27513,
+        "partial_blocks": 16428,
+        "voxel_tests": 449512671,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-014",
+      "removed_voxels": 5694278,
+      "engagement_volume_mm3": 88.97309375000002,
+      "remaining_voxels": 2754275555,
+      "affected_region": {
+        "lo": [
+          1.2000000000000004,
+          1.8,
+          17.400000000000002
+        ],
+        "hi": [
+          12,
+          12,
+          66
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04998676543387849,
+      "cut_ns": 15565126417,
+      "collision_ns": 8666,
+      "history_write_ns": 3051333,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27474,
+        "partial_blocks": 16446,
+        "voxel_tests": 450042851,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-015",
+      "removed_voxels": 5690554,
+      "engagement_volume_mm3": 88.91490625000002,
+      "remaining_voxels": 2748585001,
+      "affected_region": {
+        "lo": [
+          0.6000000000000008,
+          2.6000000000000005,
+          19.200000000000003
+        ],
+        "hi": [
+          11.8,
+          12,
+          67.80000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04963845671925797,
+      "cut_ns": 15543528500,
+      "collision_ns": 8666,
+      "history_write_ns": 3080792,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27368,
+        "partial_blocks": 16395,
+        "voxel_tests": 444659303,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-016",
+      "removed_voxels": 5695663,
+      "engagement_volume_mm3": 88.99473437500001,
+      "remaining_voxels": 2742889338,
+      "affected_region": {
+        "lo": [
+          0.0000000000000010651202142497596,
+          3.000000000000001,
+          21.000000000000004
+        ],
+        "hi": [
+          11.600000000000001,
+          12,
+          69.4
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04963963048867333,
+      "cut_ns": 15364852167,
+      "collision_ns": 10833,
+      "history_write_ns": 370250,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27244,
+        "partial_blocks": 16337,
+        "voxel_tests": 442181159,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-017",
+      "removed_voxels": 5698771,
+      "engagement_volume_mm3": 89.04329687500001,
+      "remaining_voxels": 2737190567,
+      "affected_region": {
+        "lo": [
+          -0.5999999999999985,
+          3.6000000000000005,
+          22.8
+        ],
+        "hi": [
+          11.400000000000002,
+          12,
+          71.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049630040337843,
+      "cut_ns": 15308023875,
+      "collision_ns": 8750,
+      "history_write_ns": 376875,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27267,
+        "partial_blocks": 16364,
+        "voxel_tests": 435868469,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-018",
+      "removed_voxels": 5704439,
+      "engagement_volume_mm3": 89.13185937500002,
+      "remaining_voxels": 2731486128,
+      "affected_region": {
+        "lo": [
+          -1.2,
+          4.200000000000002,
+          24.400000000000002
+        ],
+        "hi": [
+          11.2,
+          12,
+          73
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04998480973600241,
+      "cut_ns": 14886283917,
+      "collision_ns": 9958,
+      "history_write_ns": 3115041,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27269,
+        "partial_blocks": 16285,
+        "voxel_tests": 430896616,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-019",
+      "removed_voxels": 5705109,
+      "engagement_volume_mm3": 89.142328125,
+      "remaining_voxels": 2725781019,
+      "affected_region": {
+        "lo": [
+          -1.7999999999999996,
+          4.8,
+          26.200000000000003
+        ],
+        "hi": [
+          11,
+          12,
+          74.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04996275423195523,
+      "cut_ns": 14191284917,
+      "collision_ns": 9833,
+      "history_write_ns": 429916,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27293,
+        "partial_blocks": 16176,
+        "voxel_tests": 427421317,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-020",
+      "removed_voxels": 5709449,
+      "engagement_volume_mm3": 89.21014062500001,
+      "remaining_voxels": 2720071570,
+      "affected_region": {
+        "lo": [
+          -2.3999999999999995,
+          5.400000000000001,
+          28.000000000000004
+        ],
+        "hi": [
+          10.8,
+          12,
+          76.4
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04993658900051945,
+      "cut_ns": 13181264208,
+      "collision_ns": 9209,
+      "history_write_ns": 401667,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27306,
+        "partial_blocks": 16176,
+        "voxel_tests": 424950990,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-021",
+      "removed_voxels": 5714618,
+      "engagement_volume_mm3": 89.29090625000002,
+      "remaining_voxels": 2714356952,
+      "affected_region": {
+        "lo": [
+          -2.999999999999999,
+          5.999999999999999,
+          29.6
+        ],
+        "hi": [
+          10.400000000000002,
+          12,
+          78.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04993658900051981,
+      "cut_ns": 12157421250,
+      "collision_ns": 7625,
+      "history_write_ns": 367250,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27243,
+        "partial_blocks": 16078,
+        "voxel_tests": 427544061,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-022",
+      "removed_voxels": 5720727,
+      "engagement_volume_mm3": 89.38635937500003,
+      "remaining_voxels": 2708636225,
+      "affected_region": {
+        "lo": [
+          -3.6000000000000005,
+          6.400000000000001,
+          31.400000000000002
+        ],
+        "hi": [
+          10.2,
+          12,
+          80.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04996275423195513,
+      "cut_ns": 11266852125,
+      "collision_ns": 9375,
+      "history_write_ns": 5149833,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27219,
+        "partial_blocks": 15989,
+        "voxel_tests": 430233830,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-023",
+      "removed_voxels": 5726845,
+      "engagement_volume_mm3": 89.48195312500002,
+      "remaining_voxels": 2702909380,
+      "affected_region": {
+        "lo": [
+          -4.2,
+          6.999999999999999,
+          33
+        ],
+        "hi": [
+          9.8,
+          12,
+          81.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04998480973600241,
+      "cut_ns": 10319408334,
+      "collision_ns": 13875,
+      "history_write_ns": 3136500,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27100,
+        "partial_blocks": 15844,
+        "voxel_tests": 435247921,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-024",
+      "removed_voxels": 5731870,
+      "engagement_volume_mm3": 89.56046875000001,
+      "remaining_voxels": 2697177510,
+      "affected_region": {
+        "lo": [
+          -4.8,
+          7.400000000000001,
+          34.8
+        ],
+        "hi": [
+          9.400000000000002,
+          12,
+          83.4
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049630040337843115,
+      "cut_ns": 9431317500,
+      "collision_ns": 9250,
+      "history_write_ns": 5102084,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27010,
+        "partial_blocks": 15713,
+        "voxel_tests": 437037884,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-025",
+      "removed_voxels": 5743761,
+      "engagement_volume_mm3": 89.746265625,
+      "remaining_voxels": 2691433749,
+      "affected_region": {
+        "lo": [
+          -5.3999999999999995,
+          7.8,
+          36.4
+        ],
+        "hi": [
+          9,
+          12,
+          85.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049639630488673224,
+      "cut_ns": 8418828500,
+      "collision_ns": 11083,
+      "history_write_ns": 3297208,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26849,
+        "partial_blocks": 15517,
+        "voxel_tests": 437473266,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-026",
+      "removed_voxels": 5752358,
+      "engagement_volume_mm3": 89.88059375000002,
+      "remaining_voxels": 2685681391,
+      "affected_region": {
+        "lo": [
+          -6,
+          8.200000000000003,
+          38
+        ],
+        "hi": [
+          8.600000000000001,
+          12,
+          87.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04963845671925797,
+      "cut_ns": 7545651250,
+      "collision_ns": 10209,
+      "history_write_ns": 3179166,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26775,
+        "partial_blocks": 15366,
+        "voxel_tests": 435575194,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-027",
+      "removed_voxels": 5766673,
+      "engagement_volume_mm3": 90.10426562500002,
+      "remaining_voxels": 2679914718,
+      "affected_region": {
+        "lo": [
+          -6.6,
+          8.400000000000002,
+          39.8
+        ],
+        "hi": [
+          8.2,
+          12,
+          88.80000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04998676543387849,
+      "cut_ns": 6525224583,
+      "collision_ns": 10083,
+      "history_write_ns": 3144625,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26659,
+        "partial_blocks": 15122,
+        "voxel_tests": 435741935,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-028",
+      "removed_voxels": 5775222,
+      "engagement_volume_mm3": 90.23784375000002,
+      "remaining_voxels": 2674139496,
+      "affected_region": {
+        "lo": [
+          -7,
+          8.600000000000001,
+          41.4
+        ],
+        "hi": [
+          7.600000000000002,
+          12,
+          90.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04995543789144049,
+      "cut_ns": 5667008750,
+      "collision_ns": 10000,
+      "history_write_ns": 2996834,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26528,
+        "partial_blocks": 14964,
+        "voxel_tests": 435716580,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-029",
+      "removed_voxels": 5786764,
+      "engagement_volume_mm3": 90.41818750000002,
+      "remaining_voxels": 2668352732,
+      "affected_region": {
+        "lo": [
+          -7.6,
+          8.8,
+          43.2
+        ],
+        "hi": [
+          7.2,
+          12,
+          92.4
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049907753476332875,
+      "cut_ns": 4981449875,
+      "collision_ns": 8917,
+      "history_write_ns": 1816041,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26556,
+        "partial_blocks": 14746,
+        "voxel_tests": 435222289,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-030",
+      "removed_voxels": 5802476,
+      "engagement_volume_mm3": 90.66368750000001,
+      "remaining_voxels": 2662550256,
+      "affected_region": {
+        "lo": [
+          -8,
+          8.8,
+          44.8
+        ],
+        "hi": [
+          6.600000000000002,
+          12,
+          94.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049842154641269884,
+      "cut_ns": 4217753500,
+      "collision_ns": 9959,
+      "history_write_ns": 2980666,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26032,
+        "partial_blocks": 14709,
+        "voxel_tests": 443818523,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-031",
+      "removed_voxels": 5806754,
+      "engagement_volume_mm3": 90.73053125000001,
+      "remaining_voxels": 2656743502,
+      "affected_region": {
+        "lo": [
+          -8.399999999999999,
+          8.400000000000002,
+          46.6
+        ],
+        "hi": [
+          6.2,
+          12,
+          96.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04975724185981188,
+      "cut_ns": 4241116417,
+      "collision_ns": 9708,
+      "history_write_ns": 373458,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26078,
+        "partial_blocks": 14730,
+        "voxel_tests": 446870023,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-032",
+      "removed_voxels": 5822206,
+      "engagement_volume_mm3": 90.97196875,
+      "remaining_voxels": 2650921296,
+      "affected_region": {
+        "lo": [
+          -9,
+          8.000000000000004,
+          48.2
+        ],
+        "hi": [
+          5.600000000000002,
+          12,
+          97.80000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049651778963452055,
+      "cut_ns": 4916284875,
+      "collision_ns": 9250,
+      "history_write_ns": 410667,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26373,
+        "partial_blocks": 15080,
+        "voxel_tests": 451650429,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-033",
+      "removed_voxels": 5840810,
+      "engagement_volume_mm3": 91.26265625000002,
+      "remaining_voxels": 2645080486,
+      "affected_region": {
+        "lo": [
+          -9.399999999999999,
+          7.6000000000000005,
+          49.8
+        ],
+        "hi": [
+          5.000000000000001,
+          12,
+          99.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04987346297133169,
+      "cut_ns": 5672562250,
+      "collision_ns": 9250,
+      "history_write_ns": 328083,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26406,
+        "partial_blocks": 15029,
+        "voxel_tests": 455720239,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-034",
+      "removed_voxels": 5817223,
+      "engagement_volume_mm3": 90.89410937500003,
+      "remaining_voxels": 2639263263,
+      "affected_region": {
+        "lo": [
+          -9.799999999999999,
+          6.999999999999999,
+          51.4
+        ],
+        "hi": [
+          4.3999999999999995,
+          12,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049720380491548644,
+      "cut_ns": 6559108750,
+      "collision_ns": 8333,
+      "history_write_ns": 328334,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 25882,
+        "partial_blocks": 14976,
+        "voxel_tests": 450066362,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-035",
+      "removed_voxels": 5617794,
+      "engagement_volume_mm3": 87.77803125000001,
+      "remaining_voxels": 2633645469,
+      "affected_region": {
+        "lo": [
+          -10,
+          6.6000000000000005,
+          53.2
+        ],
+        "hi": [
+          3.8000000000000016,
+          12,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04989040626182877,
+      "cut_ns": 7486846625,
+      "collision_ns": 8250,
+      "history_write_ns": 2935666,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 24964,
+        "partial_blocks": 14544,
+        "voxel_tests": 441801474,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-036",
+      "removed_voxels": 5306462,
+      "engagement_volume_mm3": 82.91346875000002,
+      "remaining_voxels": 2628339007,
+      "affected_region": {
+        "lo": [
+          -10.399999999999999,
+          5.999999999999999,
+          55
+        ],
+        "hi": [
+          3.2,
+          12,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04968627010711941,
+      "cut_ns": 8373656708,
+      "collision_ns": 9417,
+      "history_write_ns": 407167,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 23706,
+        "partial_blocks": 14070,
+        "voxel_tests": 426673275,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-037",
+      "removed_voxels": 4956472,
+      "engagement_volume_mm3": 77.44487500000001,
+      "remaining_voxels": 2623382535,
+      "affected_region": {
+        "lo": [
+          -10.799999999999999,
+          5.400000000000001,
+          56.6
+        ],
+        "hi": [
+          2.6000000000000005,
+          11.8,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04980119759017663,
+      "cut_ns": 9270946167,
+      "collision_ns": 9625,
+      "history_write_ns": 750500,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 22396,
+        "partial_blocks": 13509,
+        "voxel_tests": 408677532,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-038",
+      "removed_voxels": 4585284,
+      "engagement_volume_mm3": 71.64506250000001,
+      "remaining_voxels": 2618797251,
+      "affected_region": {
+        "lo": [
+          -11,
+          4.8,
+          58.2
+        ],
+        "hi": [
+          1.8000000000000014,
+          11.8,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04988801899025449,
+      "cut_ns": 10216595416,
+      "collision_ns": 13459,
+      "history_write_ns": 386167,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 21103,
+        "partial_blocks": 12896,
+        "voxel_tests": 385844379,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-039",
+      "removed_voxels": 4212777,
+      "engagement_volume_mm3": 65.82464062500001,
+      "remaining_voxels": 2614584474,
+      "affected_region": {
+        "lo": [
+          -11.2,
+          4.400000000000001,
+          59.8
+        ],
+        "hi": [
+          0.8000000000000014,
+          11.400000000000002,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04994619902454912,
+      "cut_ns": 10986120708,
+      "collision_ns": 9000,
+      "history_write_ns": 311167,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 19620,
+        "partial_blocks": 12157,
+        "voxel_tests": 366584315,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-1-040",
+      "removed_voxels": 3843088,
+      "engagement_volume_mm3": 60.04825000000001,
+      "remaining_voxels": 2610741386,
+      "affected_region": {
+        "lo": [
+          -11.399999999999999,
+          3.8,
+          61.4
+        ],
+        "hi": [
+          -0.19999999999999857,
+          11,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049975378993803395,
+      "cut_ns": 11834622958,
+      "collision_ns": 8375,
+      "history_write_ns": 345375,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 150721,
+        "partial_blocks": 19814,
+        "voxel_tests": 563901897,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-001",
+      "removed_voxels": 66640486,
+      "engagement_volume_mm3": 1041.2575937500003,
+      "remaining_voxels": 2544100900,
+      "affected_region": {
+        "lo": [
+          -12,
+          -8.399999999999999,
+          0
+        ],
+        "hi": [
+          -8.4,
+          8,
+          44.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04997537899380361,
+      "cut_ns": 5222068209,
+      "collision_ns": 8583,
+      "history_write_ns": 5276458,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26166,
+        "partial_blocks": 14964,
+        "voxel_tests": 449440199,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-002",
+      "removed_voxels": 5743689,
+      "engagement_volume_mm3": 89.74514062500002,
+      "remaining_voxels": 2538357211,
+      "affected_region": {
+        "lo": [
+          -12,
+          -9,
+          0
+        ],
+        "hi": [
+          -7.999999999999999,
+          5.3999999999999995,
+          45.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04994619902454934,
+      "cut_ns": 5023693041,
+      "collision_ns": 11917,
+      "history_write_ns": 3098375,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 25870,
+        "partial_blocks": 14746,
+        "voxel_tests": 449725458,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-003",
+      "removed_voxels": 5745331,
+      "engagement_volume_mm3": 89.770796875,
+      "remaining_voxels": 2532611880,
+      "affected_region": {
+        "lo": [
+          -12,
+          -9.399999999999999,
+          0
+        ],
+        "hi": [
+          -7.6,
+          4.800000000000002,
+          47.400000000000006
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049888018990254274,
+      "cut_ns": 5843595375,
+      "collision_ns": 11291,
+      "history_write_ns": 5559209,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26184,
+        "partial_blocks": 15025,
+        "voxel_tests": 457643470,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-004",
+      "removed_voxels": 5738348,
+      "engagement_volume_mm3": 89.66168750000003,
+      "remaining_voxels": 2526873532,
+      "affected_region": {
+        "lo": [
+          -12,
+          -9.799999999999999,
+          0
+        ],
+        "hi": [
+          -6.999999999999999,
+          4.2,
+          49.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04980119759017705,
+      "cut_ns": 6789774667,
+      "collision_ns": 10708,
+      "history_write_ns": 623000,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26539,
+        "partial_blocks": 15451,
+        "voxel_tests": 462915219,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-005",
+      "removed_voxels": 5730317,
+      "engagement_volume_mm3": 89.53620312500003,
+      "remaining_voxels": 2521143215,
+      "affected_region": {
+        "lo": [
+          -12,
+          -10,
+          1.2000000000000002
+        ],
+        "hi": [
+          -6.6,
+          3.6000000000000005,
+          50.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04968627010711919,
+      "cut_ns": 7848791500,
+      "collision_ns": 9916,
+      "history_write_ns": 355709,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26788,
+        "partial_blocks": 15598,
+        "voxel_tests": 461985854,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-006",
+      "removed_voxels": 5726506,
+      "engagement_volume_mm3": 89.47665625,
+      "remaining_voxels": 2515416709,
+      "affected_region": {
+        "lo": [
+          -12,
+          -10.399999999999999,
+          3
+        ],
+        "hi": [
+          -5.999999999999999,
+          3.000000000000001,
+          52.400000000000006
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049890406261828564,
+      "cut_ns": 8686798375,
+      "collision_ns": 9292,
+      "history_write_ns": 381333,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26813,
+        "partial_blocks": 15745,
+        "voxel_tests": 463506838,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-007",
+      "removed_voxels": 5715437,
+      "engagement_volume_mm3": 89.30370312500003,
+      "remaining_voxels": 2509701272,
+      "affected_region": {
+        "lo": [
+          -12,
+          -10.799999999999999,
+          4.8
+        ],
+        "hi": [
+          -5.3999999999999995,
+          2.4000000000000012,
+          54.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049720380491549074,
+      "cut_ns": 10101262292,
+      "collision_ns": 9417,
+      "history_write_ns": 383291,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26905,
+        "partial_blocks": 15875,
+        "voxel_tests": 461886419,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-008",
+      "removed_voxels": 5711642,
+      "engagement_volume_mm3": 89.24440625000003,
+      "remaining_voxels": 2503989630,
+      "affected_region": {
+        "lo": [
+          -12,
+          -11,
+          6.6000000000000005
+        ],
+        "hi": [
+          -4.8,
+          1.8000000000000014,
+          55.800000000000004
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04987346297133147,
+      "cut_ns": 11022684375,
+      "collision_ns": 9458,
+      "history_write_ns": 170527709,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27115,
+        "partial_blocks": 16047,
+        "voxel_tests": 460458483,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-009",
+      "removed_voxels": 5703575,
+      "engagement_volume_mm3": 89.11835937500001,
+      "remaining_voxels": 2498286055,
+      "affected_region": {
+        "lo": [
+          -12,
+          -11.2,
+          8.4
+        ],
+        "hi": [
+          -4.3999999999999995,
+          1.2,
+          57.400000000000006
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04965177896345183,
+      "cut_ns": 11775150959,
+      "collision_ns": 17583,
+      "history_write_ns": 671416,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27199,
+        "partial_blocks": 16148,
+        "voxel_tests": 460357584,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-010",
+      "removed_voxels": 5702182,
+      "engagement_volume_mm3": 89.09659375000001,
+      "remaining_voxels": 2492583873,
+      "affected_region": {
+        "lo": [
+          -12,
+          -11.399999999999999,
+          10.200000000000001
+        ],
+        "hi": [
+          -3.8,
+          0.6000000000000003,
+          59.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049757241859812326,
+      "cut_ns": 12679749125,
+      "collision_ns": 8084,
+      "history_write_ns": 345916,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27314,
+        "partial_blocks": 16229,
+        "voxel_tests": 457680533,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-011",
+      "removed_voxels": 5698109,
+      "engagement_volume_mm3": 89.032953125,
+      "remaining_voxels": 2486885764,
+      "affected_region": {
+        "lo": [
+          -12,
+          -11.6,
+          12.000000000000002
+        ],
+        "hi": [
+          -3.2,
+          0.0000000000000007112366251504909,
+          60.800000000000004
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04984215464126945,
+      "cut_ns": 13437331125,
+      "collision_ns": 12333,
+      "history_write_ns": 389083,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27383,
+        "partial_blocks": 16281,
+        "voxel_tests": 454878781,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-012",
+      "removed_voxels": 5695918,
+      "engagement_volume_mm3": 88.99871875000002,
+      "remaining_voxels": 2481189846,
+      "affected_region": {
+        "lo": [
+          -12,
+          -11.799999999999999,
+          13.8
+        ],
+        "hi": [
+          -2.5999999999999988,
+          -0.599999999999999,
+          62.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049907753476332875,
+      "cut_ns": 15669275375,
+      "collision_ns": 8458,
+      "history_write_ns": 429167,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27476,
+        "partial_blocks": 16401,
+        "voxel_tests": 452328618,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-013",
+      "removed_voxels": 5694627,
+      "engagement_volume_mm3": 88.97854687500002,
+      "remaining_voxels": 2475495219,
+      "affected_region": {
+        "lo": [
+          -12,
+          -12,
+          15.600000000000001
+        ],
+        "hi": [
+          -1.9999999999999993,
+          -1.1999999999999986,
+          64.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04995543789144094,
+      "cut_ns": 14438832583,
+      "collision_ns": 8500,
+      "history_write_ns": 332084,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27513,
+        "partial_blocks": 16428,
+        "voxel_tests": 449512671,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-014",
+      "removed_voxels": 5694278,
+      "engagement_volume_mm3": 88.97309375000002,
+      "remaining_voxels": 2469800941,
+      "affected_region": {
+        "lo": [
+          -12,
+          -12,
+          17.400000000000002
+        ],
+        "hi": [
+          -1.1999999999999986,
+          -1.8,
+          66
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04998676543387804,
+      "cut_ns": 14374543541,
+      "collision_ns": 8500,
+      "history_write_ns": 416709,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27474,
+        "partial_blocks": 16446,
+        "voxel_tests": 450042851,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-015",
+      "removed_voxels": 5690554,
+      "engagement_volume_mm3": 88.91490625000002,
+      "remaining_voxels": 2464110387,
+      "affected_region": {
+        "lo": [
+          -11.799999999999999,
+          -12,
+          19.200000000000003
+        ],
+        "hi": [
+          -0.599999999999999,
+          -2.5999999999999988,
+          67.80000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04963845671925797,
+      "cut_ns": 14326013875,
+      "collision_ns": 8708,
+      "history_write_ns": 409167,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27368,
+        "partial_blocks": 16395,
+        "voxel_tests": 444659303,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-016",
+      "removed_voxels": 5695663,
+      "engagement_volume_mm3": 88.99473437500001,
+      "remaining_voxels": 2458414724,
+      "affected_region": {
+        "lo": [
+          -11.6,
+          -12,
+          21.000000000000004
+        ],
+        "hi": [
+          0.0000000000000007112366251504909,
+          -2.999999999999999,
+          69.4
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049639630488673675,
+      "cut_ns": 14165069459,
+      "collision_ns": 8916,
+      "history_write_ns": 687625,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27244,
+        "partial_blocks": 16337,
+        "voxel_tests": 442181159,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-017",
+      "removed_voxels": 5698771,
+      "engagement_volume_mm3": 89.04329687500001,
+      "remaining_voxels": 2452715953,
+      "affected_region": {
+        "lo": [
+          -11.399999999999999,
+          -12,
+          22.8
+        ],
+        "hi": [
+          0.6000000000000003,
+          -3.5999999999999988,
+          71.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04963004033784219,
+      "cut_ns": 14041272791,
+      "collision_ns": 10334,
+      "history_write_ns": 414375,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27267,
+        "partial_blocks": 16364,
+        "voxel_tests": 435868469,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-018",
+      "removed_voxels": 5704439,
+      "engagement_volume_mm3": 89.13185937500002,
+      "remaining_voxels": 2447011514,
+      "affected_region": {
+        "lo": [
+          -11.2,
+          -12,
+          24.400000000000002
+        ],
+        "hi": [
+          1.2,
+          -4.199999999999999,
+          73
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049984809736002875,
+      "cut_ns": 13783596416,
+      "collision_ns": 9292,
+      "history_write_ns": 425959,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27269,
+        "partial_blocks": 16285,
+        "voxel_tests": 430896616,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-019",
+      "removed_voxels": 5705109,
+      "engagement_volume_mm3": 89.142328125,
+      "remaining_voxels": 2441306405,
+      "affected_region": {
+        "lo": [
+          -11,
+          -12,
+          26.200000000000003
+        ],
+        "hi": [
+          1.8000000000000014,
+          -4.8,
+          74.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049962754231955585,
+      "cut_ns": 13392000500,
+      "collision_ns": 9125,
+      "history_write_ns": 388334,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27293,
+        "partial_blocks": 16176,
+        "voxel_tests": 427421317,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-020",
+      "removed_voxels": 5709449,
+      "engagement_volume_mm3": 89.21014062500001,
+      "remaining_voxels": 2435596956,
+      "affected_region": {
+        "lo": [
+          -10.799999999999999,
+          -12,
+          28.000000000000004
+        ],
+        "hi": [
+          2.4000000000000012,
+          -5.3999999999999995,
+          76.4
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04993658900051875,
+      "cut_ns": 12648625958,
+      "collision_ns": 7917,
+      "history_write_ns": 430583,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27306,
+        "partial_blocks": 16176,
+        "voxel_tests": 424950990,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-021",
+      "removed_voxels": 5714618,
+      "engagement_volume_mm3": 89.29090625000002,
+      "remaining_voxels": 2429882338,
+      "affected_region": {
+        "lo": [
+          -10.399999999999999,
+          -12,
+          29.6
+        ],
+        "hi": [
+          3.000000000000001,
+          -5.999999999999999,
+          78.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04993658900052015,
+      "cut_ns": 11798404750,
+      "collision_ns": 8541,
+      "history_write_ns": 436375,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27243,
+        "partial_blocks": 16078,
+        "voxel_tests": 427544061,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-022",
+      "removed_voxels": 5720727,
+      "engagement_volume_mm3": 89.38635937500003,
+      "remaining_voxels": 2424161611,
+      "affected_region": {
+        "lo": [
+          -10.2,
+          -12,
+          31.400000000000002
+        ],
+        "hi": [
+          3.6000000000000005,
+          -6.3999999999999995,
+          80.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049962754231955585,
+      "cut_ns": 11347541208,
+      "collision_ns": 8375,
+      "history_write_ns": 695333,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27219,
+        "partial_blocks": 15989,
+        "voxel_tests": 430233830,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-023",
+      "removed_voxels": 5726845,
+      "engagement_volume_mm3": 89.48195312500002,
+      "remaining_voxels": 2418434766,
+      "affected_region": {
+        "lo": [
+          -9.799999999999999,
+          -12,
+          33
+        ],
+        "hi": [
+          4.2,
+          -6.999999999999999,
+          81.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04998480973600149,
+      "cut_ns": 10107298125,
+      "collision_ns": 12041,
+      "history_write_ns": 433209,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27100,
+        "partial_blocks": 15844,
+        "voxel_tests": 435247921,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-024",
+      "removed_voxels": 5731870,
+      "engagement_volume_mm3": 89.56046875000001,
+      "remaining_voxels": 2412702896,
+      "affected_region": {
+        "lo": [
+          -9.399999999999999,
+          -12,
+          34.8
+        ],
+        "hi": [
+          4.800000000000002,
+          -7.3999999999999995,
+          83.4
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04963004033784357,
+      "cut_ns": 9273264625,
+      "collision_ns": 7875,
+      "history_write_ns": 536042,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 27010,
+        "partial_blocks": 15713,
+        "voxel_tests": 437037884,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-025",
+      "removed_voxels": 5743761,
+      "engagement_volume_mm3": 89.746265625,
+      "remaining_voxels": 2406959135,
+      "affected_region": {
+        "lo": [
+          -9,
+          -12,
+          36.4
+        ],
+        "hi": [
+          5.3999999999999995,
+          -7.8,
+          85.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049639630488673675,
+      "cut_ns": 8340683583,
+      "collision_ns": 11292,
+      "history_write_ns": 515125,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26849,
+        "partial_blocks": 15517,
+        "voxel_tests": 437473266,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-026",
+      "removed_voxels": 5752358,
+      "engagement_volume_mm3": 89.88059375000002,
+      "remaining_voxels": 2401206777,
+      "affected_region": {
+        "lo": [
+          -8.6,
+          -12,
+          38
+        ],
+        "hi": [
+          6.000000000000001,
+          -8.200000000000001,
+          87.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049638456719257526,
+      "cut_ns": 7483068833,
+      "collision_ns": 9708,
+      "history_write_ns": 351000,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26775,
+        "partial_blocks": 15366,
+        "voxel_tests": 435575194,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-027",
+      "removed_voxels": 5766673,
+      "engagement_volume_mm3": 90.10426562500002,
+      "remaining_voxels": 2395440104,
+      "affected_region": {
+        "lo": [
+          -8.2,
+          -12,
+          39.8
+        ],
+        "hi": [
+          6.600000000000002,
+          -8.4,
+          88.80000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04998676543387849,
+      "cut_ns": 6476152667,
+      "collision_ns": 8333,
+      "history_write_ns": 743791,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26659,
+        "partial_blocks": 15122,
+        "voxel_tests": 435741935,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-028",
+      "removed_voxels": 5775222,
+      "engagement_volume_mm3": 90.23784375000002,
+      "remaining_voxels": 2389664882,
+      "affected_region": {
+        "lo": [
+          -7.6,
+          -12,
+          41.4
+        ],
+        "hi": [
+          7.000000000000001,
+          -8.600000000000001,
+          90.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04995543789144049,
+      "cut_ns": 5648997250,
+      "collision_ns": 9916,
+      "history_write_ns": 415000,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26528,
+        "partial_blocks": 14964,
+        "voxel_tests": 435716580,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-029",
+      "removed_voxels": 5786764,
+      "engagement_volume_mm3": 90.41818750000002,
+      "remaining_voxels": 2383878118,
+      "affected_region": {
+        "lo": [
+          -7.2,
+          -12,
+          43.2
+        ],
+        "hi": [
+          7.600000000000002,
+          -8.8,
+          92.4
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049907753476332875,
+      "cut_ns": 4961375000,
+      "collision_ns": 9041,
+      "history_write_ns": 501959,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26556,
+        "partial_blocks": 14746,
+        "voxel_tests": 435222289,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-030",
+      "removed_voxels": 5802476,
+      "engagement_volume_mm3": 90.66368750000001,
+      "remaining_voxels": 2378075642,
+      "affected_region": {
+        "lo": [
+          -6.6,
+          -12,
+          44.8
+        ],
+        "hi": [
+          8,
+          -8.8,
+          94.2
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049842154641269884,
+      "cut_ns": 4206594625,
+      "collision_ns": 11500,
+      "history_write_ns": 335792,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26032,
+        "partial_blocks": 14709,
+        "voxel_tests": 443818523,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-031",
+      "removed_voxels": 5806754,
+      "engagement_volume_mm3": 90.73053125000001,
+      "remaining_voxels": 2372268888,
+      "affected_region": {
+        "lo": [
+          -6.2,
+          -12,
+          46.6
+        ],
+        "hi": [
+          8.400000000000002,
+          -8.4,
+          96.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04975724185981188,
+      "cut_ns": 4551063750,
+      "collision_ns": 8834,
+      "history_write_ns": 393875,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26078,
+        "partial_blocks": 14730,
+        "voxel_tests": 446870023,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-032",
+      "removed_voxels": 5822206,
+      "engagement_volume_mm3": 90.97196875,
+      "remaining_voxels": 2366446682,
+      "affected_region": {
+        "lo": [
+          -5.6,
+          -12,
+          48.2
+        ],
+        "hi": [
+          9,
+          -7.999999999999999,
+          97.80000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04965177896345183,
+      "cut_ns": 4870693208,
+      "collision_ns": 9542,
+      "history_write_ns": 411542,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26373,
+        "partial_blocks": 15080,
+        "voxel_tests": 451650429,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-033",
+      "removed_voxels": 5840810,
+      "engagement_volume_mm3": 91.26265625000002,
+      "remaining_voxels": 2360605872,
+      "affected_region": {
+        "lo": [
+          -5,
+          -12,
+          49.8
+        ],
+        "hi": [
+          9.400000000000002,
+          -7.6,
+          99.60000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04987346297133191,
+      "cut_ns": 6026295084,
+      "collision_ns": 8666,
+      "history_write_ns": 399958,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 26406,
+        "partial_blocks": 15029,
+        "voxel_tests": 455720239,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-034",
+      "removed_voxels": 5817223,
+      "engagement_volume_mm3": 90.89410937500003,
+      "remaining_voxels": 2354788649,
+      "affected_region": {
+        "lo": [
+          -4.3999999999999995,
+          -12,
+          51.4
+        ],
+        "hi": [
+          9.8,
+          -6.999999999999999,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049720380491548644,
+      "cut_ns": 6511125292,
+      "collision_ns": 9833,
+      "history_write_ns": 342083,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 25882,
+        "partial_blocks": 14976,
+        "voxel_tests": 450066362,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-035",
+      "removed_voxels": 5617794,
+      "engagement_volume_mm3": 87.77803125000001,
+      "remaining_voxels": 2349170855,
+      "affected_region": {
+        "lo": [
+          -3.8,
+          -12,
+          53.2
+        ],
+        "hi": [
+          10,
+          -6.6,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049890406261828564,
+      "cut_ns": 7415666083,
+      "collision_ns": 8708,
+      "history_write_ns": 701875,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 24964,
+        "partial_blocks": 14544,
+        "voxel_tests": 441801474,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-036",
+      "removed_voxels": 5306462,
+      "engagement_volume_mm3": 82.91346875000002,
+      "remaining_voxels": 2343864393,
+      "affected_region": {
+        "lo": [
+          -3.2,
+          -12,
+          55
+        ],
+        "hi": [
+          10.400000000000002,
+          -5.999999999999999,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04968627010711963,
+      "cut_ns": 8217075792,
+      "collision_ns": 12333,
+      "history_write_ns": 436916,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 23706,
+        "partial_blocks": 14070,
+        "voxel_tests": 426673275,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-037",
+      "removed_voxels": 4956472,
+      "engagement_volume_mm3": 77.44487500000001,
+      "remaining_voxels": 2338907921,
+      "affected_region": {
+        "lo": [
+          -2.6000000000000005,
+          -11.799999999999999,
+          56.6
+        ],
+        "hi": [
+          10.8,
+          -5.3999999999999995,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04980119759017663,
+      "cut_ns": 9091202875,
+      "collision_ns": 8541,
+      "history_write_ns": 346459,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 22396,
+        "partial_blocks": 13509,
+        "voxel_tests": 408677532,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-038",
+      "removed_voxels": 4585284,
+      "engagement_volume_mm3": 71.64506250000001,
+      "remaining_voxels": 2334322637,
+      "affected_region": {
+        "lo": [
+          -1.7999999999999996,
+          -11.799999999999999,
+          58.2
+        ],
+        "hi": [
+          11,
+          -4.8,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.049888018990254274,
+      "cut_ns": 10028727542,
+      "collision_ns": 8208,
+      "history_write_ns": 372083,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 21103,
+        "partial_blocks": 12896,
+        "voxel_tests": 385844379,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-039",
+      "removed_voxels": 4212777,
+      "engagement_volume_mm3": 65.82464062500001,
+      "remaining_voxels": 2330109860,
+      "affected_region": {
+        "lo": [
+          -0.7999999999999996,
+          -11.399999999999999,
+          59.8
+        ],
+        "hi": [
+          11.2,
+          -4.3999999999999995,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04994619902454934,
+      "cut_ns": 10765759625,
+      "collision_ns": 8166,
+      "history_write_ns": 398334,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    },
+    {
+      "work": {
+        "candidate_blocks": 19620,
+        "partial_blocks": 12157,
+        "voxel_tests": 366584315,
+        "point_pose_evaluations": 0
+      },
+      "id": "flute-2-040",
+      "removed_voxels": 3843088,
+      "engagement_volume_mm3": 60.04825000000001,
+      "remaining_voxels": 2326266772,
+      "affected_region": {
+        "lo": [
+          0.20000000000000034,
+          -11,
+          61.4
+        ],
+        "hi": [
+          11.400000000000002,
+          -3.8,
+          100.00000000000001
+        ]
+      },
+      "motion_over_removal_bound_mm": 0.04997537899380361,
+      "cut_ns": 11548138834,
+      "collision_ns": 8458,
+      "history_write_ns": 541291,
+      "shank_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_stock": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "shank_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "holder_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "cutter_fixture": {
+        "occupied_centers": 0,
+        "region": null,
+        "representation_clearance_uncertain": true,
+        "clearance": "not_checked",
+        "first_unresolved_cell_bounds": null
+      },
+      "geometric_feed_time_min": null,
+      "average_removal_mm3_min": null
+    }
+  ],
+  "target_comparison": null,
+  "target_surface_deviation": null,
+  "point_occupancy": [],
+  "ray_hits": []
+}

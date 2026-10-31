@@ -235,5 +235,7 @@ in a job and use `--color-operation` or `--color-tool` in the macOS viewer.
 - [Sparse mutation experiment](docs/SPARSE-MUTATION.md): cuts and retained roots in a 65,536³ virtual cube; separate from regular jobs, not the billion-face memory qualification.
 - Windows final-surface operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
 
-Viewer-owned calculation landed in #22. An embeddable engine library and live
-inspection are tracked separately in #23 and #24.
+Viewer-owned calculation landed in #22. The optional [synchronous C API](docs/C-API.md)
+now supports stock creation, cutting, queries and checkpoint/resume from an
+independent host (`./zig build sdk`). Broader SDK integration and live inspection
+remain tracked in #23 and #24.

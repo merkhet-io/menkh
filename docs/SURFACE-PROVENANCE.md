@@ -82,3 +82,16 @@ every volume voxel, but this is not a solution to the 2³²-face / 16 GB require
 Original outer faces are gray; interior faces are colored by the operation that
 exposed them. Measurements identify the isolated provenance increment before stacking it on
 the defect-inspector PR; they are not a new combined-branch benchmark. Raw report and header are retained in `benchmarks/provenance`.
+
+## Windows increment
+
+The D3D12 viewer now reads the same validated final-surface metadata and supports
+`--color-operation`, `--color-tool`, and **C** to cycle modes. Earlier playback
+frames deliberately disable these labels. Shader Model 5 uses explicit two-word
+integer keys, preserving all 36 bits of the 4096³ cell address. The reader rejects
+ten malformed metadata/buffer cases in addition to the existing history checks.
+Actual MSVC builds and WARP rendering passed in
+[Windows CI](https://github.com/merkhet-io/menkh/actions/runs/41148404219); the
+[rendered result](evidence/issues-2026-10-31/windows-provenance.png) was inspected.
+Hardware FPS, Windows picking, per-frame attribution and rate/time maps remain
+unimplemented or unmeasured as applicable.
