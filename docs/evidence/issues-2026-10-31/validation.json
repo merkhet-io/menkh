@@ -1,0 +1,31 @@
+{
+  "engine_tests": {
+    "Debug": 62,
+    "ReleaseFast": 62
+  },
+  "rotary_job": [
+    "scalar occupancy equality",
+    "checkpoint resume equality",
+    "6 rejected job contracts",
+    "history endpoint poses"
+  ],
+  "geometry_regressions": [
+    "10 finishing mesh fixtures",
+    "16 transformed scanline meshes",
+    "existing ball-sweep smoke suite",
+    "7 malformed history cases",
+    "5393 independent exposure-neighbor records",
+    "10 malformed provenance cases"
+  ],
+  "formal": "existing Lean proofs, axiom audit, Debug/ReleaseFast bridges and three negative controls passed; new algorithms outside scope",
+  "native_high_resolution_replay": "grinding-25um-replay.json",
+  "windows_ci": "https://github.com/merkhet-io/menkh/actions/runs/41148404219",
+  "windows_evidence": "windows-provenance.png (lossless PPM-to-PNG conversion of WARP CI output, visually inspected)",
+  "limitations": [
+    "no billion-face qualification",
+    "one 25um grinding run, not repeated benchmark",
+    "Windows hardware interaction and FPS not measured",
+    "no general profile wheel or rotary holder/shank",
+    "final surface attribution only"
+  ]
+}

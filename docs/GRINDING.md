@@ -96,3 +96,45 @@ checkpoint/resume equality, endpoint history and rejected job combinations.
 These algorithms are outside the existing Lean model. The existing proof audit
 and bridges still run; they do not prove the rotary sweep, floating-point code,
 viewer or importer.
+
+## Recorded results
+
+Apple M5 Max, 128 GiB physical RAM, Zig 0.15.2 ReleaseFast, one cutting worker.
+Raw jobs, source/binary hashes, individual reports and the actual final screenshot
+are in [the evidence directory](evidence/issues-2026-10-31/).
+
+| 250 µm, tolerance 0.05 mm, 80 operations | Median cutting | Range | Median process wall time |
+|---|---:|---:|---:|
+| Before per-block path filtering (`d533609`) | 5.968 s | 5.966–6.002 s | 6.025 s |
+| After filtering (`b95b21a`) | 5.590 s | 5.589–5.591 s | 5.647 s |
+
+Each row has one warm-up and three measured repetitions, identical JSON and
+starting material. Saved states are byte-identical between versions. This is
+about a 6% cutting-time improvement; it is not a cross-machine comparison.
+
+The **25 µm** run completed with the same 80-operation path and **0.05 mm motion
+budget** on a 960 × 960 × 4000 grid. One completed run, not a repeated benchmark:
+
+- Reported total: **783.592 s**, cutting: **780.108 s**.
+- Peak process RSS: **334,675,968 bytes** (319.17 MiB).
+- Initial occupied cells: **2,895,216,000**; final: **2,326,266,772**.
+- Removed: **568,949,228** voxel cells; final boundary voxels: **11,437,030**;
+  exposed unit faces: **15,750,764** (these count different things).
+- Native forward/backward/forward replay: **0.855 s**, with byte-exact final
+  restoration, initial descriptors and initial pool restoration.
+- Viewer shared buffers including provenance: **181,916,288 bytes**. This is not
+  the viewer process RSS. GPU command duration is not interactive FPS.
+
+The report's total excludes its own final JSON write; no durable-storage timing
+is claimed. The screenshot was actually rendered and inspected. No local
+surface-accuracy measurement against a production drill target was performed.
+The 50 µm motion budget is independent of the 25 µm voxel spacing; neither is
+presented as a universal surface-error guarantee. Viewer frames correspond to
+80 operations, each containing many bounded continuous cylinder sweeps, not 80
+isolated wheel stamps. The 80 operations contain **11,156** fixed-orientation swept-cylinder pieces
+(derived from the frozen job). The run counted 35,499,484,480 point-versus-sweep
+tests in partial blocks; these are continuous finite-cylinder predicates, not
+stationary voxel-position tests or job throughput. `environment.json` records
+the subdivision count; new reports also expose `sweep_pieces` per operation.
+
+![Actual 25 µm fluted blank with final exposure colors](evidence/issues-2026-10-31/grinding-25um.png)
