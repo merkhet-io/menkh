@@ -236,3 +236,12 @@ including the offset body's radius in its rotational bound. This changes only
 rejection, not leaf cutter geometry or the fixed method's motion approximation.
 `cutting_intervals` now excludes intersections rejected inside already removed
 material; `ray_pose_tests` still counts queries, not individual quadratic roots.
+
+## Tighter spatial group envelopes
+
+A subsequent [matched optimization](evidence/ray-envelope-anchors/README.md)
+selects better anchor poses for group enclosures while preserving seed and leaf
+order. The 25 µm axis-method cutting median changes from 5.54 to 4.60 s on eight
+workers, with byte-identical interval files at all four tested spacings and no
+larger node/pool allocation. This changes rejection efficiency only; it does not
+alter the motion budget or introduce another material approximation.

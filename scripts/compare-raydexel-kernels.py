@@ -14,6 +14,7 @@ p.add_argument('--before', type=Path, required=True)
 p.add_argument('--after', type=Path, default=Path('zig-out/bin/menkh'+('.exe' if os.name=='nt' else '')))
 p.add_argument('--out', type=Path, required=True)
 p.add_argument('--workers', type=int, default=8)
+p.add_argument('--method', choices=['fixed','axis'], default='fixed')
 p.add_argument('--repeat', type=int, default=3)
 p.add_argument('--spacings', type=float, nargs='+', default=[.25, .1, .05, .025])
 a = p.parse_args()
@@ -23,7 +24,7 @@ a.out.mkdir(parents=True, exist_ok=False)
 binaries = {name: path.resolve() for name, path in [('before', a.before), ('after', a.after)]}
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
-environment = dict(platform=platform.platform(), machine=platform.machine(), workers=a.workers,
+environment = dict(platform=platform.platform(), machine=platform.machine(), workers=a.workers, method=a.method,
                    warmups_per_configuration=1, repetitions=a.repeat,
                    commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
                    source_diff_sha256=hashlib.sha256(subprocess.check_output(['git', 'diff'])).hexdigest(),
@@ -37,7 +38,7 @@ for spacing in a.spacings:
         order = ['before', 'after'] if rep % 2 == 0 else ['after', 'before']
         for name in order:
             out = a.out/f'{spacing:g}-{rep}-{name}'
-            subprocess.run([str(binaries[name]), 'raydexel-bench', '--spacing', str(spacing),
+            subprocess.run([str(binaries[name]), 'raydexel-bench', '--method', a.method, '--spacing', str(spacing),
                             '--workers', str(a.workers), '--out', str(out)], check=True)
             digest = sha(out/'intervals.bin')
             job = sha(out/'job.json')

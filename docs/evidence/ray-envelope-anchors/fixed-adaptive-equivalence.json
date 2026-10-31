@@ -1,0 +1,50 @@
+[
+  {
+    "method": "fixed",
+    "spacing_mm": 0.25,
+    "sha256": "224ec46d5b6030cbef2a6f2e4ca707128a2d5bd5cea980d2b4c0821a19b7321d",
+    "byte_identical": true
+  },
+  {
+    "method": "fixed",
+    "spacing_mm": 0.1,
+    "sha256": "530f53ab3b89c106607a80870331b8a3a3843e1ffb3b853ebeea2df18c23558f",
+    "byte_identical": true
+  },
+  {
+    "method": "fixed",
+    "spacing_mm": 0.05,
+    "sha256": "4eed3ef04c429905d25f2f0e1bc2f7ff2a61967591f46b7ee99a6687b0da6ea3",
+    "byte_identical": true
+  },
+  {
+    "method": "fixed",
+    "spacing_mm": 0.025,
+    "sha256": "153afa3640c5e9bfa6757228544e984333cef9b57aed4bc52e5947a011eb53e1",
+    "byte_identical": true
+  },
+  {
+    "method": "adaptive",
+    "spacing_mm": 0.25,
+    "sha256": "a5e07e1c60b3c4859da620a96d2e32c344f2fdef2daeafbb69e2600311cec323",
+    "byte_identical": true
+  },
+  {
+    "method": "adaptive",
+    "spacing_mm": 0.1,
+    "sha256": "0d9439280977661abd3729744cc7a1be2f6adc2c582028a08a9bc1c02217a60e",
+    "byte_identical": true
+  },
+  {
+    "method": "adaptive",
+    "spacing_mm": 0.05,
+    "sha256": "b1fe763c3015b58fd4aa7a88b1a43486926ea328537cdc956d5dc0750550bd77",
+    "byte_identical": true
+  },
+  {
+    "method": "adaptive",
+    "spacing_mm": 0.025,
+    "sha256": "f567c4daa1adf779413c9ae503e19cd3632371c6221caf5291f5fe841506f6b0",
+    "byte_identical": true
+  }
+]

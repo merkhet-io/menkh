@@ -1,0 +1,143 @@
+diff --git a/src/raydexel.zig b/src/raydexel.zig
+index d2db888..ced46e6 100644
+--- a/src/raydexel.zig
++++ b/src/raydexel.zig
+@@ -201,7 +201,7 @@ pub const Tree = struct {
+         return t.poses.len * @sizeOf(Pose) + t.nodes.capacity * @sizeOf(Node);
+     }
+ };
+-pub const Work = struct { node_tests: u64 = 0, ray_pose_tests: u64 = 0, cutting_intervals: u64 = 0, skipped_removed_nodes: u64 = 0, envelope_tests: u64 = 0, seed_tests: u64 = 0 };
++pub const Work = struct { node_tests: u64 = 0, ray_pose_tests: u64 = 0, cutting_intervals: u64 = 0, skipped_removed_nodes: u64 = 0, envelope_tests: u64 = 0, seed_tests: u64 = 0, tile_node_tests: u64 = 0, tile_pose_tests: u64 = 0 };
+ pub const Column = struct { x: u32, y: u32, offset: usize, count: usize };
+ pub const Result = struct {
+     allocator: std.mem.Allocator,
+@@ -260,7 +260,41 @@ pub fn overlaps(material: []const Interval, box: Interval) bool {
+     }
+     return false;
+ }
+-fn visit(tree: Tree, profile: Profile, index: u32, x: f64, y: f64, material: *std.ArrayList(Interval), work: *Work) !void {
++fn maskContains(mask: []const u64, index: u32) bool {
++    return mask[index / 64] & (@as(u64, 1) << @as(u6, @intCast(index % 64))) != 0;
++}
++// Tile expansion is only a rejection bound: moving a point from any XY cell
++// to the tile center moves it by at most radius. Each normalized conic/cap
++// constraint is 1-Lipschitz, so adding radius to its offset covers the tile.
++fn markTile(tree: Tree, index: u32, x: f64, y: f64, half: [2]f64, radius: f64, limits: Interval, mask: []u64, work: *Work) !bool {
++    work.tile_node_tests += 1;
++    const node = tree.nodes.items[index];
++    if (x + half[0] < node.bounds.lo[0] or x - half[0] > node.bounds.hi[0] or y + half[1] < node.bounds.lo[1] or y - half[1] > node.bounds.hi[1]) return false;
++    if (node.bounds.hi[2] < limits.lo or node.bounds.lo[2] > limits.hi) return false;
++    if (node.envelope_offset >= 0) {
++        var envelope = tree.poses[node.start];
++        envelope.offset = node.envelope_offset + radius;
++        work.tile_pose_tests += 1;
++        if (try ray(tree.profile, envelope, .{ x, y, 0 }, .{ 0, 0, 1 }, limits) == null) return false;
++    }
++    var active = false;
++    if (node.count == 0) {
++        const left = try markTile(tree, node.left, x, y, half, radius, limits, mask, work);
++        const right = try markTile(tree, node.right, x, y, half, radius, limits, mask, work);
++        active = left or right;
++    } else for (tree.poses[node.start .. node.start + node.count]) |pose| {
++        var envelope = pose;
++        envelope.offset += radius;
++        work.tile_pose_tests += 1;
++        if (try ray(tree.profile, envelope, .{ x, y, 0 }, .{ 0, 0, 1 }, limits) != null) {
++            active = true;
++            break;
++        }
++    }
++    if (active) mask[index / 64] |= @as(u64, 1) << @as(u6, @intCast(index % 64));
++    return active;
++}
++fn visit(tree: Tree, profile: Profile, index: u32, x: f64, y: f64, material: *std.ArrayList(Interval), work: *Work, mask: []const u64) !void {
+     work.node_tests += 1;
+     const node = tree.nodes.items[index];
+     if (x < node.bounds.lo[0] or x > node.bounds.hi[0] or y < node.bounds.lo[1] or y > node.bounds.hi[1]) return;
+@@ -280,8 +314,8 @@ fn visit(tree: Tree, profile: Profile, index: u32, x: f64, y: f64, material: *st
+         }
+     }
+     if (node.count == 0) {
+-        try visit(tree, profile, node.left, x, y, material, work);
+-        try visit(tree, profile, node.right, x, y, material, work);
++        if (maskContains(mask, node.left)) try visit(tree, profile, node.left, x, y, material, work, mask);
++        if (maskContains(mask, node.right)) try visit(tree, profile, node.right, x, y, material, work, mask);
+     } else for (tree.poses[node.start .. node.start + node.count]) |pose| {
+         if (material.items.len == 0) break;
+         if (x < pose.bounds.lo[0] or x > pose.bounds.hi[0] or y < pose.bounds.lo[1] or y > pose.bounds.hi[1]) continue;
+@@ -311,10 +345,33 @@ pub fn finishCylinderRows(a: std.mem.Allocator, profile: Profile, tree: Tree, ba
+     var material: std.ArrayList(Interval) = .empty;
+     defer material.deinit(a);
+     try material.ensureTotalCapacityPrecise(a, try std.math.add(usize, tree.poses.len, 1));
+-    result.scratch_bytes = material.capacity * @sizeOf(Interval);
++    const tile_width = 8;
++    const tiles_x = (@as(usize, n) + tile_width - 1) / tile_width;
++    const words = (tree.nodes.items.len + 63) / 64;
++    const masks = try a.alloc(u64, if (exhaustive) 0 else try std.math.mul(usize, tiles_x, words));
++    defer a.free(masks);
++    result.scratch_bytes = material.capacity * @sizeOf(Interval) + masks.len * @sizeOf(u64);
++    var tile_y: ?usize = null;
+     const range = rows orelse [2]u32{ 0, n };
+     if (range[0] > range[1] or range[1] > n) return error.InvalidRayRows;
+     for (range[0]..range[1]) |iy| for (0..n) |ix| {
++        if (!exhaustive and ix == 0 and tile_y != iy / tile_width) {
++            tile_y = iy / tile_width;
++            @memset(masks, 0);
++            const y0 = iy / tile_width * tile_width;
++            const y1 = @min(y0 + tile_width, n);
++            const cy = result.origin[1] + @as(f64, @floatFromInt(y0 + y1)) * 0.5 * spacing;
++            const hy = @as(f64, @floatFromInt(y1 - y0)) * 0.5 * spacing;
++            for (0..tiles_x) |tx| {
++                const x0 = tx * tile_width;
++                const x1 = @min(x0 + tile_width, n);
++                const cx = result.origin[0] + @as(f64, @floatFromInt(x0 + x1)) * 0.5 * spacing;
++                const hx = @as(f64, @floatFromInt(x1 - x0)) * 0.5 * spacing;
++                const guard = 1e-9 * (1 + @abs(cx) + @abs(cy) + radius);
++                const reach = @sqrt(hx * hx + hy * hy) + guard;
++                _ = try markTile(tree, 0, cx, cy, .{ hx + guard, hy + guard }, reach, .{ .lo = base[2], .hi = base[2] + length }, masks[tx * words ..][0..words], &result.work);
++            }
++        }
+         const x = result.origin[0] + (@as(f64, @floatFromInt(ix)) + 0.5) * spacing;
+         const y = result.origin[1] + (@as(f64, @floatFromInt(iy)) + 0.5) * spacing;
+         if ((x - base[0]) * (x - base[0]) + (y - base[1]) * (y - base[1]) > radius * radius) continue;
+@@ -325,7 +382,7 @@ pub fn finishCylinderRows(a: std.mem.Allocator, profile: Profile, tree: Tree, ba
+                 result.work.ray_pose_tests += 1;
+                 if (try ray(profile, pose, .{ x, y, 0 }, .{ 0, 0, 1 }, .{ .lo = base[2], .hi = base[2] + length })) |cut| subtractIntervals(&material, cut);
+             }
+-        } else {
++        } else if (maskContains(masks[(ix / tile_width) * words ..][0..words], 0)) {
+             // Seed the removed union with widely spaced poses before refining
+             // its boundary. This is traversal order only: the exact tree pass
+             // still covers every pose. It avoids growing each cut monotonically
+@@ -337,7 +394,7 @@ pub fn finishCylinderRows(a: std.mem.Allocator, profile: Profile, tree: Tree, ba
+                 result.work.seed_tests += 1;
+                 if (try ray(profile, pose, .{ x, y, 0 }, .{ 0, 0, 1 }, .{ .lo = base[2], .hi = base[2] + length })) |cut| subtractIntervals(&material, cut);
+             }
+-            try visit(tree, profile, 0, x, y, &material, &result.work);
++            try visit(tree, profile, 0, x, y, &material, &result.work, masks[(ix / tile_width) * words ..][0..words]);
+         }
+         const offset = result.intervals.items.len;
+         try result.intervals.appendSlice(a, material.items);
+diff --git a/src/raydexel_parallel.zig b/src/raydexel_parallel.zig
+index 91cfafe..a57ae03 100644
+--- a/src/raydexel_parallel.zig
++++ b/src/raydexel_parallel.zig
+@@ -32,11 +32,16 @@ pub fn finish(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.P
+     const nf = @ceil(2 * radius / spacing - 0.5);
+     if (!std.math.isFinite(nf) or nf < 1 or nf > 65536) return error.InvalidRayResolution;
+     const n: u32 = @intFromFloat(nf);
+-    const count = @min(workers, n);
++    // Assign whole tile rows for fixed/axis queries. This avoids repeating tile
++    // preparation at worker boundaries and preserves work counters as well as
++    // occupancy across worker counts. Adaptive traversal has no tile prepass.
++    const row_unit: usize = if (plan == null) 8 else 1;
++    const units = (@as(usize, n) + row_unit - 1) / row_unit;
++    const count = @min(workers, units);
+     // Wrap the supplied allocator rather than assuming it is thread safe.
+     var safe = std.heap.ThreadSafeAllocator{ .child_allocator = a };
+     var tasks: [64]Task = undefined;
+-    for (tasks[0..count], 0..) |*task, i| task.* = .{ .allocator = safe.allocator(), .profile = profile, .plan = plan, .tree = tree, .base = base, .radius = radius, .length = length, .spacing = spacing, .rows = .{ @intCast(@as(usize, n) * i / count), @intCast(@as(usize, n) * (i + 1) / count) } };
++    for (tasks[0..count], 0..) |*task, i| task.* = .{ .allocator = safe.allocator(), .profile = profile, .plan = plan, .tree = tree, .base = base, .radius = radius, .length = length, .spacing = spacing, .rows = .{ @intCast(@min(n, units * i / count * row_unit)), @intCast(@min(n, units * (i + 1) / count * row_unit)) } };
+     defer for (tasks[0..count]) |*task| if (task.result) |*result| {
+         result.material.deinit();
+     };

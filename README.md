@@ -37,7 +37,9 @@ backend. An opt-in `--method axis` planner exploits wheel rotational symmetry,
 reducing prepared poses from 90,112 to 39,936 at the same requested motion budget.
 [Comparisons and limits](docs/evidence/axisymmetric-rays/README.md) distinguish
 its changed approximation from byte-identical kernel optimizations. Raw results,
-accuracy checks and unsuccessful approaches are included.
+accuracy checks and unsuccessful approaches are included. A subsequent
+[exact-result hierarchy optimization](docs/evidence/ray-envelope-anchors/README.md)
+measures 5.54 → 4.60 s at 25 µm with eight workers and byte-identical material.
 
 ## Why “Menkh”?
 

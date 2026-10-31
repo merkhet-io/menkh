@@ -154,7 +154,7 @@ const State = struct {
         if (s.x < node.bounds.lo[0] or s.x > node.bounds.hi[0] or s.y < node.bounds.lo[1] or s.y > node.bounds.hi[1]) return;
         if (!d.overlaps(s.material.items, .{ .lo = node.bounds.lo[2], .hi = node.bounds.hi[2] })) return;
         if (node.envelope_offset >= 0) {
-            var envelope = s.tree.poses[node.start];
+            var envelope = s.tree.poses[node.anchorIndex()];
             envelope.offset = node.envelope_offset;
             const cut = (try s.hit(envelope)) orelse return;
             if (!d.overlaps(s.material.items, cut)) {
@@ -169,7 +169,7 @@ const State = struct {
         }
         if (node.count == 0) {
             try s.spatial(node.left);
-            try s.spatial(node.right);
+            try s.spatial(node.right_or_anchor);
         } else for (s.tree.poses[node.start .. node.start + node.count]) |pose| try s.temporal(pose.motion_index);
     }
 };

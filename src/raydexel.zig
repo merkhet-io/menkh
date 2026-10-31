@@ -128,7 +128,20 @@ fn rayRetained(comptime filter: bool, profile: Profile, pose: Pose, origin: e.V,
     }
     return interval;
 }
-pub const Node = struct { bounds: e.Bounds, start: u32, count: u32, left: u32 = 0, right: u32 = 0, envelope_offset: f64 = -1 };
+pub const Node = struct {
+    bounds: e.Bounds,
+    // A leaf's contiguous pose range, or an internal node's envelope anchor.
+    start: u32,
+    count: u32,
+    left: u32 = 0,
+    // count == 0: right child; count > 0: leaf envelope anchor pose.
+    // Reuse the inactive child slot without changing leaf/seed traversal order.
+    right_or_anchor: u32 = 0,
+    envelope_offset: f64 = -1,
+    pub fn anchorIndex(node: Node) u32 {
+        return if (node.count == 0) node.start else node.right_or_anchor;
+    }
+};
 pub const Tree = struct {
     allocator: std.mem.Allocator,
     poses: []Pose,
@@ -177,7 +190,7 @@ pub const Tree = struct {
             const left = t.build(start, count / 2);
             const right = t.build(start + count / 2, count - count / 2);
             t.nodes.items[index].left = left;
-            t.nodes.items[index].right = right;
+            t.nodes.items[index].right_or_anchor = right;
             t.nodes.items[index].count = 0;
         }
         // Compare each offset body to the SAME offset body at the anchor.
@@ -187,15 +200,54 @@ pub const Tree = struct {
         // the original offset encloses it. No extra miter on the offset itself.
         // Rejection only: leaves retain original poses.
         if (count <= 256) {
-            const anchor = t.poses[start];
             const rho = @sqrt(t.profile.radius * t.profile.radius + t.profile.length * t.profile.length);
-            var margin: f64 = 0;
+            // Anchor near the group's center in position/orientation space,
+            // rather than at an arbitrary edge of the sorted pose range.
+            var mean_base: e.V = .{ 0, 0, 0 };
+            var mean_axis: e.V = .{ 0, 0, 0 };
             for (t.poses[start .. start + count]) |pose| {
-                margin = @max(margin, pose.offset + e.norm(e.sub(pose.base, anchor.base)) + (rho + pose.offset * t.profile.miter) * e.norm(e.sub(pose.axis, anchor.axis)));
+                mean_base = e.add(mean_base, pose.base);
+                mean_axis = e.add(mean_axis, pose.axis);
             }
+            mean_base = e.scale(mean_base, 1 / @as(f64, @floatFromInt(count)));
+            mean_axis = e.scale(mean_axis, 1 / @as(f64, @floatFromInt(count)));
+            var chosen = start;
+            var best = std.math.inf(f64);
+            for (t.poses[start .. start + count], start..) |pose, i| {
+                const db = e.sub(pose.base, mean_base);
+                const da = e.sub(pose.axis, mean_axis);
+                const score = e.dot(db, db) + rho * rho * e.dot(da, da);
+                if (score < best) {
+                    best = score;
+                    chosen = @intCast(i);
+                }
+            }
+            // For small leaves, minimize the actual envelope radius over all
+            // available anchors. For larger groups compare center and original
+            // anchors; never widen their enclosure just to use a central pose.
+            var margin = t.envelopeMargin(start, count, chosen, rho);
+            const candidates = if (count <= 8) count else @as(u32, 1);
+            for (start..start + candidates) |candidate| {
+                const candidate_margin = t.envelopeMargin(start, count, @intCast(candidate), rho);
+                if (candidate_margin < margin) {
+                    margin = candidate_margin;
+                    chosen = @intCast(candidate);
+                }
+            }
+            if (t.nodes.items[index].count > 0) {
+                t.nodes.items[index].right_or_anchor = chosen;
+            } else t.nodes.items[index].start = chosen;
             t.nodes.items[index].envelope_offset = margin + 1e-8 * (1 + rho + margin);
         }
         return index;
+    }
+    fn envelopeMargin(t: Tree, start: u32, count: u32, anchor_index: u32, rho: f64) f64 {
+        const anchor = t.poses[anchor_index];
+        var value: f64 = 0;
+        for (t.poses[start .. start + count]) |pose| {
+            value = @max(value, pose.offset + e.norm(e.sub(pose.base, anchor.base)) + (rho + pose.offset * t.profile.miter) * e.norm(e.sub(pose.axis, anchor.axis)));
+        }
+        return value;
     }
     pub fn bytes(t: Tree) usize {
         return t.poses.len * @sizeOf(Pose) + t.nodes.capacity * @sizeOf(Node);
@@ -269,7 +321,7 @@ fn visit(tree: Tree, profile: Profile, index: u32, x: f64, y: f64, material: *st
         return;
     }
     if (node.envelope_offset >= 0) {
-        var envelope = tree.poses[node.start];
+        var envelope = tree.poses[node.anchorIndex()];
         envelope.offset = node.envelope_offset;
         const limits = Interval{ .lo = node.bounds.lo[2], .hi = node.bounds.hi[2] };
         work.envelope_tests += 1;
@@ -281,7 +333,7 @@ fn visit(tree: Tree, profile: Profile, index: u32, x: f64, y: f64, material: *st
     }
     if (node.count == 0) {
         try visit(tree, profile, node.left, x, y, material, work);
-        try visit(tree, profile, node.right, x, y, material, work);
+        try visit(tree, profile, node.right_or_anchor, x, y, material, work);
     } else for (tree.poses[node.start .. node.start + node.count]) |pose| {
         if (material.items.len == 0) break;
         if (x < pose.bounds.lo[0] or x > pose.bounds.hi[0] or y < pose.bounds.lo[1] or y > pose.bounds.hi[1]) continue;
