@@ -67,7 +67,7 @@ Windows CI builds both MSVC entry points, tests the DLL and static library, comp
 
 Build `sdk` for a shared library or `sdk-static` for a static library. Both expose the same [versioned C API](docs/C-API.md): material operations, copied-history undo/redo, checkpoint/resume, and complete JSON jobs with progress and cancellation. Rendering remains separate.
 
-See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contracts](docs/ENGINE.md), [job/state/STL formats](docs/FORMATS.md), and [measured validation report](docs/ENGINE-VALIDATION.md). The matrix distinguishes tested behavior from restrictions; this is not a claim of ModuleWorks compatibility or feature parity. All material removal stays on the CPU. Fixed-axis line jobs reject orientation changes; cylindrical-wheel XYZAC operations have a separate bounded-sweep contract.
+See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contracts](docs/ENGINE.md), [job/state/STL formats](docs/FORMATS.md), and [measured validation report](docs/ENGINE-VALIDATION.md). The matrix distinguishes tested behavior from restrictions; this is not a claim of ModuleWorks compatibility or feature parity. All material removal stays on the CPU. Fixed-axis line jobs reject orientation changes; cylindrical/profile-wheel XYZAC operations have a separate bounded-sweep contract.
 
 [Watch the inspected pocket-milling video](docs/general-demo.mp4) (31 seconds).
 
@@ -277,7 +277,7 @@ in a job and use `--color-operation` or `--color-tool` in either native voxel vi
 
 ## Further capabilities
 
-- [Cylinder-wheel grinding](docs/GRINDING.md): explicit XYZAC motion, continuous coverage with a declared conservative bound, and `./scripts/grinding-demo.sh`.
+- [Grinding wheels](docs/GRINDING.md): cylindrical or piecewise-linear radius profiles, explicit XYZAC motion and a declared continuous-coverage bound. Run `./scripts/grinding-demo.sh --profile` for a crowned wheel.
 - [Sparse mutation experiment](docs/SPARSE-MUTATION.md): cuts and retained roots in a 65,536³ virtual cube; separate from regular jobs, not the billion-face memory qualification.
 - Windows final-surface operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
 

@@ -6,6 +6,7 @@ p=argparse.ArgumentParser()
 p.add_argument('--out',type=Path,default=Path('out/grinding/job.json'))
 p.add_argument('--voxel',type=float,default=.5)
 p.add_argument('--segments',type=int,default=40)
+p.add_argument('--profile',action='store_true',help='Use a piecewise-linear crowned wheel instead of the cylinder')
 p.add_argument('--tolerance',type=float,default=.2)
 a=p.parse_args()
 if not (math.isfinite(a.voxel) and a.voxel>0 and math.isfinite(a.tolerance) and a.tolerance>0 and 1<=a.segments<=2000):p.error('positive voxel/tolerance and 1..2000 segments required')
@@ -18,5 +19,7 @@ job=dict(version=1,units='mm',bounds=dict(lo=[-12,-12,0],hi=[12,12,100]),voxel_m
          tools=[dict(cutter=dict(kind='flat',radius=100,length=50))],motion_tolerance_mm=a.tolerance,
          export_mesh=False,export_provenance=True,
          operations=[dict(id=f'flute-{f+1}-{i+1:03}',tool=0,rotary=dict(a=pose(i/a.segments,f),b=pose((i+1)/a.segments,f))) for f in range(2) for i in range(a.segments)])
+if a.profile:
+ job['tools'][0]['cutter'].update(kind='profile',profile=[dict(z=0,radius=95),dict(z=20,radius=100),dict(z=30,radius=100),dict(z=50,radius=95)])
 a.out.parent.mkdir(parents=True,exist_ok=True);a.out.write_text(json.dumps(job,indent=2)+'\n')
 print(a.out)

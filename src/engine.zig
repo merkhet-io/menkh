@@ -138,18 +138,31 @@ pub fn segmentBounds(a: V, b: V) Bounds {
     }
     return out;
 }
-pub const ToolKind = enum { flat, ball, bull, taper, drill };
+pub const ToolKind = enum { flat, ball, bull, taper, drill, profile };
+pub const ProfilePoint = struct { z: f64, radius: f64 };
 pub const Tool = struct {
     kind: ToolKind = .flat,
     radius: f64,
     length: f64,
     corner: f64 = 0,
     tip_radius: f64 = 0,
+    profile: []const ProfilePoint = &.{},
     pub fn validate(t: Tool) !void {
         try positive(t.radius);
         try positive(t.length);
         if (!std.math.isFinite(t.corner) or !std.math.isFinite(t.tip_radius)) return error.InvalidTool;
+        if (t.kind != .profile and t.profile.len != 0) return error.InvalidToolProfile;
         switch (t.kind) {
+            .profile => {
+                if (t.corner != 0 or t.tip_radius != 0 or t.profile.len < 2 or t.profile.len > 256) return error.InvalidToolProfile;
+                var maximum: f64 = 0;
+                for (t.profile, 0..) |p, i| {
+                    if (!std.math.isFinite(p.z) or !std.math.isFinite(p.radius) or p.radius < 0 or p.radius > t.radius or p.z < 0 or p.z > t.length) return error.InvalidToolProfile;
+                    if (i > 0 and p.z - t.profile[i - 1].z < 1e-9) return error.InvalidToolProfile;
+                    maximum = @max(maximum, p.radius);
+                }
+                if (t.profile[0].z != 0 or t.profile[t.profile.len - 1].z != t.length or maximum != t.radius) return error.InvalidToolProfile;
+            },
             .flat => if (t.corner != 0 or t.tip_radius != 0) return error.InvalidTool,
             .ball => if (t.length < t.radius or t.corner != 0 or t.tip_radius != 0) return error.InvalidTool,
             .bull => if (t.corner <= 0 or t.corner > t.radius or t.corner > t.length or t.tip_radius != 0) return error.InvalidTool,
@@ -160,6 +173,27 @@ pub const Tool = struct {
     // Exact signed distance to a solid of revolution. Ball includes the cylindrical flute.
     pub fn distance(t: Tool, r: f64, z: f64) f64 {
         switch (t.kind) {
+            .profile => {
+                // Meridional outer boundary plus the two radial caps. The axis
+                // is not a surface of the solid of revolution.
+                var inside = false;
+                var best = std.math.inf(f64);
+                for (t.profile[0 .. t.profile.len - 1], t.profile[1..]) |p, q| {
+                    const dr = q.radius - p.radius;
+                    const dz = q.z - p.z;
+                    const u = std.math.clamp(((r - p.radius) * dr + (z - p.z) * dz) / (dr * dr + dz * dz), 0, 1);
+                    const x = r - (p.radius + u * dr);
+                    const y = z - (p.z + u * dz);
+                    best = @min(best, @sqrt(x * x + y * y));
+                    if (z >= p.z and z <= q.z and r <= p.radius + dr * ((z - p.z) / dz)) inside = true;
+                }
+                for ([_]ProfilePoint{ t.profile[0], t.profile[t.profile.len - 1] }) |cap| {
+                    const x = @max(r - cap.radius, 0);
+                    const y = z - cap.z;
+                    best = @min(best, @sqrt(x * x + y * y));
+                }
+                return if (inside) -best else best;
+            },
             .flat => return sd2(r - t.radius, @abs(z - t.length / 2) - t.length / 2),
             .ball, .bull => {
                 const c = if (t.kind == .ball) t.radius else t.corner;

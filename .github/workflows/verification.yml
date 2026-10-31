@@ -30,7 +30,7 @@ jobs:
           ./zig build -Doptimize=ReleaseFast
           ./zig build test --summary all
           ./zig build test -Doptimize=ReleaseFast --summary all
-      - name: Rotary-cylinder jobs and portable provenance reader
+      - name: Grinding-wheel jobs and portable provenance reader
         run: |
           python3 scripts/test-grinding.py
           xcrun clang++ -std=c++17 -O2 viewer/windows/history-test.cpp -o out/history-test
@@ -133,11 +133,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Viewer DLL rendering failed' }
           ./out/windows-viewer/menkh-viewer.exe examples/general.json --engine zig-out/bin/menkh.exe --job-output out/windows-job-render --warp --debug --smoke out/windows-job-render-images
           if ($LASTEXITCODE -ne 0) { throw 'Automatic job/result render failed' }
-      - name: Rotary-cylinder jobs and Windows provenance rendering
+      - name: Grinding-wheel jobs and Windows provenance rendering
         shell: pwsh
         run: |
           python scripts/test-grinding.py
           if ($LASTEXITCODE -ne 0) { throw 'Rotary jobs failed' }
+          ./out/windows-viewer/menkh-viewer.exe out/grinding-test/profile-visible/voxel-animation.json --verify-history --warp --debug --frame 4 --snapshot out/windows-profile.ppm
+          if ($LASTEXITCODE -ne 0) { throw 'Profile history/render failed' }
           python scripts/test-provenance.py
           if ($LASTEXITCODE -ne 0) { throw 'Provenance oracle failed' }
           python scripts/test-viewer-provenance.py --exe out/windows-viewer/menkh-viewer.exe --viewer
@@ -169,6 +171,7 @@ jobs:
             out/windows-viewer-smoke/
             out/windows-job-render-images/
             out/windows-provenance.ppm
+            out/windows-profile.ppm
             out/windows-job-runner/
             out/windows-library-runner/
             out/windows-dll-render-images/

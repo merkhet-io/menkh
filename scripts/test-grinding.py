@@ -35,3 +35,31 @@ for kind in ['ball','feed','assembly','ambiguous','bad-angle','bad-tolerance']:
 report=json.loads((full/'report.json').read_text());assert all(o['motion_over_removal_bound_mm']<=job['motion_tolerance_mm']+1e-12 for o in report['operations'])
 history=json.loads((full/'voxel-animation.json').read_text());assert all(f['cutter']['radius']==1.2 and len(f['axis'])==3 for f in history['frames'])
 print('Rotary job: scalar equality, checkpoint/resume equality, six rejected contracts, bounds and viewer poses passed')
+
+for label,points in [('crowned',[(0,.8),(.35,1.2),(.7,.8)]),('waisted',[(0,1.2),(.35,.4),(.7,1.2)])]:
+ profile=copy.deepcopy(job);profile['tools'][0]['cutter'].update(kind='profile',profile=[dict(z=z,radius=r) for z,r in points])
+ result=run(label,profile);reference=run(label+'-reference',profile,True)
+ assert cells(result/'final.menkh')==cells(reference/'final.menkh')
+ first=copy.deepcopy(profile);first['operations']=first['operations'][:2];checkpoint=run(label+'-first',first)
+ resumed=copy.deepcopy(profile);resumed['operations']=resumed['operations'][2:];resumed['stock']=dict(state_file=str((checkpoint/'final.menkh').resolve()))
+ final=run(label+'-resume',resumed);assert cells(result/'final.menkh')==cells(final/'final.menkh')
+ report=json.loads((result/'report.json').read_text());assert all(o['motion_over_removal_bound_mm']<=profile['motion_tolerance_mm']+1e-12 for o in report['operations'])
+ history=json.loads((result/'voxel-animation.json').read_text());assert all(f['cutter']['profile']==profile['tools'][0]['cutter']['profile'] for f in history['frames'])
+ repeat=copy.deepcopy(profile);repeat['operations'] += [dict(op,id=op['id']+'-again') for op in profile['operations']]
+ repeated=run(label+'-repeat',repeat);assert cells(result/'final.menkh')==cells(repeated/'final.menkh')
+ bad=copy.deepcopy(profile);bad['tools'][0]['cutter']['profile'][1]['z']=0;run(label+'-invalid',bad,valid=False)
+print('Crowned/waisted profiles: reference equality, resume, idempotence, declared bounds, history metadata and invalid input passed')
+
+# Stationary, tiny, axial and diagonal translations with fixed orientation.
+for name,end in [('stationary',[0,0,0]),('tiny',[1e-12,0,0]),('axial',[0,0,.5]),('diagonal',[.3,-.2,.4])]:
+ fixed=copy.deepcopy(profile);fixed['operations']=[dict(id=name,tool=0,rotary=dict(a=dict(position=[0,0,0],a_deg=0,c_deg=0),b=dict(position=end,a_deg=0,c_deg=0)))]
+ result=run(name,fixed);reference=run(name+'-reference',fixed,True)
+ assert cells(result/'final.menkh')==cells(reference/'final.menkh')
+ reverse=copy.deepcopy(fixed);r=reverse['operations'][0]['rotary'];r['a'],r['b']=r['b'],r['a'];rev=run(name+'-reverse',reverse)
+ assert cells(result/'final.menkh')==cells(rev/'final.menkh')
+print('Profile stationary, tiny, axial, diagonal and reversed motion passed')
+# Expose the profile cut at the stock boundary for a meaningful viewer snapshot.
+visible=copy.deepcopy(profile);visible['bounds']['hi'][2]=.5
+visible['stock']['primitives'][0]['box']=copy.deepcopy(visible['bounds'])
+result=run('profile-visible',visible);reference=run('profile-visible-reference',visible,True)
+assert cells(result/'final.menkh')==cells(reference/'final.menkh')

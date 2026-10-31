@@ -1,0 +1,16 @@
+{
+  "compiler": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "hardware": "Apple M5 Max",
+  "physical_memory_bytes": 137438953472,
+  "binary_sha256": "a491ee9b9d91b80d3fa3817bf1e0b437c28e8859761b7b416733a48c6805df3a",
+  "job_sha256": "1b3e3e376da74deb00ede1f42ffec580f68f44b9554ac3303e0fe8335e5331cc",
+  "engine_source_sha256": {
+    "src/engine.zig": "16a62badc62462bdbf7f392601ebeeed14069b170831b9438695d1d30e882055",
+    "src/motion.zig": "c5e1fef7a1a0676efc05c7a0c7bddb60ee1e75316bff47b684dc5608f8acd15e",
+    "src/job.zig": "3b35a8e5345cf148a9e762120601357fa164df4e59d0cd95df69a5cb0b251cfa"
+  },
+  "base_commit": "f0abc9f9db5b6b5df27a976f14e908e628dca894",
+  "source_note": "motion.zig documentation comment added after benchmark; executable geometry unchanged"
+}
