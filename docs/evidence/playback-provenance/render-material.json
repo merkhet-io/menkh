@@ -1,0 +1,28 @@
+{
+  "averaged_normals" : false,
+  "fixtures_visible" : true,
+  "frame" : 160,
+  "gpu_ms_max" : 2.044333319645375,
+  "gpu_ms_median" : 1.83097917761188,
+  "gpu_ms_min" : 1.7696666764095426,
+  "grid" : [
+    1200,
+    960,
+    640
+  ],
+  "height" : 900,
+  "holder_visible" : false,
+  "load_upload_seconds" : 0.035201907157897949,
+  "note" : "GPU command duration only, offscreen static view; not interactive FPS",
+  "provenance_active" : false,
+  "provenance_mode" : 0,
+  "provenance_records" : 3999627,
+  "samples" : 10,
+  "samples_per_pixel" : 4,
+  "section_axis" : 2,
+  "section_fraction" : 1,
+  "seek_seconds" : 0.012149930000305176,
+  "target_comparison" : false,
+  "warmups" : 3,
+  "width" : 1280
+}

@@ -59,7 +59,7 @@ Open an existing result with:
 .\out\windows-viewer\menkh-viewer.exe out/windows-pocket/voxel-animation.json
 ```
 
-Orbit, pan, zoom, play/pause and scrub the recorded history; **[ / ]** move the Z section and **C** cycles final-surface operation/tool colors when provenance was exported. The Windows viewer has fewer inspection features than the macOS viewer. See [controls and limits](viewer/windows/README.md).
+Orbit, pan, zoom, play/pause and scrub the recorded history; **[ / ]** move the Z section and **C** cycles operation/tool exposure colors when provenance was exported. The Windows viewer has fewer inspection features than the macOS viewer. See [controls and limits](viewer/windows/README.md).
 
 Windows CI builds both MSVC entry points, tests the DLL and static library, compares job output with the CLI, exercises cancellation, and renders/replays results through D3D12 WARP. These checks establish functionality, not hardware-GPU performance.
 
@@ -271,15 +271,15 @@ The default `drill` command also emits `voxel-animation.json`. Its `animation.js
 continues to open the mesh animation on macOS and now routes the Windows viewer
 to the matching voxel history. Regenerate older mesh-only outputs once.
 
-Optional [final-surface exposure coloring](docs/SURFACE-PROVENANCE.md) identifies
+Optional [surface exposure coloring](docs/SURFACE-PROVENANCE.md) identifies
 the operation that exposed each surviving voxel face. Enable `export_provenance`
-in a job and use `--color-operation` or `--color-tool` in either native voxel viewer. Attribution currently covers the final surface, not every playback frame.
+in a job and use `--color-operation` or `--color-tool` in either native voxel viewer. Add `"provenance_scope": "all_frames"` for exact attribution while scrubbing; the default `final_surface` scope uses less memory.
 
 ## Further capabilities
 
 - [Grinding wheels](docs/GRINDING.md): cylindrical or piecewise-linear radius profiles, explicit XYZAC motion and a declared continuous-coverage bound. Run `./scripts/grinding-demo.sh --profile` for a crowned wheel.
 - [Sparse mutation experiment](docs/SPARSE-MUTATION.md): cuts and retained roots in a 65,536³ virtual cube; separate from regular jobs, not the billion-face memory qualification.
-- Windows final-surface operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
+- Windows playback operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
 
 The [C API](docs/C-API.md) supports shared/static embedding and Windows viewer-owned calculation. Consistent live snapshots, bounded buffering and inspection while a job is running remain tracked in [#24](https://github.com/merkhet-io/menkh/issues/24).
 

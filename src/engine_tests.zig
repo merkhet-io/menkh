@@ -774,8 +774,9 @@ test "final surface exposure IDs match independent per-cell removal chronology" 
     }
     try std.testing.expect(expected > 0);
     try std.testing.expectEqual(expected, index.entries.items.len);
-    try std.testing.expectError(error.CorruptHistory, index.consume(&.{ 1, 2 }, 1, 0));
+    try std.testing.expectError(error.CorruptHistory, index.consume(&.{ 1, 2 }, index.last_operation + 1, 0));
     try std.testing.expectError(error.InvalidOperationId, index.consume(&.{}, 0, 0));
+    try std.testing.expectError(error.InvalidOperationId, index.consume(&.{}, index.last_operation, 0));
 }
 
 fn provenanceAllocations(allocator: std.mem.Allocator, g: @import("core.zig").Grid, delta: []const u8) !void {
@@ -1010,4 +1011,35 @@ test "waisted profile motion has independent sampled surface envelope and split 
         const surface_error = @sqrt(@as(f64, 1.36)) / 128;
         if (shape.contains(p)) try std.testing.expect(best <= plan.over_removal_bound_mm + time_error + surface_error + 1e-9);
     }
+}
+
+fn playbackIndexAllocation(g: @import("core.zig").Grid, bytes: []const u8, alloc: std.mem.Allocator) !void {
+    var index = @import("provenance.zig").Index.initAllFrames(alloc, g);
+    defer index.deinit();
+    try index.consumeFrame(g, bytes, 1, 1);
+    index.sort();
+    try std.testing.expect(index.entries.items.len > 0);
+}
+
+test "playback exposure allocation and explicit limit preserve authoritative stock" {
+    const bounds = e.Bounds{ .lo = .{ -1, -1, -1 }, .hi = .{ 2.4, 2.8, 1.6 } };
+    var g = try e.stock(a, bounds, 0.2, &.{.{ .box = bounds }});
+    defer g.deinit();
+    var changes: e.Changes = .{};
+    defer changes.deinit(a);
+    try e.subtract(&g, .{ .primitive = .{ .box = .{ .lo = .{ -0.7, -0.5, -0.3 }, .hi = .{ 1.5, 1.6, 1.3 } } } }, &changes, false);
+    const before = try @import("state.zig").encode(a, g);
+    defer a.free(before);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(alloc: std.mem.Allocator, grid: @import("core.zig").Grid, bytes: []const u8) !void {
+            try playbackIndexAllocation(grid, bytes, alloc);
+        }
+    }.run, .{ g, changes.bytes.items });
+    var limited = @import("provenance.zig").Index.initAllFrames(a, g);
+    defer limited.deinit();
+    limited.max_entries = 0;
+    try std.testing.expectError(error.ProvenanceTooLarge, limited.consumeFrame(g, changes.bytes.items, 1, 1));
+    const after = try @import("state.zig").encode(a, g);
+    defer a.free(after);
+    try std.testing.expectEqualSlices(u8, before, after);
 }

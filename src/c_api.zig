@@ -18,7 +18,7 @@ fn failure(err: anyerror) Status {
         error.Cancelled => .cancelled,
         error.FileNotFound, error.AccessDenied, error.NotDir, error.NoSpaceLeft, error.InputOutput => .io_error,
         error.OrientationChangeUnsupported, error.RotaryRequiresWheel => .unsupported,
-        error.MotionToleranceTooSmall, error.PoolTooLarge, error.Overflow, error.GridTooLargeOrEmpty => .resource_limit,
+        error.ProvenanceTooLarge, error.MotionToleranceTooSmall, error.PoolTooLarge, error.Overflow, error.GridTooLargeOrEmpty => .resource_limit,
         else => .invalid_argument,
     };
 }

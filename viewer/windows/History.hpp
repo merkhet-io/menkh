@@ -89,7 +89,8 @@ class History {
     std::vector<uint64_t> pool;
     std::vector<Step> steps;
     std::vector<uint32_t> provenance; // u64 cell, u32 operation, u32 tool, little endian words
-    bool hasProvenance = false;
+    bool hasProvenance = false, provenanceAllFrames = false;
+    bool provenanceAvailableAtFrame() const { return provenanceAllFrames || frame == steps.size(); }
     std::vector<size_t> dirtyBlocks, dirtySlots;
     explicit History(const fs::path &path) {
         root = path.parent_path();
@@ -198,7 +199,7 @@ class History {
         const auto path = root / "surface-provenance.json";
         if (!fs::exists(path)) return;
         const auto j = Json::parse(read(path, 64 << 20));
-        require(j.at("format") == "menkh-surface-provenance-v1" && j.at("scope") == "final_surface" &&
+        require(j.at("format") == "menkh-surface-provenance-v1" && (j.at("scope") == "final_surface" || j.at("scope") == "all_frames") &&
                 j.at("grid") == Json(n) && vec(j.at("origin_mm")) == origin &&
                 j.at("voxel_mm").get<float>() == h && j.at("final_occupied") == final &&
                 j.at("record_bytes") == 16 && j.at("initial_id") == 0,
@@ -224,7 +225,30 @@ class History {
             for(size_t w=0;w<4;++w) provenance[i*4+w]=u32(p+w*4);
             previous=key;
         }
+        provenanceAllFrames=j.at("scope")=="all_frames";
         hasProvenance=true;
+    }
+    void verifyExposureOracle(const fs::path &path) {
+        const auto oracle=Json::parse(read(path));
+        for(int pass=0;pass<3;++pass)for(size_t i=0;i<oracle.size();++i){
+            const auto &f=oracle.at(pass==1?oracle.size()-1-i:i);seek(f.at("frame").get<size_t>());
+            for(const auto &row:f.at("neighbors")) {
+                const auto value=exposure(row.at(0).get<uint64_t>());
+                require(value[0]==row.at(1).get<uint32_t>() && value[1]==row.at(2).get<uint32_t>(),"Exposure oracle mismatch");
+            }
+        }
+    }
+    // Query an empty neighbor cell at the current replay frame; face selection
+    // remains the caller's responsibility (clip interiors are not cut faces).
+    std::array<uint32_t,2> exposure(uint64_t key) const {
+        if (!hasProvenance || !provenanceAvailableAtFrame() || key>=uint64_t(n[0])*n[1]*n[2]) return {};
+        const size_t x=size_t(key%n[0]),y=size_t(key/n[0]%n[1]),z=size_t(key/(uint64_t(n[0])*n[1]));
+        const auto d=blocks[(z/8*nb[1]+y/8)*nb[0]+x/8];
+        if (d==Full || (d<Full && (pool[size_t(d)*8+z%8] & (uint64_t(1)<<(y%8*8+x%8))))) return {};
+        size_t lo=0,hi=provenance.size()/4;
+        while(lo<hi){size_t mid=lo+(hi-lo)/2;uint64_t value=uint64_t(provenance[mid*4])|(uint64_t(provenance[mid*4+1])<<32);if(value<key)lo=mid+1;else hi=mid;}
+        if(lo<provenance.size()/4 && (uint64_t(provenance[lo*4])|(uint64_t(provenance[lo*4+1])<<32))==key && provenance[lo*4+2]<=frame) return {provenance[lo*4+2],provenance[lo*4+3]};
+        return {};
     }
     std::array<size_t, 3> coords(size_t i) const {
         return {i % nb[0], (i / nb[0]) % nb[1], i / (size_t(nb[0]) * nb[1])};

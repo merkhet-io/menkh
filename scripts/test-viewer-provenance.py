@@ -10,7 +10,7 @@ def run(path,ok):
 run(source,True)
 with tempfile.TemporaryDirectory() as tmp:
  root=Path(tmp)/'history';shutil.copytree(source.parent,root);header=root/'surface-provenance.json';binary=root/'surface-provenance.bin';orig=json.loads(header.read_text());raw=binary.read_bytes();path=root/source.name
- for key,value in [('grid',[1,2,3]),('scope','all_frames'),('entries',-1),('bytes',orig['bytes']+1),('final_occupied',0)]:
+ for key,value in [('grid',[1,2,3]),('scope','unknown_scope'),('entries',-1),('bytes',orig['bytes']+1),('final_occupied',orig['final_occupied']+1)]:
   bad=copy.deepcopy(orig);bad[key]=value;header.write_text(json.dumps(bad));run(path,False)
  header.write_text(json.dumps(orig))
  for offset,value in [(8,0),(8,len(orig['operations'])+1),(12,0xffffffff)]:
