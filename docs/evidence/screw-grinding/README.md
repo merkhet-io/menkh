@@ -97,3 +97,7 @@ fairly without the same wheel geometry, continuous-motion/error contract and job
 The newly permitted representation experiments are documented separately in
 [the dexel experiment](../../DEXEL-EXPERIMENT.md); they do not silently replace
 the production engine or its measured results above.
+
+Large per-operation raw records are losslessly compressed as
+`engine-suite-results.json.gz` and `dexel-100um.json.gz`; use `gzip -dc FILE`
+to inspect them. Small raw summaries remain directly readable JSON.
