@@ -28,6 +28,12 @@ thread profile or a claim of 16k³ cutting capability. An experimental
 [quantized dexel backend](docs/DEXEL-EXPERIMENT.md) preserves exact occupancy for
 comparison; it is currently slower and is not the default.
 
+An [experimental continuous ray-interval kernel](docs/ANALYTIC-DEXELS.md) evaluates
+the complete screw without history. With eight workers on the measured M5 Max,
+25 µm cutting takes 9.10 s median; a complete 6.25 µm qualification takes 122.52 s.
+It changes motion-approximation semantics and is not the production viewer/history
+backend. Raw results, accuracy checks and unsuccessful approaches are included.
+
 ## Why “Menkh”?
 
 **𓍊 — a chisel.** The name draws on ancient Egyptian *mnḫ*, associated with carving. We chose it because the simulator does the same basic job as a chisel: remove material to give a workpiece its shape. The sign **𓍊** is Gardiner **U22** (Unicode U+1334A), used in writing *mnḫ*. “Menkh” is our readable Latin spelling, not a claim about the exact ancient pronunciation. The logo pairs a chisel with a voxel block.

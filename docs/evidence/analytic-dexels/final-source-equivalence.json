@@ -1,0 +1,54 @@
+{
+  "binary_sha256": "3a2b2e5996de41fae64f6bc0dd5baa3589ce9d280065a651e662284ca3a0857e",
+  "checks": [
+    {
+      "spacing_mm": 0.25,
+      "method": "fixed",
+      "byte_exact": true,
+      "sha256": "224ec46d5b6030cbef2a6f2e4ca707128a2d5bd5cea980d2b4c0821a19b7321d"
+    },
+    {
+      "spacing_mm": 0.25,
+      "method": "adaptive",
+      "byte_exact": true,
+      "sha256": "a5e07e1c60b3c4859da620a96d2e32c344f2fdef2daeafbb69e2600311cec323"
+    },
+    {
+      "spacing_mm": 0.1,
+      "method": "fixed",
+      "byte_exact": true,
+      "sha256": "530f53ab3b89c106607a80870331b8a3a3843e1ffb3b853ebeea2df18c23558f"
+    },
+    {
+      "spacing_mm": 0.1,
+      "method": "adaptive",
+      "byte_exact": true,
+      "sha256": "0d9439280977661abd3729744cc7a1be2f6adc2c582028a08a9bc1c02217a60e"
+    },
+    {
+      "spacing_mm": 0.05,
+      "method": "fixed",
+      "byte_exact": true,
+      "sha256": "4eed3ef04c429905d25f2f0e1bc2f7ff2a61967591f46b7ee99a6687b0da6ea3"
+    },
+    {
+      "spacing_mm": 0.05,
+      "method": "adaptive",
+      "byte_exact": true,
+      "sha256": "b1fe763c3015b58fd4aa7a88b1a43486926ea328537cdc956d5dc0750550bd77"
+    },
+    {
+      "spacing_mm": 0.025,
+      "method": "fixed",
+      "byte_exact": true,
+      "sha256": "153afa3640c5e9bfa6757228544e984333cef9b57aed4bc52e5947a011eb53e1"
+    },
+    {
+      "spacing_mm": 0.025,
+      "method": "adaptive",
+      "byte_exact": true,
+      "sha256": "f567c4daa1adf779413c9ae503e19cd3632371c6221caf5291f5fe841506f6b0"
+    }
+  ],
+  "note": "Final implementation includes regularized zero-length tangent handling and input validation. All frozen-workload outputs remain byte-identical to measured binary."
+}
