@@ -39,6 +39,7 @@ jobs:
       - name: C embedding boundary and independent host
         run: |
           ./zig build sdk -Doptimize=ReleaseFast
+          ./zig build sdk-static -Doptimize=ReleaseFast
           ./zig build sdk-test --summary all
           ./zig build sdk-test -Doptimize=ReleaseFast --summary all
           python3 scripts/test-sdk.py
@@ -88,6 +89,8 @@ jobs:
         run: |
           ./zig.ps1 build sdk -Doptimize=ReleaseFast
           if ($LASTEXITCODE -ne 0) { throw 'SDK build failed' }
+          ./zig.ps1 build sdk-static -Doptimize=ReleaseFast
+          if ($LASTEXITCODE -ne 0) { throw 'Static SDK build failed' }
           ./zig.ps1 build sdk-test --summary all
           if ($LASTEXITCODE -ne 0) { throw 'SDK tests failed' }
           python scripts/test-sdk.py
@@ -124,6 +127,10 @@ jobs:
         run: |
           python scripts/test-viewer-jobs.py --viewer out/windows-viewer/menkh-viewer.exe --engine zig-out/bin/menkh.exe --out out/windows-job-runner
           if ($LASTEXITCODE -ne 0) { throw 'Viewer job lifecycle failed' }
+          python scripts/test-viewer-jobs.py --viewer out/windows-viewer/menkh-viewer.exe --engine zig-out/bin/menkh.exe --library zig-out/bin/menkh.dll --out out/windows-library-runner
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer DLL lifecycle failed' }
+          ./out/windows-viewer/menkh-viewer.exe examples/general.json --library zig-out/bin/menkh.dll --job-output out/windows-dll-render --warp --debug --smoke out/windows-dll-render-images
+          if ($LASTEXITCODE -ne 0) { throw 'Viewer DLL rendering failed' }
           ./out/windows-viewer/menkh-viewer.exe examples/general.json --engine zig-out/bin/menkh.exe --job-output out/windows-job-render --warp --debug --smoke out/windows-job-render-images
           if ($LASTEXITCODE -ne 0) { throw 'Automatic job/result render failed' }
       - name: Rotary-cylinder jobs and Windows provenance rendering
@@ -163,6 +170,9 @@ jobs:
             out/windows-job-render-images/
             out/windows-provenance.ppm
             out/windows-job-runner/
+            out/windows-library-runner/
+            out/windows-dll-render-images/
+            out/windows-viewer/menkh.dll
             out/windows-viewer-*.log
             out/menkh-windows-viewer-demo.zip
           if-no-files-found: error

@@ -8,6 +8,21 @@ pub fn build(b: *std.Build) void {
     const library = b.addLibrary(.{ .name = "menkh", .linkage = .dynamic, .root_module = b.createModule(.{ .root_source_file = b.path("src/c_api.zig"), .target = target, .optimize = optimize, .link_libc = true }) });
     b.step("sdk", "Build the synchronous C ABI shared library and header").dependOn(&b.addInstallArtifact(library, .{}).step);
     library.installHeader(b.path("include/menkh.h"), "menkh.h");
+    const static_library = b.addLibrary(.{ .name = "menkh-static", .linkage = .static, .root_module = b.createModule(.{ .root_source_file = b.path("src/c_api.zig"), .target = target, .optimize = optimize, .link_libc = true }) });
+    static_library.bundle_compiler_rt = true;
+    static_library.installHeader(b.path("include/menkh.h"), "menkh.h");
+    const static_step = b.step("sdk-static", "Build the same C ABI as a static library");
+    if (builtin.os.tag == .macos and target.result.os.tag == .macos) {
+        // Apple's linker requires 8-byte Mach-O archive-member alignment.
+        // Repack Zig 0.15.2's archive with the installed native librarian.
+        const pack = b.addSystemCommand(&.{"sh"});
+        pack.addFileArg(b.path("scripts/repack-static-macos.sh"));
+        pack.addFileArg(static_library.getEmittedBin());
+        const archive = pack.addOutputFileArg("libmenkh-static.a");
+        static_step.dependOn(&b.addInstallLibFile(archive, "libmenkh-static.a").step);
+        static_step.dependOn(&b.addInstallHeaderFile(b.path("include/menkh.h"), "menkh.h").step);
+    } else static_step.dependOn(&b.addInstallArtifact(static_library, .{}).step);
+
     const sdk_tests = b.addTest(.{ .root_module = b.createModule(.{ .root_source_file = b.path("src/c_api.zig"), .target = target, .optimize = optimize, .link_libc = true }) });
     b.step("sdk-test", "Test C boundary allocation and failure contracts").dependOn(&b.addRunArtifact(sdk_tests).step);
 

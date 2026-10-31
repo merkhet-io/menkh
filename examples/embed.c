@@ -28,6 +28,15 @@ int main(int argc,char **argv) {
         OK(menkh_query_v1(h,p,&occupied));CHECK(occupied==(uint32_t)!cut);oracle_count+=occupied;
     }
     CHECK(oracle_count==report.remaining_voxels);
+    size_t delta_size=0;
+    CHECK(menkh_history_write_v1(h,NULL,0,&delta_size)==MENKH_BUFFER_TOO_SMALL);
+    unsigned char *delta=(unsigned char*)malloc(delta_size);CHECK(delta);
+    OK(menkh_history_write_v1(h,delta,delta_size,&delta_size));
+    OK(menkh_history_apply_v1(h,delta,delta_size,0));OK(menkh_count_v1(h,&count));CHECK(count==12000);
+    OK(menkh_history_apply_v1(h,delta,delta_size,1));OK(menkh_count_v1(h,&count));CHECK(count==oracle_count);
+    delta[0]=255;delta[1]=255;delta[2]=255;delta[3]=255;
+    CHECK(menkh_history_apply_v1(h,delta,delta_size,0)==MENKH_INVALID_STATE);
+    OK(menkh_count_v1(h,&count));CHECK(count==oracle_count);free(delta);
     OK(menkh_cut_line_v1(h,&tool,&from,&to,.01,&report));CHECK(report.removed_voxels==0);
     to.axis[0]=1;to.axis[2]=0;CHECK(menkh_cut_line_v1(h,&tool,&from,&to,.01,&report)==MENKH_UNSUPPORTED);
     OK(menkh_count_v1(h,&count));CHECK(count==oracle_count);

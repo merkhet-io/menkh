@@ -133,3 +133,14 @@ cell keys and tool mappings. Rendering looks up the removed neighbor of the hit
 voxel face, not the last operation touching the surviving voxel. Keys retain all
 36 bits needed for a 4096³ grid. This is categorical coloring, not a removal-rate
 heatmap. Playback-frame attribution and Windows picking remain separate work.
+
+### In-process job calculation
+
+Build the library with `zig build sdk -Doptimize=ReleaseFast` before building the
+viewer. If `menkh.dll` is beside the viewer, opening a job uses it on a background
+thread. Select a different library with `--library PATH`, or explicitly retain
+the process runner with `--engine PATH`. Progress/cancellation and automatic
+result loading are available in either mode; library cancellation waits for the
+current operation boundary. The DLL remains loaded until its worker exits.
+See [the API contract](../../docs/C-API.md). This does not yet provide live
+material inspection while calculating.

@@ -19,5 +19,6 @@ cl /nologo /std:c++17 /EHsc /MT /O2 /W4 /DUNICODE /D_UNICODE /DNOMINMAX /DWIN32_
 if errorlevel 1 exit /b 1
 copy /y Voxel.hlsl "..\..\out\windows-viewer\Voxel.hlsl" >nul
 if exist "..\..\zig-out\bin\menkh.exe" copy /y "..\..\zig-out\bin\menkh.exe" "..\..\out\windows-viewer\menkh.exe" >nul
+if exist "..\..\zig-out\bin\menkh.dll" copy /y "..\..\zig-out\bin\menkh.dll" "..\..\out\windows-viewer\menkh.dll" >nul
 if errorlevel 1 exit /b 1
 exit /b 0

@@ -5,7 +5,7 @@ const c = @import("core.zig");
 const state = @import("state.zig");
 const motion = @import("motion.zig");
 const allocator = std.heap.c_allocator;
-const Status = enum(c_int) { ok = 0, invalid_argument = 1, out_of_memory = 2, unsupported = 3, invalid_state = 4, buffer_too_small = 5, resource_limit = 6 };
+const Status = enum(c_int) { ok = 0, invalid_argument = 1, out_of_memory = 2, unsupported = 3, invalid_state = 4, buffer_too_small = 5, resource_limit = 6, io_error = 7, cancelled = 8 };
 const Box = extern struct { origin: [3]f64, size: [3]f64, voxel_mm: f64 };
 const Tool = extern struct { kind: u32, radius_mm: f64, length_mm: f64 };
 const Pose = extern struct { position: [3]f64, axis: [3]f64 };
@@ -15,6 +15,8 @@ const Handle = struct { grid: c.Grid, changes: e.Changes = .{}, occupied: u64 };
 fn failure(err: anyerror) Status {
     return switch (err) {
         error.OutOfMemory => .out_of_memory,
+        error.Cancelled => .cancelled,
+        error.FileNotFound, error.AccessDenied, error.NotDir, error.NoSpaceLeft, error.InputOutput => .io_error,
         error.OrientationChangeUnsupported, error.RotaryRequiresCylinder => .unsupported,
         error.MotionToleranceTooSmall, error.PoolTooLarge, error.Overflow, error.GridTooLargeOrEmpty => .resource_limit,
         else => .invalid_argument,
@@ -41,6 +43,8 @@ export fn menkh_status_message(status: c_int) [*:0]const u8 {
         4 => "invalid material state",
         5 => "output buffer too small",
         6 => "resource or subdivision limit exceeded",
+        7 => "file input/output failed",
+        8 => "cancelled at a consistent operation boundary",
         else => "unknown status",
     };
 }
@@ -173,4 +177,60 @@ fn allocationCase(alloc: std.mem.Allocator) !void {
 }
 test "C boundary allocations and failed-cut atomicity" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationCase, .{});
+}
+
+const ProgressCallback = *const fn (?*anyopaque, u32, u64, u64) callconv(.c) u32;
+export fn menkh_run_job_v1(path: ?[*:0]const u8, output: ?[*:0]const u8, working_dir: ?[*:0]const u8, callback: ?ProgressCallback, context: ?*anyopaque) Status {
+    const input = std.mem.span(path orelse return .invalid_argument);
+    const out = std.mem.span(output orelse return .invalid_argument);
+    const base = std.mem.span(working_dir orelse return .invalid_argument);
+    if (!std.fs.path.isAbsolute(input) or !std.fs.path.isAbsolute(out) or !std.fs.path.isAbsolute(base)) return .invalid_argument;
+    var base_dir = std.fs.cwd().openDir(base, .{}) catch |err| return failure(err);
+    base_dir.close();
+    var existing: ?std.fs.Dir = std.fs.cwd().openDir(out, .{ .iterate = true }) catch |err| switch (err) {
+        error.FileNotFound => null,
+        else => return failure(err),
+    };
+    if (existing) |*dir| {
+        defer dir.close();
+        var entries = dir.iterate();
+        while (entries.next() catch |err| return failure(err)) |entry| {
+            if (!std.mem.eql(u8, entry.name, "launch.json")) return .invalid_argument;
+        }
+    }
+    if (callback) |cb| if (cb(context, 0, 0, 0) != 0) return .cancelled;
+    const progress = std.fs.path.join(allocator, &.{ out, "progress.jsonl" }) catch return .out_of_memory;
+    defer allocator.free(progress);
+    @import("job.zig").runControlled(allocator, input, out, false, null, progress, base, if (callback) |cb| .{ .callback = cb, .context = context } else null) catch |err| {
+        // Best-effort diagnostic belongs to this run, never global error storage.
+        const log = std.fs.path.join(allocator, &.{ out, "simulation.log" }) catch return failure(err);
+        defer allocator.free(log);
+        std.fs.cwd().makePath(out) catch {};
+        std.fs.cwd().writeFile(.{ .sub_path = log, .data = @errorName(err) }) catch {};
+        return failure(err);
+    };
+    return .ok;
+}
+export fn menkh_history_write_v1(handle: ?*const Handle, buffer: ?[*]u8, capacity: usize, written: ?*usize) Status {
+    const h = handle orelse return .invalid_argument;
+    const out = written orelse return .invalid_argument;
+    out.* = h.changes.bytes.items.len;
+    if (capacity < out.*) return .buffer_too_small;
+    if (out.* == 0) return .ok;
+    const dest = buffer orelse return .invalid_argument;
+    @memcpy(dest[0..out.*], h.changes.bytes.items);
+    return .ok;
+}
+export fn menkh_history_apply_v1(handle: ?*Handle, buffer: ?[*]const u8, size: usize, forward: u32) Status {
+    const h = handle orelse return .invalid_argument;
+    if (forward > 1 or size > 1024 * 1024 * 1024) return .invalid_argument;
+    if (size == 0) {
+        h.changes.bytes.clearRetainingCapacity();
+        return .ok;
+    }
+    const data = buffer orelse return .invalid_argument;
+    state.replay(&h.grid, data[0..size], forward == 1) catch |err| return if (err == error.OutOfMemory) .out_of_memory else .invalid_state;
+    h.occupied = h.grid.stats().occupied;
+    h.changes.bytes.clearRetainingCapacity();
+    return .ok;
 }

@@ -10,7 +10,8 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup><OutDir>$(MSBuildThisFileDirectory)..\..\out\windows-viewer\$(Configuration)\</OutDir><IntDir>$(OutDir)obj\</IntDir><TargetName>menkh-viewer</TargetName></PropertyGroup>
   <ItemDefinitionGroup><ClCompile><LanguageStandard>stdcpp17</LanguageStandard><ExceptionHandling>Sync</ExceptionHandling><RuntimeLibrary Condition="'$(Configuration)'=='Release'">MultiThreaded</RuntimeLibrary><RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebug</RuntimeLibrary><WarningLevel>Level4</WarningLevel><PreprocessorDefinitions>UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions><Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization></ClCompile><Link><SubSystem>Console</SubSystem><AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;user32.lib;gdi32.lib;comctl32.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies></Link><PostBuildEvent><Command>copy /y "$(ProjectDir)Voxel.hlsl" "$(OutDir)Voxel.hlsl"
-if exist "$(ProjectDir)..\..\zig-out\bin\menkh.exe" copy /y "$(ProjectDir)..\..\zig-out\bin\menkh.exe" "$(OutDir)menkh.exe"</Command></PostBuildEvent></ItemDefinitionGroup>
+if exist "$(ProjectDir)..\..\zig-out\bin\menkh.exe" copy /y "$(ProjectDir)..\..\zig-out\bin\menkh.exe" "$(OutDir)menkh.exe"
+if exist "$(ProjectDir)..\..\zig-out\bin\menkh.dll" copy /y "$(ProjectDir)..\..\zig-out\bin\menkh.dll" "$(OutDir)menkh.dll"</Command></PostBuildEvent></ItemDefinitionGroup>
   <ItemGroup><ClCompile Include="main.cpp" /></ItemGroup><ItemGroup><ClInclude Include="History.hpp" /><ClInclude Include="JobRunner.hpp" /><ClInclude Include="Renderer.hpp" /></ItemGroup><ItemGroup><None Include="Voxel.hlsl" /></ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
