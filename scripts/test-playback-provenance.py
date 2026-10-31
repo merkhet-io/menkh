@@ -77,3 +77,14 @@ assert oracles[1]['neighbors']==oracles[2]['neighbors'],'Idempotent cut must not
 (all_frames/'oracle.json').write_text(json.dumps(oracles))
 (root/'validation.json').write_text(json.dumps(dict(frames=len(oracles),entries=len(actual),all_frames_exact=True,final_mode_preserved=True,final_state_byte_exact=True,transient_surfaces_retained=True),indent=2)+'\n')
 print(f'Playback provenance: {len(oracles)} frames and {len(actual)} historical surface neighbors independently verified')
+
+# A reused output directory must not advertise an old completed run after failure.
+failure=run('final_surface');delta=failure/h['frames'][0]['file'];saved=delta.read_bytes();delta.unlink();delta.mkdir()
+try:
+ result=subprocess.run([str(exe),'job',str(failure/'job.json'),'--out',str(failure)],capture_output=True)
+ assert result.returncode!=0
+ assert not (failure/'voxel-animation.json').exists() and not (failure/'report.json').exists()
+finally:
+ delta.rmdir();delta.write_bytes(saved)
+run('final_surface')
+print('Failed output reuse removes stale completion manifests')

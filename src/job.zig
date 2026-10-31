@@ -209,7 +209,7 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
     try std.fs.cwd().makePath(out);
     var dir = try std.fs.cwd().openDir(out, .{});
     defer dir.close();
-    for ([_][]const u8{ "defects.json", "surface-provenance.json", "surface-provenance.bin" }) |name| dir.deleteFile(name) catch |err| switch (err) {
+    for ([_][]const u8{ "voxel-animation.json", "report.json", "defects.json", "surface-provenance.json", "surface-provenance.bin" }) |name| dir.deleteFile(name) catch |err| switch (err) {
         error.FileNotFound => {},
         else => return err,
     };

@@ -77,7 +77,8 @@ process memory also includes stock, history/scratch and other outputs.
 
 The index is optional derived data. Its allocation failures do not mutate stock
 or recorded deltas. A job that cannot produce its requested index fails; it does
-not advertise a completed result. No arbitrary partial index is published.
+not advertise a completed result. Reusing a CLI output directory removes old
+completion manifests before overwriting history. No arbitrary partial index is published.
 `provenance_capacity_bytes` reports the entry-array capacity, not total process
 memory. Reports separate `provenance_extract_ns` (collection during the job) and
 `provenance_finalize_ns` (final extraction if selected, sorting and export);
@@ -109,10 +110,10 @@ runs of the same 325-operation pocket, with mesh export disabled:
 
 | Scope | Records / wire bytes | Median provenance time | Median CLI wall time (range) | Peak process RSS |
 |---|---:|---:|---:|---:|
-| Final surface | 630,564 / 10,089,024 | 102.40 ms | 223.38 ms (221.26–224.00) | 43,401,216 B |
-| All frames | 3,999,627 / 63,994,032 | 189.48 ms | 311.85 ms (306.89–314.82) | 146,423,808 B |
+| Final surface | 630,564 / 10,089,024 | 105.32 ms | 225.22 ms (217.19–229.32) | 43,384,832 B |
+| All frames | 3,999,627 / 63,994,032 | 192.20 ms | 312.77 ms (311.45–319.27) | 146,407,424 B |
 
-Median cutting was 60.66 ms and 61.65 ms respectively. These runs quantify the
+Median cutting was 61.38 ms and 61.32 ms respectively. These runs quantify the
 optional indexing cost; no cutting speedup is claimed. At frame 160, a separate
 1280×900 offscreen Metal sample measured median GPU command duration of 3.34 ms
 with operation colors versus 1.83 ms with material color (three warm-ups, ten

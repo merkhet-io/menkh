@@ -11,6 +11,7 @@ Reproduce:
 
 ```sh
 ./zig build -Doptimize=ReleaseFast
+python3 scripts/benchmark-provenance.py
 zig-out/bin/menkh job docs/evidence/playback-provenance/job.json --out out/playback-pocket
 ./scripts/build-viewer.sh
 zig-out/bin/menkh-viewer out/playback-pocket/voxel-animation.json --frame 160 --color-operation
@@ -18,7 +19,9 @@ zig-out/bin/menkh-viewer out/playback-pocket/voxel-animation.json --verify-histo
 zig-out/bin/menkh-viewer out/playback-pocket/voxel-animation.json --frame 160 --color-operation --hide-tool --render-bench out/playback-pocket/render.json
 ```
 
-For the comparison, change only `provenance_scope` to `final_surface` in a copy of
+The benchmark script runs both scopes with one warm-up and three measurements,
+checks all final checkpoint hashes, and records timings and memory. For a manual
+comparison, change only `provenance_scope` to `final_surface` in a copy of
 the input. Repeat each job four times from initial stock, discarding the first
 run for summary statistics. The CLI rebuilds initial stock for every invocation.
 Use separate output directories for each scope. Rendering is separate from job
