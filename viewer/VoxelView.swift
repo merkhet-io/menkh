@@ -165,8 +165,9 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         let occupied=frame==0 ? history.initial_occupied:history.frames[frame-1].occupied
         let stage=frame==0 ? "Initial stock":frame==history.frames.count ? "Complete":history.frames[frame-1].stage
         let approximation=history.motion_tolerance_mm.map {String(format:" · motion budget %.4f mm",$0)} ?? ""
+        let exposureNotice = provenanceMode == 0 ? "" : compareTarget ? " · provenance inactive (target comparison)" : provenanceAvailableAtFrame ? (provenanceAllFrames ? " · playback surface provenance" : " · final surface provenance") : " · provenance inactive (final state only)"
         let toolNotice = frame>0 && history.frames[frame-1].cutter?.kind == "profile" ? " · profile wheel display unavailable" : ""
-        return "\(stage)\(toolNotice) · \(frame)/\(history.frames.count) · \(history.grid[0]) × \(history.grid[1]) × \(history.grid[2]) · \(String(format:"%.3f",history.voxel_mm*1000)) µm · \(occupied.formatted()) occupied · GPU \(String(format:"%.1f",lastGPUms)) ms\(approximation)\(provenanceMode == 0 ? "" : (provenanceAvailableAtFrame && !compareTarget ? (provenanceAllFrames ? " · playback surface provenance":" · final surface provenance") : " · provenance inactive (final state only; target comparison takes precedence)")) · \(picked)"
+        return "\(stage)\(toolNotice) · \(frame)/\(history.frames.count) · \(history.grid[0]) × \(history.grid[1]) × \(history.grid[2]) · \(String(format:"%.3f",history.voxel_mm*1000)) µm · \(occupied.formatted()) occupied · GPU \(String(format:"%.1f",lastGPUms)) ms\(approximation)\(exposureNotice) · \(picked)"
     }
 }
 final class VoxelMetalView:MTKView {
