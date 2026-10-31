@@ -152,8 +152,8 @@ fn atomicBytes(dir: std.fs.Dir, name: []const u8, bytes: []const u8) !void {
 }
 
 // Zig 0.15.2 renameatW maps STATUS_SHARING_VIOLATION to Unexpected.
-// Use the Win32 replacement operation so a reader without FILE_SHARE_DELETE
-// yields a specific, retryable error. Never retry an arbitrary Unexpected error.
+// Keep directory-relative NT paths, but expose that specific retryable status.
+// Never retry an arbitrary Unexpected error or resolve against the process CWD.
 fn renameWindows(file: *std.fs.AtomicFile) !void {
     const w = std.os.windows;
     if (file.file_open) {
@@ -163,15 +163,29 @@ fn renameWindows(file: *std.fs.AtomicFile) !void {
     const temporary = std.fmt.hex(file.random_integer);
     const source = try w.sliceToPrefixedFileW(file.dir.fd, &temporary);
     const destination = try w.sliceToPrefixedFileW(file.dir.fd, file.dest_basename);
-    if (w.kernel32.MoveFileExW(source.span().ptr, destination.span().ptr, w.MOVEFILE_REPLACE_EXISTING) == 0) {
-        return switch (w.GetLastError()) {
-            .SHARING_VIOLATION, .LOCK_VIOLATION => error.WouldBlock,
-            .ACCESS_DENIED => error.AccessDenied,
-            .FILE_NOT_FOUND, .PATH_NOT_FOUND => error.FileNotFound,
-            else => |err| w.unexpectedError(err),
-        };
+    const handle = try w.OpenFile(source.span(), .{
+        .dir = file.dir.fd,
+        .access_mask = w.SYNCHRONIZE | w.GENERIC_WRITE | w.DELETE,
+        .creation = w.FILE_OPEN,
+    });
+    defer w.CloseHandle(handle);
+    // These internal destination basenames are latest.json, status.json or
+    // voxel-animation.json; retain an explicit bound rather than truncating.
+    var storage: [@sizeOf(w.FILE_RENAME_INFORMATION) + 255 * 2]u8 align(@alignOf(w.FILE_RENAME_INFORMATION)) = undefined;
+    if (destination.len > 255) return error.NameTooLong;
+    const info: *w.FILE_RENAME_INFORMATION = @ptrCast(&storage);
+    info.* = .{ .Flags = w.TRUE, .RootDirectory = file.dir.fd, .FileNameLength = @intCast(destination.len * 2), .FileName = undefined };
+    @memcpy((&info.FileName).ptr, destination.span());
+    var io: w.IO_STATUS_BLOCK = undefined;
+    const status = w.ntdll.NtSetInformationFile(handle, &io, info, @intCast(@sizeOf(w.FILE_RENAME_INFORMATION) - 1 + destination.len * 2), .FileRenameInformation);
+    switch (status) {
+        .SUCCESS => file.file_exists = false,
+        .SHARING_VIOLATION => return error.WouldBlock,
+        .ACCESS_DENIED => return error.AccessDenied,
+        .OBJECT_NAME_NOT_FOUND, .OBJECT_PATH_NOT_FOUND => return error.FileNotFound,
+        .OBJECT_NAME_COLLISION => return error.PathAlreadyExists,
+        else => return w.unexpectedStatus(status),
     }
-    file.file_exists = false;
 }
 
 test "Windows pointer replacement preserves old file during a sharing conflict" {
