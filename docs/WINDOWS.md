@@ -2,9 +2,10 @@
 
 The Zig engine, CLI, checkpoint inspection and CPU predicate benchmark have an
 experimental Windows x86-64 build. The Swift/Metal viewer remains macOS-only; a separate [D3D12 viewer](../viewer/windows/README.md) now reads the same voxel history on Windows.
-MSVC does not compile the Zig sources; no Visual Studio version or C++ toolset is
-required. This is not a C++ port or an MSVC SDK integration. Visual Studio can be
-used as an editor and to launch the PowerShell commands.
+Zig builds the engine and its shared/static C libraries. MSVC builds the viewer,
+which can load the engine DLL to calculate jobs in process. Building only the Zig
+CLI does not require Visual Studio; building the native viewer requires the C++
+desktop tools and Windows SDK.
 
 ## Native viewer
 
@@ -62,5 +63,27 @@ memory readings. Cutting and storage formats do not depend on the platform modul
 Validation: the CLI and kernel benchmark were cross-compiled on macOS. The
 `windows-cli` GitHub Actions job builds and executes Debug/ReleaseFast tests and
 the 25 µm pocket plus exact remaining-material/surface-count checks. Consult its
-run result before treating Windows runtime validation as complete. The engine has no MSVC-built library or C ABI. The separate D3D12 viewer has a
-`build.bat` and v145 `.vcxproj` and does not require Zig.
+run result before treating Windows runtime validation as complete. The engine exposes a [versioned C ABI](C-API.md) in Zig-built shared/static
+libraries. CI also runs independent C hosts, compares DLL job output with the CLI,
+and tests viewer cancellation and automatic result rendering. The separate
+D3D12 viewer has a `build.bat` and v145 `.vcxproj`; recorded playback does not
+require Zig or an engine library.
+
+## Calculate through the viewer
+
+Build the DLL before the viewer so the batch/project build copies it beside the
+executable:
+
+```powershell
+.\zig.ps1 build sdk -Doptimize=ReleaseFast
+.\viewer\windows\build.bat
+.\out\windows-viewer\menkh-viewer.exe examples/pocket-25um.json --job-output out/windows-pocket-new
+```
+
+The adjacent DLL is selected automatically. `--library PATH` chooses a DLL;
+`--engine PATH` explicitly chooses the supervised CLI subprocess instead.
+The UI stays responsive while the library runs on a worker thread. Cancellation
+waits for the current operation boundary. The completed result opens automatically;
+live material inspection during execution is not yet supported. Output directories
+must be new. For static embedding, build `sdk-static` and follow the
+[C host examples and ownership contract](C-API.md).

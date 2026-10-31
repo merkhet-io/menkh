@@ -2,7 +2,9 @@
 
 Standalone C++17 / Windows SDK viewer. It reads the existing Zig engine's
 `menkh-voxel-history-v1` JSON plus `initial.blocks`, `initial.pool` and deltas.
-It does not run the simulation and does not need Zig to build or operate.
+It can also calculate JSON jobs using the engine DLL or CLI, then open the result.
+Recorded-history playback needs neither the engine nor Zig; building the viewer
+requires only MSVC and the Windows SDK.
 Keep the history directory intact when transferring it to another computer.
 
 The CI artifact includes `menkh-windows-viewer-demo.zip` after rendering tests
@@ -136,7 +138,7 @@ heatmap. Playback-frame attribution and Windows picking remain separate work.
 
 ### In-process job calculation
 
-Build the library with `zig build sdk -Doptimize=ReleaseFast` before building the
+Build the library with `.\zig.ps1 build sdk -Doptimize=ReleaseFast` before building the
 viewer. If `menkh.dll` is beside the viewer, opening a job uses it on a background
 thread. Select a different library with `--library PATH`, or explicitly retain
 the process runner with `--engine PATH`. Progress/cancellation and automatic

@@ -1,12 +1,27 @@
-# menkh — voxel-based material removal on Apple Silicon
+![Menkh — an orange chisel cutting a blue voxel block](docs/brand/menkh.svg)
 
-Menkh is a voxel-based geometric cutting simulator for macOS on Apple Silicon, with a **Zig CPU engine**, a **native Swift/Metal viewer**, and **Lean proofs of core mathematical models**.
+# Menkh — geometric cutting simulation
 
-It consumes stock geometry, tools and motion to calculate the material remaining in a workpiece. General jobs support primitive or binary-STL stock, fixed-orientation flat/ball/bull/taper cutters, bounded helical motion, reversible cutting history, resumable checkpoints, fixture/holder checks, target comparison, cross-sections and limited turning envelopes.
+Menkh calculates the material left after machining, using a **Zig CPU engine** and voxel occupancy as its geometric truth. It runs on **macOS / Apple Silicon** and **Windows x86-64**, with native **Swift/Metal** and **C++/D3D12** viewers. Lean proofs cover selected core mathematical models; a versioned C API supports embedding the engine.
 
-Start the native demonstration:
+[Get started](#get-started) · [Windows guide](docs/WINDOWS.md) · [C API](docs/C-API.md) · [Capabilities](docs/CAPABILITIES.md)
+
+## Why “Menkh”?
+
+**𓍊 — a chisel.** The name draws on ancient Egyptian *mnḫ*, associated with carving. We chose it because the simulator does the same basic job as a chisel: remove material to give a workpiece its shape. The sign **𓍊** is Gardiner **U22** (Unicode U+1334A), used in writing *mnḫ*. “Menkh” is our readable Latin spelling, not a claim about the exact ancient pronunciation. The logo pairs a chisel with a voxel block.
+
+Sources: [Gardiner sign list, U22](https://www.egyptianhieroglyphs.net/gardiners-sign-list/) and the Metropolitan Museum’s [*Ancient Egyptian Calligraphy*](https://resources.metmuseum.org/resources/metpublications/pdf/Ancient_Egyptian_Calligraphy.pdf), entry U22.
+
+## Get started
+
+General jobs consume stock geometry, tools and motion. They support primitive or binary-STL stock, fixed-orientation flat/ball/bull/taper cutters, bounded helical motion, reversible cutting history, resumable checkpoints, fixture/holder checks, target comparison, cross-sections and limited turning envelopes.
+
+### macOS / Apple Silicon
+
+With Apple Command Line Tools installed, bootstrap the pinned Zig compiler locally and start the native demonstration:
 
 ```sh
+./scripts/bootstrap-zig.sh
 ./scripts/general-demo.sh
 ```
 
@@ -20,7 +35,39 @@ python3 scripts/validate-engine.py
 python3 scripts/benchmark-engine.py
 ```
 
-See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contracts](docs/ENGINE.md), [job/state/STL formats](docs/FORMATS.md), and [measured validation report](docs/ENGINE-VALIDATION.md). The matrix distinguishes tested behavior from restrictions; this is not a claim of ModuleWorks compatibility or feature parity. All material removal stays on the CPU. General jobs reject simultaneous orientation changes.
+### Windows x86-64
+
+For playback without a compiler, download the **windows-d3d12-viewer** artifact from a successful [Verification run](https://github.com/merkhet-io/menkh/actions/workflows/verification.yml), extract the included `menkh-windows-viewer-demo.zip`, and run `open-demo.bat`. `calculate-demo.bat` runs the bundled job. Keep the extracted files together.
+
+To build from source, use PowerShell with Visual Studio C++ desktop tools and the Windows SDK installed:
+
+```powershell
+.\scripts\bootstrap-zig.ps1
+.\zig.ps1 build -Doptimize=ReleaseFast
+.\zig.ps1 build sdk -Doptimize=ReleaseFast
+.\viewer\windows\build.bat
+.\out\windows-viewer\menkh-viewer.exe examples/pocket-25um.json --job-output out/windows-pocket
+```
+
+Zig 0.15.2 builds the engine; MSVC builds the viewer. The bootstrap installs Zig inside the repository, with no global installation. Alternatively, open `viewer/windows/menkh-viewer.vcxproj` in Visual Studio 2026 with toolset **v145**, Release/x64.
+
+The viewer loads the adjacent **menkh.dll** and calculates on a worker thread, showing progress and cancellation before opening the completed result. `--library PATH` selects another DLL; `--engine PATH` selects the CLI subprocess runner. Choose a fresh `--job-output` directory for each run. Cancellation in library mode waits for an operation boundary; live material inspection during calculation is still unsupported.
+
+Open an existing result with:
+
+```powershell
+.\out\windows-viewer\menkh-viewer.exe out/windows-pocket/voxel-animation.json
+```
+
+Orbit, pan, zoom, play/pause and scrub the recorded history; **[ / ]** move the Z section and **C** cycles final-surface operation/tool colors when provenance was exported. The Windows viewer has fewer inspection features than the macOS viewer. See [controls and limits](viewer/windows/README.md).
+
+Windows CI builds both MSVC entry points, tests the DLL and static library, compares job output with the CLI, exercises cancellation, and renders/replays results through D3D12 WARP. These checks establish functionality, not hardware-GPU performance.
+
+### Embed the engine
+
+Build `sdk` for a shared library or `sdk-static` for a static library. Both expose the same [versioned C API](docs/C-API.md): material operations, copied-history undo/redo, checkpoint/resume, and complete JSON jobs with progress and cancellation. Rendering remains separate.
+
+See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contracts](docs/ENGINE.md), [job/state/STL formats](docs/FORMATS.md), and [measured validation report](docs/ENGINE-VALIDATION.md). The matrix distinguishes tested behavior from restrictions; this is not a claim of ModuleWorks compatibility or feature parity. All material removal stays on the CPU. Fixed-axis line jobs reject orientation changes; cylindrical-wheel XYZAC operations have a separate bounded-sweep contract.
 
 [Watch the inspected pocket-milling video](docs/general-demo.mp4) (31 seconds).
 
@@ -30,7 +77,7 @@ The default demo now uses 325 real cutting increments at 100 µm, rather than th
 
 ## Inspect defects and collisions
 
-The native viewer can now filter excess/missing regions and collision events,
+The macOS viewer can filter excess/missing regions and collision events,
 focus their world-space location and seek to a collision operation. Findings can
 be regenerated from saved material states. See the [inspector guide](docs/DEFECT-INSPECTOR.md)
 for the small demo, the 25 µm workflow and measured limitations.
@@ -125,7 +172,7 @@ zig-out/bin/menkh-viewer out/drill/animation.json
 
 A cylinder, 12 mm in diameter and 60 mm long, receives two helical flutes and a faceted tip on a 0.25 mm grid. Zig computes **225 actual voxel states** sequentially for playback. The translucent orange cutter remains visible as a position indicator even behind the workpiece. This is an idealized geometry demo; it does not establish cutting-edge clearance, real machine kinematics, or a production-ready drill. [Details and reproduction](docs/DRILL-DEMO.md).
 
-## Quick start on this Mac
+## macOS CLI examples
 
 ```sh
 ./zig version
@@ -207,12 +254,11 @@ python3 scripts/validate-exports.py out/fine
 
 The independent export check uses only the Python standard library. It validates the fixed example's PPM pixel values, removed volume, and oriented OBJ volume. Python is not a runtime dependency of the CLI.
 
-Measured results for all four voxel sizes, including warm-up and seven repetitions, are in [BENCHMARKS.md](docs/BENCHMARKS.md). Unmodified JSON measurements are in [benchmarks/](benchmarks/). Explicit SIMD, multiple workers, GPU material removal, an octree, and a PS3 port are not implemented. The measured implementation uses one worker.
+Measured results for all four voxel sizes, including warm-up and seven repetitions, are in [BENCHMARKS.md](docs/BENCHMARKS.md). Unmodified JSON measurements are in [benchmarks/](benchmarks/). These original measurements use one cutting worker. Current SIMD predicate benchmarks and the separate sparse-storage experiment are documented below; GPU material removal and a PS3 port are not implemented.
 
-## Windows comparison build and surface counts
+## Surface counts and portable histories
 
-The CLI and CPU benchmark now have an experimental [Windows x86-64 build](docs/WINDOWS.md),
-using repository-local Zig 0.15.2, not MSVC. A separate [Windows D3D12 viewer](viewer/windows/README.md) provides native playback, camera controls and scrubbing with `build.bat` or a v145 `.vcxproj`; the Swift/Metal viewer remains available on macOS.
+The macOS and Windows viewers read the same voxel-history format.
 `menkh inspect-state FILE` reports boundary voxels separately from material volume.
 The 25 µm pocket video ends with **2,819,284 surface voxels**, versus 170,711,351
 occupied volume voxels. See [definitions, raw counts and comparison limits](docs/INSPECTION-COUNTS.md).
@@ -227,15 +273,12 @@ to the matching voxel history. Regenerate older mesh-only outputs once.
 
 Optional [final-surface exposure coloring](docs/SURFACE-PROVENANCE.md) identifies
 the operation that exposed each surviving voxel face. Enable `export_provenance`
-in a job and use `--color-operation` or `--color-tool` in the macOS viewer.
+in a job and use `--color-operation` or `--color-tool` in either native voxel viewer. Attribution currently covers the final surface, not every playback frame.
 
-## Current issue increments
+## Further capabilities
 
 - [Cylinder-wheel grinding](docs/GRINDING.md): explicit XYZAC motion, continuous coverage with a declared conservative bound, and `./scripts/grinding-demo.sh`.
 - [Sparse mutation experiment](docs/SPARSE-MUTATION.md): cuts and retained roots in a 65,536³ virtual cube; separate from regular jobs, not the billion-face memory qualification.
 - Windows final-surface operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
 
-Viewer-owned calculation landed in #22. The optional [synchronous C API](docs/C-API.md)
-now supports stock creation, cutting, queries and checkpoint/resume from an
-independent host (`./zig build sdk`). Broader SDK integration and live inspection
-remain tracked in #23 and #24.
+The [C API](docs/C-API.md) supports shared/static embedding and Windows viewer-owned calculation. Consistent live snapshots, bounded buffering and inspection while a job is running remain tracked in [#24](https://github.com/merkhet-io/menkh/issues/24).

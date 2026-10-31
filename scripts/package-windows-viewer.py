@@ -55,8 +55,10 @@ If included, calculate-demo.bat opens the bundled job directly.
 Progress and Cancel are shown during calculation; successful results open at the final frame.
 Results/logs are retained in %LOCALAPPDATA%\\Menkh\\runs. Existing output is never overwritten.
 Relative STL/state paths are resolved from the job directory; --working-dir overrides this.
-The viewer runs a supervised background process, not an in-process library. Only completed
-results are loaded; incremental simulation-time viewing is not implemented.
+When menkh.dll is included beside the viewer, calculation runs in process on a worker
+thread. Otherwise the viewer runs the bundled CLI as a supervised background process.
+Use --library PATH or --engine PATH to select explicitly. DLL cancellation waits for
+an operation boundary. Only completed results are loaded; live inspection is not implemented.
 ''')
         archive.writestr('README.txt', '''Menkh Windows D3D12 viewer
 Extract the entire ZIP, then double-click open-demo.bat.
