@@ -85,9 +85,10 @@ memory. Reports separate `provenance_extract_ns` (collection during the job) and
 `provenance_ns` is their sum. Cutting time excludes index generation.
 
 Only monotone removal histories are supported. No feed/time heatmaps, larger
-manufacturing-stage grouping, Windows picking, or attribution before the loaded
-checkpoint are added. Live inspection while calculating remains #24. The new
-index and renderer logic are outside the Lean proof model.
+manufacturing-stage grouping or attribution before the loaded checkpoint are added.
+Both native viewers support material picking. [Live windows](LIVE-OVERLAYS.md)
+retain known global IDs across rebases with a separate bounded index. Index and
+renderer logic remain outside the Lean proof model.
 
 ## Validation and measurements
 

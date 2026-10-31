@@ -21,7 +21,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Cutting vs shank/holder geometry | Implemented, validated | Separate finite cylindrical noncutting components, offsets above cutting length |
 | Stock/fixture collisions | Implemented, restricted | Swept center contacts plus conservative whole-cell separation; explicit not-checked/unresolved states, independent fixtures, operation IDs and candidate bounds; pre-operation stock conservatism remains |
 | C embedding boundary | Restricted initial API | Shared/static libraries, opaque handles, cuts/queries/state/copied history and cancellable JSON jobs; Windows DLL viewer integration. Cancellation at operation boundaries; optional bounded file publication for jobs; no custom allocator callbacks. [Contract](C-API.md) |
-| Live calculation inspection | Implemented, restricted | macOS and Windows `--live`, leased completed-operation windows, bounded buffering, pause/seek/cancel/failure and exact final-state checks. Windows supports DLL/subprocess execution. Live target/fixture/provenance overlays omitted. [Contract and measurements](LIVE-INSPECTION.md) |
+| Live calculation inspection | Implemented, restricted | macOS and Windows `--live`, leased completed-operation windows, bounded buffering, pause/seek/cancel/failure and exact final-state checks. Windows supports DLL/subprocess execution. Live target/fixture/exposure overlays, global IDs across rebases and explicit asset/index limits. Connected defect regions remain final-only. [Contract and measurements](LIVE-INSPECTION.md) |
 | Versioned JSON jobs | Implemented, validated | Strict Zig JSON parsing, units, tool/operation validation, stable IDs, operation history |
 | Resumable state | Implemented, validated | Little-endian checked format, checksums, slot/index/padding validation; same-grid resumption |
 | Reversible history | Implemented, validated | Transactional Zig replay tests; native general-job and full 4096³ forward/backward/forward replay |
@@ -34,7 +34,7 @@ Menkh is a macOS/Apple Silicon geometric stock-removal engine. It consumes geome
 | Target excess and missing material | Implemented, validated | Exact bitwise comparison on the same grid; sampled surface distances separately reported for one analytic target primitive |
 | Turning | Implemented, restricted | Complete-revolution rectangular-insert envelopes for longitudinal/facing cuts, explicit spindle origin/axis; independently validated radial profiles |
 | Combined milling and turning | Experimental geometric composition | Same stock and tilted/translated spindle transforms tested; no spindle-angle evolution, turret, synchronization, or production mill-turn claim |
-| Surface exposure attribution | Implemented, restricted | Exact raster-history face IDs at every playback frame with opt-in all_frames index; operation/tool colors on macOS and Windows, picking on macOS. Initial/prehistory unknown; no rate/time heatmaps; explicit index-size limit. [Evidence](SURFACE-PROVENANCE.md) |
+| Surface exposure attribution | Implemented, restricted | Exact raster-history face IDs at every playback frame with opt-in all_frames index; operation/tool colors on macOS and Windows, material picking on both native viewers; bounded live attribution preserves known IDs across rebases. Initial/prehistory unknown; no rate/time heatmaps; explicit index-size limit. [Evidence](SURFACE-PROVENANCE.md) |
 | Direct Metal inspection | Implemented, validated | Rectangular grids/origins, history scrubbing, X/Y/Z sections, target colors, fixture and shank/holder visibility, occupied-point picking |
 | General tool rendering | Restricted | Flat and complete ball cutter, shank and holder shown at recorded poses; other general cutter shapes are not yet rendered. Legacy mesh drill animation retains its tool illustration |
 | Incremental GPU updates | Implemented | Changed descriptors/bits uploaded in shared buffers; CPU waits for prior GPU command; no whole-state upload each frame |
@@ -54,9 +54,8 @@ Implemented and locally validated: 34 named Lean results including history/pool 
 Windows x86-64 CLI/benchmark: experimental, cross-compiled locally; native runtime
 checks are in the Windows CI job. Zig 0.15.2 builds it; MSVC integration of the engine is unsupported. See [Windows instructions](WINDOWS.md).
 A separate [Windows D3D12 viewer](../viewer/windows/README.md) implements native
-voxel playback, orbit/pan/zoom, scrubbing and Z sections. Flat tools/shank/holder
-are visualized; targets, fixtures and non-flat cutter display are restricted as
-documented. Windows CI renders via WARP; hardware interaction/FPS are unmeasured.
+voxel playback, orbit/pan/zoom, scrubbing, XYZ sections, target/fixture overlays and material picking. Flat
+tools/shank/holder are visualized; non-flat cutter display remains unsupported. Windows CI renders via WARP; hardware interaction/FPS are unmeasured.
 Checkpoint surface inspection counts six-neighbor boundary voxels and exposed
 faces independently of mesh generation; see [count semantics](INSPECTION-COUNTS.md).
 

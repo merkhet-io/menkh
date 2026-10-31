@@ -1,0 +1,58 @@
+{
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "commit": "99df0d825a7781f590aaeec46984b443e166c4bb",
+  "source_sha256": "59ccdcbebe4af2a9c012c1b0373fcf8c29a969c1ca1b575e425790c578b1255f",
+  "binary_sha256": "f2768f61e2fa4304ee18f3cda882ab215a5414ca0953ff6ba7f97a28958cd53d",
+  "compiler": "Zig 0.15.2",
+  "build_mode": "ReleaseFast",
+  "workers": 1,
+  "operations": 2501,
+  "voxel_mm": 0.025,
+  "summary": {
+    "archive": {
+      "wall_seconds": {
+        "median": 40.44825154199498,
+        "min": 40.3997992920049,
+        "max": 40.470614791003754
+      },
+      "job_seconds": {
+        "median": 40.431456125,
+        "min": 40.383157916,
+        "max": 40.454045834
+      },
+      "cut_seconds": {
+        "median": 39.607720825,
+        "min": 39.566850482,
+        "max": 39.623100804
+      },
+      "peak_rss_bytes": {
+        "median": 117784576,
+        "min": 117784576,
+        "max": 117784576
+      }
+    },
+    "live": {
+      "wall_seconds": {
+        "median": 45.96203154200339,
+        "min": 45.91268979100278,
+        "max": 46.012168082990684
+      },
+      "job_seconds": {
+        "median": 45.944457,
+        "min": 45.895112958,
+        "max": 45.994166167
+      },
+      "cut_seconds": {
+        "median": 39.519135338,
+        "min": 39.479842321,
+        "max": 39.526020295
+      },
+      "peak_rss_bytes": {
+        "median": 156499968,
+        "min": 156499968,
+        "max": 156499968
+      }
+    }
+  },
+  "note": "Local cached writes; no durable-storage or interactive-FPS claim. Commit is base; binary and job hashes identify tested working tree."
+}

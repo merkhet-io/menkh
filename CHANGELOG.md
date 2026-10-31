@@ -9,14 +9,14 @@ Benchmark results remain tied to their documented hardware, workload and build.
 Voxel spacing is not a guaranteed surface-error bound; Lean proofs cover selected
 mathematical models, not the complete executable.
 
-## In review
+## 2026-10-31
+
+### Fixed
 
 - **Windows demo colors:** include exposure metadata/buffers in the ZIP, enable
   playback-wide attribution for the bundled pocket, and add `open-colors.bat`.
   The default demo starts in operation-color mode; C explains missing data.
   CI renders operation/tool colors from the extracted package. ([#38](https://github.com/merkhet-io/menkh/pull/38))
-
-## 2026-10-31
 
 ### Added
 

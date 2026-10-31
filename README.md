@@ -281,7 +281,7 @@ in a job and use `--color-operation` or `--color-tool` in either native voxel vi
 - [Sparse mutation experiment](docs/SPARSE-MUTATION.md): cuts and retained roots in a 65,536³ virtual cube; separate from regular jobs, not the billion-face memory qualification.
 - Windows playback operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
 
-The [C API](docs/C-API.md) supports shared/static embedding and Windows viewer-owned calculation. On macOS, `./scripts/live-demo.sh` demonstrates [live inspection](docs/LIVE-INSPECTION.md): consistent material windows, retained-range scrubbing and pause/resume while a 25 µm ball-end job runs. Use `menkh-viewer job.json --live` for your own jobs. The Windows viewer also accepts `--live`. Live target/fixture overlays and provenance are tracked separately in [#35](https://github.com/merkhet-io/menkh/issues/35) and [#36](https://github.com/merkhet-io/menkh/issues/36).
+The [C API](docs/C-API.md) supports shared/static embedding and Windows viewer-owned calculation. On macOS, `./scripts/live-demo.sh` demonstrates [live inspection](docs/LIVE-INSPECTION.md): consistent material windows, retained-range scrubbing and pause/resume while a 25 µm ball-end job runs. Use `menkh-viewer job.json --live` for your own jobs. The Windows viewer also accepts `--live`. `./scripts/live-inspection-demo.sh` adds [live exposure colors, target comparison, fixtures and picking](docs/LIVE-OVERLAYS.md); live attribution requires `export_provenance: true`.
 
 ## License
 

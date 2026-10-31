@@ -73,7 +73,7 @@ pub const Publisher = struct {
             p.exposure.?.max_entries = p.options.max_provenance_bytes / 16;
         }
         for ([_]?c.Grid{ target, fixtures }) |grid| if (grid) |v| {
-            p.asset_bytes = try std.math.add(usize, p.asset_bytes, try std.math.add(usize, v.blocks.len * 4, v.pool.items.len * 64));
+            p.asset_bytes = try std.math.add(usize, p.asset_bytes, try std.math.add(usize, try std.math.mul(usize, v.blocks.len, 4), try std.math.mul(usize, v.pool.items.len, 64)));
         };
         if (p.asset_bytes > p.options.max_asset_bytes) return error.LiveAssetsTooLarge;
         if (target == null and fixtures == null) return;

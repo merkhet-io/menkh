@@ -133,12 +133,11 @@ pause/cancel and an injected write failure, and compares final state bytes with
 publication disabled. Unit tests inject allocator failures. macOS and Windows CI
 run the transport regression; a Metal device is not required there.
 
-The macOS live view supports material, rendered cutter/assembly, sections, picking
-and retained-range playback. Windows supports material, its existing flat-tool/assembly
-display, Z sections and retained-range playback; non-flat cutter display and picking
-remain outside its current renderer capabilities. Live windows currently omit target, fixture, defect
-and provenance sidecars. They remain available in the completed result. Live target/fixture comparison is tracked in [#35](https://github.com/merkhet-io/menkh/issues/35)
-and live exposure provenance in [#36](https://github.com/merkhet-io/menkh/issues/36).
+Both native viewers support live exposure colors, target comparison, fixtures,
+sections and occupied-material picking. Windows non-flat cutter visualization
+remains unsupported. Live reports retain per-operation contacts; connected defect
+regions remain completed-result data. See the [overlay contract](LIVE-OVERLAYS.md)
+for global IDs across rebases, immutable assets, controls and explicit limits.
 
 File publication, locking, the native viewer and this transport test are outside
 the Lean model. Existing proofs and bridge tests were rerun; no additional formal

@@ -1,0 +1,15 @@
+{
+  "final_occupied" : 124282033,
+  "final_replay_byte_exact" : true,
+  "forward_replay_validated" : true,
+  "grid" : [
+    1120,
+    880,
+    400
+  ],
+  "initial_occupied" : 221184000,
+  "replay_seconds" : 0.49989902973175049,
+  "reverse_descriptors_byte_exact" : true,
+  "reverse_initial_pool_byte_exact" : true,
+  "shared_buffer_bytes" : 39653280
+}

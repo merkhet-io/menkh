@@ -71,9 +71,9 @@ This first implementation prioritizes correctness over pipelined frame throughpu
 
 Supported tool visualization is the flat cutter plus cylindrical shank/holder.
 For non-flat cutters the status explicitly says cutter display is unavailable;
-the recorded stock remains visible. Target/gouge coloring, fixture display,
-picking, toolpath overlays, video encoding and lighting-normal smoothing are not
-implemented in this viewer. The macOS viewer remains available unchanged.
+the recorded stock remains visible. Target comparison, fixture display, XYZ sections and material picking are supported;
+see [live overlays and controls](../../docs/LIVE-OVERLAYS.md). Toolpath overlays,
+video encoding and lighting-normal smoothing remain unsupported.
 
 ## Validation and troubleshooting
 
@@ -139,13 +139,13 @@ playback and reverse scrubbing. The default `final_surface` scope retains the
 older final-frame-only behavior. Initial/prehistory faces and section interiors remain neutral.
 Keep both `surface-provenance.json` and `surface-provenance.bin` beside
 `voxel-animation.json`. If no color index is loaded, pressing C explains why.
-Live windows currently omit the index; inspect the completed result for colors.
+Live jobs with export_provenance enabled include bounded retained-range exposure data.
 
 The metadata reader validates grid/origin/spacing, operation IDs, sorted 64-bit
 cell keys and tool mappings. Rendering looks up the removed neighbor of the hit
 voxel face, not the last operation touching the surviving voxel. Keys retain all
 36 bits needed for a 4096³ grid. This is categorical coloring, not a removal-rate
-heatmap. Windows picking remains unsupported. See the [index limits and measurements](../../docs/SURFACE-PROVENANCE.md).
+heatmap. Ctrl-click picks occupied material and its known exposure IDs. See the [index limits and measurements](../../docs/SURFACE-PROVENANCE.md).
 
 ### In-process job calculation
 
@@ -155,8 +155,7 @@ thread. Select a different library with `--library PATH`, or explicitly retain
 the process runner with `--engine PATH`. Progress/cancellation and automatic
 result loading are available in either mode; library cancellation waits for the
 current operation boundary. The DLL remains loaded until its worker exits.
-See [the API contract](../../docs/C-API.md). This does not yet provide live
-material inspection while calculating.
+See [the API contract](../../docs/C-API.md). Use `--live` for leased material inspection while calculating.
 
 ## Inspect while calculating
 
@@ -172,6 +171,5 @@ re-enable Follow latest to catch up. The lease protects its lazy history files w
 the producer continues. Both DLL and explicit `--engine` modes are supported.
 
 See [the live inspection contract](../../docs/LIVE-INSPECTION.md) for resource
-bounds, measurements and failure behavior. Live overlays for target/fixtures,
-defects and exposure provenance are separate follow-ups; completed-result
-inspection stays unchanged. Windows still does not draw non-flat cutters.
+bounds, measurements and failure behavior. [Live overlays](../../docs/LIVE-OVERLAYS.md) include target/fixture grids, exposure
+colors and operation-labeled contacts; connected defect regions remain final-only. Windows still does not draw non-flat cutters.
