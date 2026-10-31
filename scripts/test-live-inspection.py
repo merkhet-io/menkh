@@ -106,7 +106,8 @@ while proc.poll() is None:
    seen.add(meta['live_sequence']);rebased+=start>0
   lock.close()
  time.sleep(.001)
-assert proc.returncode==0 and rebased>0
+assert proc.returncode==0, (proc.returncode, read(stream/'live/status.json'), (root/'stream.log').read_text()[-8000:])
+assert rebased>0, dict(seen=sorted(seen), latest=read(stream/'live/latest.json'))
 item=wait(lambda:lease(stream));states=decode(item[1]);meta=item[2]
 assert meta['completed_operations']==len(job['operations'])
 assert states==oracle[meta['first_operation']:];item[0].close()
