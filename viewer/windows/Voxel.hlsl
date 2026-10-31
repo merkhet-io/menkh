@@ -7,17 +7,24 @@ cbuffer Uniforms : register(b0) {
 StructuredBuffer<uint> blocks : register(t0);
 StructuredBuffer<uint> pool : register(t1);
 StructuredBuffer<uint> provenance : register(t2);
+StructuredBuffer<uint> targetBlocks : register(t3);
+StructuredBuffer<uint> targetPool : register(t4);
+StructuredBuffer<uint> fixtureBlocks : register(t5);
+StructuredBuffer<uint> fixturePool : register(t6);
 RWTexture2D<float4> image : register(u0);
 struct Hit { bool found; float t; float3 normal; int3 cell; };
 Hit miss() { Hit h;h.found=false;h.t=1e30;h.normal=float3(0,0,1);h.cell=0;return h; }
-bool filled(int3 p) {
+uint descriptor(uint index,uint kind){return kind==1?targetBlocks[index]:kind==2?fixtureBlocks[index]:blocks[index];}
+uint bits(uint index,uint kind){return kind==1?targetPool[index]:kind==2?fixturePool[index]:pool[index];}
+bool filledKind(int3 p,uint kind) {
     if(any(p<0)||any(p>=int3(dimensions.xyz)))return false;
-    uint3 b=uint3(p)>>3;uint d=blocks[(b.z*blockDimensions.y+b.y)*blockDimensions.x+b.x];
+    uint3 b=uint3(p)>>3;uint d=descriptor((b.z*blockDimensions.y+b.y)*blockDimensions.x+b.x,kind);
     if(d==0xffffffffu)return false;if(d==0xfffffffeu)return true;
-    uint bit=uint(p.y&7)*8+uint(p.x&7);return (pool[d*16+uint(p.z&7)*2+(bit>>5)]&(1u<<(bit&31)))!=0;
+    uint bit=uint(p.y&7)*8+uint(p.x&7);return (bits(d*16+uint(p.z&7)*2+(bit>>5),kind)&(1u<<(bit&31)))!=0;
 }
+bool filled(int3 p){return filledKind(p,0);}
 float3 faceNormal(uint axis,float3 ray) { float s=ray[axis]>0?-1:1;return axis==0?float3(s,0,0):(axis==1?float3(0,s,0):float3(0,0,s)); }
-Hit trace(float3 ray) {
+Hit trace(float3 ray,uint kind) {
     float3 safe=float3(abs(ray.x)<1e-15?1e-15:ray.x,abs(ray.y)<1e-15?1e-15:ray.y,abs(ray.z)<1e-15?1e-15:ray.z);
     float3 inv=1/safe,a=(low.xyz-eye.xyz)*inv,b=(high.xyz-eye.xyz)*inv;
     float3 near=min(a,b),far=max(a,b);float enter=max(max(near.x,near.y),near.z),leave=min(min(far.x,far.y),far.z);
@@ -27,8 +34,8 @@ Hit trace(float3 ray) {
     [loop] for(uint iter=0;iter<dimensions.x+dimensions.y+dimensions.z+8 && t<=leave;iter++) {
         int3 cell=int3(floor(eye.xyz+ray*(t+epsilon)));
         if(any(cell<0)||any(cell>=int3(dimensions.xyz)))break;
-        uint3 block=uint3(cell)>>3;uint d=blocks[(block.z*blockDimensions.y+block.y)*blockDimensions.x+block.x];
-        if(d!=0xffffffffu && (d==0xfffffffeu || filled(cell))) {hit.found=true;hit.t=t;hit.normal=normal;hit.cell=cell;return hit;}
+        uint3 block=uint3(cell)>>3;uint d=descriptor((block.z*blockDimensions.y+block.y)*blockDimensions.x+block.x,kind);
+        if(d!=0xffffffffu && (d==0xfffffffeu || filledKind(cell,kind))) {hit.found=true;hit.t=t;hit.normal=normal;hit.cell=cell;return hit;}
         int stride=d==0xffffffffu?8:1;int3 base=(cell/stride)*stride;
         float3 edge=float3(base)+float3(ray.x>0?stride:0,ray.y>0?stride:0,ray.z>0?stride:0);
         float3 next=(edge-eye.xyz)*inv;axis=next.x<next.y?(next.x<next.z?0:2):(next.y<next.z?1:2);
@@ -65,7 +72,11 @@ float3 category(uint id) {
 }
 float3 shade(float2 pixel) {
     float2 uv=pixel/settings.yz*2-1;uv.y=-uv.y;uv.x*=settings.y/settings.z;
-    float3 ray=normalize(forward.xyz+settings.w*(uv.x*right.xyz+uv.y*up.xyz));Hit hit=trace(ray);
+    float3 ray=normalize(forward.xyz+settings.w*(uv.x*right.xyz+uv.y*up.xyz));Hit hit=trace(ray,0);
+    if((blockDimensions.w&4)!=0)hit=miss();
+    bool missing=false,fixture=false,target=false;
+    if((blockDimensions.w&9)!=0){Hit th=trace(ray,1);if(th.found&&(!hit.found||th.t<hit.t-.01)){hit=th;missing=(blockDimensions.w&1)!=0&&!filled(th.cell);target=true;}}
+    if((blockDimensions.w&2)!=0){Hit fh=trace(ray,2);if(fh.found&&(!hit.found||fh.t<hit.t)){hit=fh;fixture=true;}}
     float3 bg=flags.x==0?float3(.83,.47,.25):float3(.055,.07,.095);
     Hit part=cylinderHit(ray,cutter,cutterAxis),s=cylinderHit(ray,shank,shankAxis),h=cylinderHit(ray,holder,holderAxis);
     if(s.found&&s.t<part.t)part=s;if(h.found&&h.t<part.t)part=h;
@@ -76,13 +87,16 @@ float3 shade(float2 pixel) {
     float light=.46+.32*max(0,dot(normal,key))+.22*max(0,dot(normal,-forward.xyz));
     float spec=pow(max(0,dot(normal,normalize(key-ray))),48)*.10;
     float3 material=float3(.32,.50,.82);
-    if(flags.z!=0) {
+    if((blockDimensions.w&1)!=0){if(missing)material=float3(.95,.18,.15);else if(!filledKind(hit.cell,1))material=float3(.98,.8,.12);}
+    else if(target)material=float3(.3,.75,.75);
+    if(flags.z!=0 && !fixture && !target) {
         float3 facePosition=eye.xyz+ray*hit.t;
         uint axis=abs(normal.x)>.5?0:(abs(normal.y)>.5?1:2);
         // Clip-plane interiors have no exposure attribution.
         uint id=0;if(abs(facePosition[axis]-round(facePosition[axis]))<.01)id=exposure(hit.cell+int3(round(normal)));
         material=category(id);
     }
+    if(fixture)material=float3(.25,.7,.4);
     return material*light+spec;
 }
 [numthreads(8,8,1)] void main(uint3 pixel:SV_DispatchThreadID) {

@@ -84,6 +84,11 @@ class History {
     Vec origin{}, low{}, high{};
     float h = 0, tolerance = 0;
     uint64_t initial = 0, final = 0;
+    uint32_t firstOperation = 0;
+    bool liveAssets = false, liveHistory = false;
+    std::vector<uint32_t> targetBlocks, fixtureBlocks;
+    std::vector<uint64_t> targetPool, fixturePool;
+    Json contacts=Json::array();
     size_t frame = 0, initialSlots = 0, declaredSlots = 0;
     std::vector<uint32_t> blocks, slotOwner;
     std::vector<uint64_t> pool;
@@ -112,6 +117,7 @@ class History {
                     "Drill mesh and voxel history disagree");
         }
         require(j.at("format") == "menkh-voxel-history-v1", "Unsupported history format");
+        if(j.contains("live_sequence")) { liveHistory=true; firstOperation=uint32_t(integer(j.at("first_operation"),UINT32_MAX)); liveAssets=j.value("live_assets",false); require(uint64_t(firstOperation)+j.at("frames").size()<=UINT32_MAX && j.at("completed_operations")==uint64_t(firstOperation)+j.at("frames").size(),"Invalid live operation range"); }
         require(j.at("grid").size() == 3 && j.at("block_grid").size() == 3, "Invalid dimensions");
         size_t count = 1;
         uint64_t cells = 1;
@@ -194,19 +200,73 @@ class History {
         require(previous == final, "Final frame count mismatch");
         require(occupied() == initial, "Initial occupied count mismatch");
         loadProvenance();
+        loadInspection();
+    }
+    void loadInspection() {
+        const auto assets=liveAssets ? root.parent_path()/"assets" : root;
+        auto load=[&](const char *prefix,std::vector<uint32_t> &desc,std::vector<uint64_t> &bits) {
+            const auto bf=assets/(std::string(prefix)+".blocks"),pf=assets/(std::string(prefix)+".pool");
+            require(fs::exists(bf)==fs::exists(pf),"Incomplete inspection buffers");
+            if(!fs::exists(bf))return;
+            const auto bd=read(bf),pd=read(pf);
+            require(bd.size()==blocks.size()*4 && pd.size()%64==0,"Invalid inspection buffer lengths");
+            desc.resize(blocks.size());bits.resize(pd.size()/8);
+            for(size_t i=0;i<bits.size();++i)bits[i]=u64(pd.data()+i*8);
+            for(size_t i=0;i<desc.size();++i){desc[i]=u32(bd.data()+i*4);if(desc[i]<Full){require(desc[i]<pd.size()/64,"Invalid inspection descriptor");validBits(i,pd.data()+size_t(desc[i])*64);}}
+        };
+        load("target",targetBlocks,targetPool);load("fixture",fixtureBlocks,fixturePool);
+        require(!liveAssets || !targetBlocks.empty() || !fixtureBlocks.empty(),"Missing live inspection assets");
+        if(fs::exists(root/"report.json")) {
+            const auto report=Json::parse(read(root/"report.json",64<<20));
+            if(report.value("format","")=="menkh-job-report-v1") {
+                require(report.at("voxel_mm").get<float>()==h && vec(report.at("origin_mm"))==origin && report.at("remaining_occupied")==final && report.at("operations").size()==steps.size(),"Inspection report mismatch");
+                if(liveHistory)require(report.at("first_operation")==firstOperation,"Inspection report range mismatch");
+                for(size_t i=0;i<steps.size();++i){const auto &op=report.at("operations").at(i);require(op.at("id")==steps[i].stage,"Inspection operation mismatch");
+                    for(const char *kind:{"shank_stock","holder_stock","shank_fixture","holder_fixture","cutter_fixture"}) {
+                        const auto &contact=op.at(kind);
+                        if(contact.at("occupied_centers").get<uint64_t>()>0 || contact.value("clearance","")=="unresolved_voxel_contact")
+                            contacts.push_back(Json{{"operation",firstOperation+i+1},{"frame",i+1},{"id",steps[i].stage},{"kind",kind},{"stock_state_before_operation",firstOperation+i},{"contact",contact}});
+                    }
+                }
+            }
+        }
+    }
+    bool filled(const std::array<int,3> &p,int kind=0) const {
+        for(size_t k=0;k<3;++k)if(p[k]<0 || uint32_t(p[k])>=n[k])return false;
+        const auto &desc=kind==1?targetBlocks:kind==2?fixtureBlocks:blocks;
+        const auto &bits=kind==1?targetPool:kind==2?fixturePool:pool;
+        if(desc.empty())return false;
+        const auto d=desc[(size_t(p[2]/8)*nb[1]+p[1]/8)*nb[0]+p[0]/8];
+        return d==Full || (d<Full && (bits[size_t(d)*8+p[2]%8]&(uint64_t(1)<<(p[1]%8*8+p[0]%8))));
+    }
+    Json comparison() const {
+        if(targetBlocks.empty())return nullptr;
+        uint64_t excess=0,missing=0;
+        for(size_t b=0;b<blocks.size();++b) {
+            const auto p=coords(b);uint64_t xy=0;
+            const auto ex=std::min(size_t(8),n[0]-p[0]*8),ey=std::min(size_t(8),n[1]-p[1]*8);
+            for(size_t y=0;y<ey;++y)xy|=((uint64_t(1)<<ex)-1)<<(8*y);
+            for(size_t z=0;z<8;++z){const uint64_t valid=p[2]*8+z<n[2]?xy:0;
+                auto word=[&](uint32_t d,const std::vector<uint64_t> &bits){return d==Empty?uint64_t(0):d==Full?valid:bits[size_t(d)*8+z];};
+                const auto a=word(blocks[b],pool),t=word(targetBlocks[b],targetPool);excess+=pop(a&~t);missing+=pop(t&~a);
+            }
+        }
+        return Json{{"completed_operation",uint64_t(firstOperation)+frame},{"excess_voxels",excess},{"missing_voxels",missing},{"excess_mm3",excess*double(h)*h*h},{"missing_mm3",missing*double(h)*h*h},{"raster_approximation",true}};
     }
     void loadProvenance() {
         const auto path = root / "surface-provenance.json";
         if (!fs::exists(path)) return;
         const auto j = Json::parse(read(path, 64 << 20));
-        require(j.at("format") == "menkh-surface-provenance-v1" && (j.at("scope") == "final_surface" || j.at("scope") == "all_frames") &&
+        const bool live=j.at("format")=="menkh-live-provenance-v1";
+        require((live || j.at("format") == "menkh-surface-provenance-v1") && (j.at("scope") == "final_surface" || j.at("scope") == "all_frames") &&
                 j.at("grid") == Json(n) && vec(j.at("origin_mm")) == origin &&
                 j.at("voxel_mm").get<float>() == h && j.at("final_occupied") == final &&
                 j.at("record_bytes") == 16 && j.at("initial_id") == 0,
                 "Provenance does not match history");
-        const auto &ops = j.at("operations");
-        require(ops.is_array() && ops.size() == steps.size(), "Provenance operation count mismatch");
-        for(size_t i=0;i<steps.size();++i)
+        const auto ops = live ? Json::array() : j.at("operations");
+        if(live) require(liveHistory && j.at("scope")=="all_frames" && j.at("first_operation")==firstOperation && j.at("completed_operations")==uint64_t(firstOperation)+steps.size(),"Live provenance range mismatch");
+        else require(ops.is_array() && ops.size() == steps.size(), "Provenance operation count mismatch");
+        for(size_t i=0;i<ops.size();++i)
             require(ops.at(i).at("id") == steps[i].stage, "Provenance operation ID mismatch");
         const size_t entries = integer(j.at("entries"), 67108864);
         require(integer(j.at("bytes"), size_t(1)<<30) == entries*16, "Invalid provenance size");
@@ -217,11 +277,12 @@ class History {
         for(size_t i=0;i<entries;++i) {
             const auto *p=bytes.data()+i*16;
             const uint64_t key=u64(p); const uint32_t op=u32(p+8), tool=u32(p+12);
-            require(key<cells && (!i || key>previous) && op>0 && op<=ops.size(), "Invalid provenance entry");
+            require(key<cells && (!i || key>previous) && op>0 && op<=uint64_t(firstOperation)+steps.size(), "Invalid provenance entry");
+            if(live) { require(tool<=integer(j.at("tool_count"),UINT32_MAX-1),"Invalid live tool ID"); } else {
             const auto &source=ops.at(op-1);
             const uint32_t expected=source.contains("tool") && !source.at("tool").is_null()
                 ? uint32_t(integer(source.at("tool"), uint64_t(UINT32_MAX)-1)+1) : 0;
-            require(tool==expected,"Provenance tool mismatch");
+            require(tool==expected,"Provenance tool mismatch"); }
             for(size_t w=0;w<4;++w) provenance[i*4+w]=u32(p+w*4);
             previous=key;
         }
@@ -232,6 +293,7 @@ class History {
         const auto oracle=Json::parse(read(path));
         for(int pass=0;pass<3;++pass)for(size_t i=0;i<oracle.size();++i){
             const auto &f=oracle.at(pass==1?oracle.size()-1-i:i);seek(f.at("frame").get<size_t>());
+            if(f.contains("excess_voxels")){const auto actual=comparison();require(actual.at("excess_voxels")==f.at("excess_voxels") && actual.at("missing_voxels")==f.at("missing_voxels"),"Target comparison oracle mismatch");}
             for(const auto &row:f.at("neighbors")) {
                 const auto value=exposure(row.at(0).get<uint64_t>());
                 require(value[0]==row.at(1).get<uint32_t>() && value[1]==row.at(2).get<uint32_t>(),"Exposure oracle mismatch");
@@ -247,7 +309,7 @@ class History {
         if (d==Full || (d<Full && (pool[size_t(d)*8+z%8] & (uint64_t(1)<<(y%8*8+x%8))))) return {};
         size_t lo=0,hi=provenance.size()/4;
         while(lo<hi){size_t mid=lo+(hi-lo)/2;uint64_t value=uint64_t(provenance[mid*4])|(uint64_t(provenance[mid*4+1])<<32);if(value<key)lo=mid+1;else hi=mid;}
-        if(lo<provenance.size()/4 && (uint64_t(provenance[lo*4])|(uint64_t(provenance[lo*4+1])<<32))==key && provenance[lo*4+2]<=frame) return {provenance[lo*4+2],provenance[lo*4+3]};
+        if(lo<provenance.size()/4 && (uint64_t(provenance[lo*4])|(uint64_t(provenance[lo*4+1])<<32))==key && provenance[lo*4+2]<=uint64_t(firstOperation)+frame) return {provenance[lo*4+2],provenance[lo*4+3]};
         return {};
     }
     std::array<size_t, 3> coords(size_t i) const {

@@ -454,10 +454,31 @@ fn liveAllocations(allocator: std.mem.Allocator) !void {
     const count = g.stats().occupied;
     var publisher = try @import("live.zig").Publisher.init(allocator, temp.dir, .{}, g, count);
     defer publisher.deinit();
+    try publisher.configure(g, true, 0, g, g);
     const frames: []const struct { file: []const u8, delta_bytes: usize } = &.{};
-    try publisher.publish(temp.dir, g, frames, count, 0.01, 0, true);
+    try publisher.publish(temp.dir, g, frames, frames, count, 0.01, 0, true);
     try std.testing.expectEqual(count, g.stats().occupied);
     try std.testing.expectEqual(@as(usize, 1), publisher.sequence);
+}
+
+test "live provenance pruning retains old face IDs and drops sealed-away history" {
+    const prov = @import("provenance.zig");
+    var g = try c.Grid.init(a, .{ 3, 1, 1 }, 1);
+    defer g.deinit();
+    var index = prov.Index.initAllFrames(a, g);
+    defer index.deinit();
+    // Empty cell 1 borders surviving cells 0 and 2. Its exposure predates the
+    // retained window; pruning must not renumber or discard that source.
+    g.blocks[0] = 0;
+    try g.pool.append(a, @splat(0));
+    g.pool.items[0][0] = 5;
+    try index.entries.append(a, .{ .cell = 1, .operation = 7, .tool = 2 });
+    index.retainBoundary(g);
+    try std.testing.expectEqual(@as(usize, 1), index.entries.items.len);
+    try std.testing.expectEqual(@as(u32, 7), index.entries.items[0].operation);
+    g.blocks[0] = c.empty;
+    index.retainBoundary(g);
+    try std.testing.expectEqual(@as(usize, 0), index.entries.items.len);
 }
 test "live publication allocation failures clean up without changing material" {
     try std.testing.checkAllAllocationFailures(a, liveAllocations, .{});

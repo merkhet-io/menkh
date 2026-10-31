@@ -3,6 +3,7 @@
 // the engine worker never exposes a mutable grid to the renderer.
 class LiveView {
     bool warp, debug;
+    uint32_t initialColor;bool initialComparison;
     fs::path evidence;
     std::unique_ptr<LiveLease> lease;
     std::unique_ptr<App> app;
@@ -12,7 +13,7 @@ class LiveView {
     static double ms(std::chrono::steady_clock::duration d){return std::chrono::duration<double,std::milli>(d).count();}
     static void bytes(const fs::path &path,const void *data,size_t size){std::ofstream f(path,std::ios::binary);f.write(static_cast<const char*>(data),std::streamsize(size));require(bool(f),"Cannot write live evidence");}
 public:
-    LiveView(bool w,bool d,fs::path e):warp(w),debug(d),evidence(std::move(e)){}
+    LiveView(bool w,bool d,fs::path e,uint32_t color=0,bool comparison=false):warp(w),debug(d),initialColor(color),initialComparison(comparison),evidence(std::move(e)){}
     ~LiveView(){if(app){app->renderer.reset();if(app->window)DestroyWindow(app->window);}app.reset();lease.reset();}
     void update(const fs::path &output,RunWindow &controls) {
         const bool follow=controls.following();
@@ -36,6 +37,7 @@ public:
         if(!app) {
             app=std::make_unique<App>(incoming->manifest);app->live=true;
             app->history=std::move(history);app->renderer=std::move(renderer);
+            app->camera.colorMode=initialColor;app->camera.compare=initialComparison;
             openWindow(*app);
             // Scrubbing implicitly holds the current window rather than having
             // the next publication undo the user's camera/history inspection.
@@ -57,6 +59,9 @@ public:
         Json record={{"sequence",sequence},{"first_operation",first},{"completed_operations",end},{"load_seek_ms",ms(sought-began)},{"renderer_setup_ms",ms(prepared-sought)},{"upload_ms",ms(uploaded-prepared)},{"attach_render_ms",ms(drawn-uploaded)},
             {"cpu_material_capacity_bytes",h.blocks.capacity()*4+h.pool.capacity()*8+h.slotOwner.capacity()*4},
             {"retained_delta_bytes",uint64_t(0)},{"process_peak_rss_bytes",memory.PeakWorkingSetSize},{"publication",incoming->pointer},{"adapter",fs::path(app->renderer->adapterName()).u8string()},{"verification_enabled",!evidence.empty()}};
+        record["cpu_provenance_capacity_bytes"]=h.provenance.capacity()*4;
+        record["cpu_asset_capacity_bytes"]=(h.targetBlocks.capacity()+h.fixtureBlocks.capacity())*4+(h.targetPool.capacity()+h.fixturePool.capacity())*8;
+        record["color_mode"]=app->camera.colorMode;record["comparison_enabled"]=app->camera.compare;
         record["d3d12_allocations"]=app->renderer->materialMemory();
         record["history_metadata_capacity_bytes"]=h.steps.capacity()*sizeof(Step);
         record["dirty_scratch_capacity_bytes"]=(h.dirtyBlocks.capacity()+h.dirtySlots.capacity())*sizeof(size_t);

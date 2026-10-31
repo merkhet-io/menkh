@@ -9,6 +9,7 @@ struct VoxelStep:Decodable {let cutter:CutterGeometry?;let axis:[Float]?;let sha
 struct VoxelHistory:Decodable {
     let format:String;let grid:[Int];let block_grid:[Int];let voxel_mm:Float
     let origin_mm:[Float]?;let motion_tolerance_mm:Float?
+    let first_operation:Int?;let live_sequence:Int?;let live_assets:Bool?
     let initial_occupied:UInt64;let final_occupied:UInt64;let pool_slots:Int
     let stock_min:[Float];let stock_max:[Float];let frames:[VoxelStep]
 }
@@ -23,6 +24,7 @@ struct VoxelUniforms {
 final class VoxelRenderer:NSObject,MTKViewDelegate {
     let history:VoxelHistory;let root:URL;let device:MTLDevice;let queue:MTLCommandQueue;let pipeline:MTLComputePipelineState
     let blocks:MTLBuffer;let pool:MTLBuffer
+    var operationOffset:Int {history.live_sequence == nil ? 0:(history.first_operation ?? 0)}
     var provenanceAllFrames=false
     var provenanceAvailableAtFrame:Bool {provenanceAllFrames || frame==history.frames.count}
     var provenanceBuffer:MTLBuffer?;var provenanceCount:UInt32=0;var provenanceMode:UInt32=0
@@ -41,6 +43,8 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         root=file.deletingLastPathComponent();let decoded=try JSONDecoder().decode(VoxelHistory.self,from:Data(contentsOf:file));history=decoded
 
         guard history.format=="menkh-voxel-history-v1",history.grid.count==3,history.block_grid.count==3,history.stock_min.count==3,history.stock_max.count==3,history.grid.allSatisfy({$0>=1 && $0<=4096}),zip(history.grid,history.block_grid).allSatisfy({($0.0+7)/8==$0.1}),history.pool_slots>=0,history.pool_slots<=history.block_grid.reduce(1,*),history.voxel_mm.isFinite,history.voxel_mm>0 else {throw MeshError.invalidOBJ("Invalid voxel history")}
+        let first=history.live_sequence == nil ? 0:(history.first_operation ?? 0)
+        guard first>=0,first<=Int(UInt32.max)-history.frames.count else {throw MeshError.invalidOBJ("Invalid global operation range")}
         guard let device=MTLCreateSystemDefaultDevice(),let queue=device.makeCommandQueue() else {throw MeshError.noMetal};self.device=device;self.queue=queue
         let shader=URL(fileURLWithPath:CommandLine.arguments[0]).deletingLastPathComponent().appendingPathComponent("Voxel.metal")
         let options=MTLCompileOptions();options.mathMode = .safe
@@ -55,17 +59,18 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         guard bits.count<=pool.length && bits.count%64==0 else {throw MeshError.invalidOBJ("Invalid bit pool")};bits.copyBytes(to:pool.contents().assumingMemoryBound(to:UInt8.self),count:bits.count)
         super.init()
         guard (history.origin_mm ?? [0,0,0]).count==3,(history.origin_mm ?? [0,0,0]).allSatisfy({$0.isFinite}),history.stock_min.allSatisfy({$0.isFinite}),history.stock_max.allSatisfy({$0.isFinite}) else {throw MeshError.invalidOBJ("Invalid scene bounds")}
+        let assetRoot=history.live_assets == true ? root.deletingLastPathComponent().appendingPathComponent("assets"):root
         let descriptors=blocks.contents().assumingMemoryBound(to:UInt32.self)
         for i in 0..<size/4 {let d=descriptors[i];guard d>=0xfffffffe || Int(d)<bits.count/64 else {throw MeshError.invalidOBJ("Invalid initial descriptor")}}
-        if FileManager.default.fileExists(atPath:root.appendingPathComponent("target.blocks").path) {
-            let tb=try Data(contentsOf:root.appendingPathComponent("target.blocks"));let tp=try Data(contentsOf:root.appendingPathComponent("target.pool"))
+        if FileManager.default.fileExists(atPath:assetRoot.appendingPathComponent("target.blocks").path) {
+            let tb=try Data(contentsOf:assetRoot.appendingPathComponent("target.blocks"));let tp=try Data(contentsOf:assetRoot.appendingPathComponent("target.pool"))
             guard tb.count==size,tp.count%64==0 else {throw MeshError.invalidOBJ("Invalid target buffers")}
             for i in 0..<size/4 {let d=tb.withUnsafeBytes {UInt32(littleEndian:$0.loadUnaligned(fromByteOffset:i*4,as:UInt32.self))};guard d>=0xfffffffe || Int(d)<tp.count/64 else {throw MeshError.invalidOBJ("Invalid target descriptor")}}
             targetBlocks=device.makeBuffer(length:size,options:.storageModeShared);targetPool=device.makeBuffer(length:max(64,tp.count),options:.storageModeShared)
             guard let t=targetBlocks,let p=targetPool else {throw MeshError.noMetal};tb.copyBytes(to:t.contents().assumingMemoryBound(to:UInt8.self),count:tb.count);tp.copyBytes(to:p.contents().assumingMemoryBound(to:UInt8.self),count:tp.count)
         }
-        if FileManager.default.fileExists(atPath:root.appendingPathComponent("fixture.blocks").path) {
-            let tb=try Data(contentsOf:root.appendingPathComponent("fixture.blocks"));let tp=try Data(contentsOf:root.appendingPathComponent("fixture.pool"))
+        if FileManager.default.fileExists(atPath:assetRoot.appendingPathComponent("fixture.blocks").path) {
+            let tb=try Data(contentsOf:assetRoot.appendingPathComponent("fixture.blocks"));let tp=try Data(contentsOf:assetRoot.appendingPathComponent("fixture.pool"))
             guard tb.count==size,tp.count%64==0 else {throw MeshError.invalidOBJ("Invalid fixture buffers")}
             for i in 0..<size/4 {let d=tb.withUnsafeBytes {UInt32(littleEndian:$0.loadUnaligned(fromByteOffset:i*4,as:UInt32.self))};guard d>=0xfffffffe || Int(d)<tp.count/64 else {throw MeshError.invalidOBJ("Invalid fixture descriptor")}}
             fixtureBlocks=device.makeBuffer(length:size,options:.storageModeShared);fixturePool=device.makeBuffer(length:max(64,tp.count),options:.storageModeShared)
@@ -131,7 +136,7 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         if showHolder,frame>0 {let step=history.frames[frame-1];let axis=step.axis ?? [0,0,1]
             if axis.count==3,step.tool.count==3 {let u=SIMD3<Float>(axis[0],axis[1],axis[2]);let p=SIMD3<Float>(step.tool[0],step.tool[1],step.tool[2]);if let part=step.cutter,(part.kind=="flat" || part.kind=="ball") {cutter=SIMD4((p-origin)/h,part.radius/h);cutterAxis=SIMD4(u,part.length/h)};if let part=step.shank {shank=SIMD4((p+u*part.offset-origin)/h,part.radius/h);shankAxis=SIMD4(u,part.length/h)};if let part=step.holder {holder=SIMD4((p+u*part.offset-origin)/h,part.radius/h);holderAxis=SIMD4(u,part.length/h)}}
         }
-        return VoxelUniforms(eye:SIMD4((eye-origin)/h,frame>0 && history.frames[frame-1].cutter?.kind=="ball" ? 1:0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis,provenance:SIMD4(provenanceCount,provenanceAvailableAtFrame && !compareTarget ? provenanceMode:0,UInt32(frame),0))
+        return VoxelUniforms(eye:SIMD4((eye-origin)/h,frame>0 && history.frames[frame-1].cutter?.kind=="ball" ? 1:0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis,provenance:SIMD4(provenanceCount,provenanceAvailableAtFrame && !compareTarget ? provenanceMode:0,UInt32(operationOffset+frame),0))
     }
     func encode(_ texture:MTLTexture)->MTLCommandBuffer? {
         guard let command=queue.makeCommandBuffer(),let encoder=command.makeComputeCommandEncoder() else {return nil}
@@ -220,15 +225,15 @@ final class VoxelController:NSViewController {
         let restart=NSButton(title:"Restart",target:self,action:#selector(restart))
         play.target=self;play.action=#selector(toggle);slider.target=self;slider.action=#selector(scrub);slider.isContinuous=true;slider.maxValue=Double(renderer.history.frames.count)
         status.textColor = .white;status.font = .monospacedDigitSystemFont(ofSize:12,weight:.medium)
-        let stock=stockControl;stock.target=self;stock.action=#selector(stock(_:));stock.state = .on
+        let stock=stockControl;stock.target=self;stock.action=#selector(stock(_:));stock.state = renderer.showStock ? .on:.off
         let comparison=comparisonControl;comparison.target=self;comparison.action=#selector(compare(_:))
-        comparison.isEnabled=renderer.targetBlocks != nil
-        let section=sectionControl;section.target=self;section.action=#selector(section(_:));section.toolTip="Z cross-section";section.widthAnchor.constraint(equalToConstant:120).isActive=true
-        let fixtures=fixtureControl;fixtures.target=self;fixtures.action=#selector(fixtures(_:));fixtures.state = .on;fixtures.isEnabled=renderer.fixtureBlocks != nil
+        comparison.state=renderer.compareTarget ? .on:.off;comparison.isEnabled=renderer.targetBlocks != nil
+        let section=sectionControl;section.doubleValue=Double(renderer.sectionFraction);section.target=self;section.action=#selector(section(_:));section.toolTip="Z cross-section";section.widthAnchor.constraint(equalToConstant:120).isActive=true
+        let fixtures=fixtureControl;fixtures.target=self;fixtures.action=#selector(fixtures(_:));fixtures.state = renderer.showFixtures ? .on:.off;fixtures.isEnabled=renderer.fixtureBlocks != nil
         let holder=holderControl;holder.target=self;holder.action=#selector(holder(_:));holder.state = renderer.showHolder ? .on:.off
         let buttons=NSStackView(views:[play,restart,reset,lighting,background]);buttons.spacing=12
         let axes=axesControl;axes.addItems(withTitles:["Section X","Section Y","Section Z"]);axes.selectItem(at:renderer.sectionAxis);axes.target=self;axes.action=#selector(sectionAxis(_:))
-        let provenance=NSPopUpButton();provenance.addItems(withTitles:["Material color","Exposure operation","Exposure tool"]);provenance.isEnabled=renderer.provenanceBuffer != nil;provenance.target=self;provenance.action=#selector(provenance(_:))
+        let provenance=NSPopUpButton();provenance.addItems(withTitles:["Material color","Exposure operation","Exposure tool"]);provenance.selectItem(at:Int(renderer.provenanceMode));provenance.isEnabled=renderer.provenanceBuffer != nil;provenance.target=self;provenance.action=#selector(provenance(_:))
         buttons.addArrangedSubview(provenance)
         let inspection=NSStackView(views:[stock,comparison,fixtures,holder,axes,section]);inspection.spacing=12
         do {findings=try renderer.loadFindings();filterFindings()}
@@ -281,6 +286,8 @@ extension Delegate {
         if let i=args.firstIndex(of:"--section-axis"),i+1<args.count,let axis=["x","y","z"].firstIndex(of:args[i+1]) {renderer.sectionAxis=axis}
         if let i=args.firstIndex(of:"--yaw"),i+1<args.count,let value=Float(args[i+1]),value.isFinite {renderer.yaw=value}
         if let i=args.firstIndex(of:"--elevation"),i+1<args.count,let value=Float(args[i+1]),value.isFinite {renderer.elevation=max(-1.5,min(1.5,value))}
+        if args.contains("--hide-fixtures") {renderer.showFixtures=false}
+        if args.contains("--hide-stock") {renderer.showStock=false}
         if args.contains("--hide-tool") {renderer.showHolder=false}
         if args.contains("--smooth-lighting") {renderer.smoothLighting=true}
         if args.contains("--compare-target") {renderer.compareTarget=true}
@@ -413,7 +420,7 @@ extension VoxelRenderer {
                 picked=String(format:"occupied @ (%.4f, %.4f, %.4f) mm",hit.x,hit.y,hit.z)
                 if provenanceBuffer != nil && provenanceAvailableAtFrame {
                     var neighbor=p;neighbor[faceAxis] += ray[faceAxis]>0 ? -1:1
-                    if abs((eye+ray*t)[faceAxis] - round((eye+ray*t)[faceAxis]))<0.01, let (op,tool)=provenanceAt(neighbor) {picked += " · exposed by \(history.frames[Int(op)-1].stage) (operation \(op), tool \(tool == 0 ? "none":String(tool-1)))"}
+                    if abs((eye+ray*t)[faceAxis] - round((eye+ray*t)[faceAxis]))<0.01, let (op,tool)=provenanceAt(neighbor) {let local=Int(op)-operationOffset-1;let label=history.frames.indices.contains(local) ? history.frames[local].stage:"before retained range";picked += " · exposed by \(label) (operation \(op), tool \(tool == 0 ? "none":String(tool-1)))"}
                     else {picked += " · initial/prehistory boundary or section interior"}
                 }
                 let offset=oldEye-hit;let length=simd_length(offset)

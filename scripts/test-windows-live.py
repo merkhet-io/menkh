@@ -7,6 +7,7 @@ p=argparse.ArgumentParser();p.add_argument('--viewer',type=Path,required=True);p
 root=a.out.resolve();root.mkdir(parents=True,exist_ok=True);source=root/'inputs café';source.mkdir(exist_ok=True)
 viewer=str(a.viewer.resolve());engine=str(a.engine.resolve());library=str(a.library.resolve())
 job=dict(version=1,units='mm',bounds=dict(lo=[-3,-2,0],hi=[3,2,3]),voxel_mm=a.voxel,stock=dict(primitives=[dict(box=dict(lo=[-3,-2,0],hi=[3,2,3]))]),tools=[dict(cutter=dict(kind='ball',radius=.45,length=2))],motion_tolerance_mm=.01,export_mesh=False,operations=[])
+job.update(export_provenance=True,provenance_scope='all_frames',target=dict(primitives=[dict(box=dict(lo=[-3,-2,0],hi=[3,2,1.8]))]),fixtures=dict(primitives=[dict(box=dict(lo=[2.6,1.6,0],hi=[3,2,3]))]))
 position=[-2.5,-1.5,1.7]
 for row in range(40):
  for col in range(61):
@@ -100,7 +101,7 @@ for mode in ['process','library']:
  for action in ['complete','cancel','failure']:
   name=f'{mode}-{action}';out=root/name;evidence=root/(name+'-images')
   with (root/(name+'.stdout')).open('w') as stdout,(root/(name+'.stderr')).open('w') as stderr:
-   command=[viewer,str(file),'--engine' if mode=='process' else '--library',engine if mode=='process' else library,'--job-output',str(out),'--live','--warp','--debug','--live-evidence',str(evidence)]
+   command=[viewer,str(file),'--engine' if mode=='process' else '--library',engine if mode=='process' else library,'--job-output',str(out),'--live','--color-operation','--warp','--debug','--live-evidence',str(evidence)]
    command+=['--verify-history','--window-smoke',str(evidence/'completed-window')] if action=='complete' else ['--run-only']
    proc=subprocess.Popen(command,stdout=stdout,stderr=stderr);children.append(proc)
   run=wait(lambda:window(proc.pid,'MenkhCalculation'),proc)
@@ -118,6 +119,11 @@ for mode in ['process','library']:
   message(view,0x100,0x24);wait(lambda:'Frame 0 /' in status(view),proc)
   assert message(user.GetDlgItem(run,3),0xF0)==0
   message(view,0x100,0x23);wait(lambda:f"Frame {completed-latest['first_operation']} /" in status(view),proc)
+  message(view,0x100,ord('G'));message(view,0x100,ord('G'))
+  message(view,0x100,ord('F'));message(view,0x100,ord('F'))
+  message(view,0x100,ord('X'));message(view,0x100,ord('Z'))
+  message(view,0x201,9,(400<<16)|600) # Ctrl-click: occupied material coordinates.
+  wait(lambda:'position_mm' in status(view),proc)
   pinned=out/f"live/slot-{latest['publication']['slot']}";before=digest(pinned)
   time.sleep(.1);assert read(out/'live/status.json')['completed_operations']==completed
   if action=='complete':
@@ -141,6 +147,7 @@ for mode in ['process','library']:
    assert state(sample/'final.blocks',sample/'final.pool')==oracle[meta['completed_operations']],(name,row['sequence'])
    assert (sample/'latest.ppm').read_bytes()==(sample/'replayed.ppm').read_bytes()
    assert row['render_replay_exact'] and row['verification_enabled']
+   assert row['color_mode']==1 and row['cpu_provenance_capacity_bytes']>=0 and row['cpu_asset_capacity_bytes']>0
   errors=(root/(name+'.stderr')).read_text()
   assert 'D3D12: ' not in errors,errors[-6000:]
   summary.append(dict(case=name,paused_operation=completed,windows_checked=len(rows),metrics={key:dict(median=statistics.median(r[key] for r in rows),min=min(r[key] for r in rows),max=max(r[key] for r in rows)) for key in ['load_seek_ms','renderer_setup_ms','upload_ms','attach_render_ms','process_peak_rss_bytes']}))

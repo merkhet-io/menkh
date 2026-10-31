@@ -210,6 +210,7 @@ final class LiveInspection {
         guard meta?["live_sequence"] as? Int == next else {return}
         let start=CFAbsoluteTimeGetCurrent()
         let renderer=try VoxelRenderer(file)
+        if controller == nil {renderer.provenanceMode=CommandLine.arguments.contains("--color-operation") ? 1:CommandLine.arguments.contains("--color-tool") ? 2:0;renderer.compareTarget=CommandLine.arguments.contains("--compare-target")}
         let loaded=CFAbsoluteTimeGetCurrent()
         try renderer.seek(renderer.history.frames.count)
         let sought=CFAbsoluteTimeGetCurrent()
@@ -219,6 +220,7 @@ final class LiveInspection {
             renderer.sectionAxis=old.sectionAxis;renderer.sectionFraction=old.sectionFraction
             renderer.smoothLighting=old.smoothLighting;renderer.darkBackground=old.darkBackground
             renderer.showStock=old.showStock;renderer.showHolder=old.showHolder
+            renderer.provenanceMode=old.provenanceMode;renderer.compareTarget=old.compareTarget;renderer.showFixtures=old.showFixtures
         }
         let nextController=VoxelController(renderer);nextController.playing=false
         controller?.timer?.invalidate();controller?.metal.isPaused=true
@@ -232,7 +234,7 @@ final class LiveInspection {
         if firstWindow {window!.makeKeyAndOrderFront(nil)}
         controller=nextController;lease=held;sequence=next;lastLoad=Date()
         var usage=rusage();getrusage(RUSAGE_SELF,&usage)
-        let record:[String:Any]=["process_peak_rss_bytes":usage.ru_maxrss,"sequence":next,"first_operation":first,"completed_operations":completed,"load_upload_ms":(loaded-start)*1000,"seek_ms":(sought-loaded)*1000,"gpu_material_bytes":renderer.blocks.length+renderer.pool.length,"publication":info]
+        let record:[String:Any]=["process_peak_rss_bytes":usage.ru_maxrss,"sequence":next,"first_operation":first,"completed_operations":completed,"load_upload_ms":(loaded-start)*1000,"seek_ms":(sought-loaded)*1000,"gpu_material_bytes":renderer.blocks.length+renderer.pool.length,"gpu_provenance_bytes":renderer.provenanceBuffer?.length ?? 0,"gpu_asset_bytes":[renderer.targetBlocks,renderer.targetPool,renderer.fixtureBlocks,renderer.fixturePool].compactMap{$0}.reduce(0){$0+$1.length},"publication":info]
         let line=try JSONSerialization.data(withJSONObject:record,options:[.sortedKeys])+Data([10])
         let log=output.appendingPathComponent("live-viewer.jsonl")
         if !FileManager.default.fileExists(atPath:log.path) {try Data().write(to:log)}

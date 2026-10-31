@@ -19,7 +19,7 @@ private struct FindingOperation:Decodable {
     let shank_stock:FindingContact;let holder_stock:FindingContact
     let shank_fixture:FindingContact;let holder_fixture:FindingContact;let cutter_fixture:FindingContact
 }
-private struct FindingReport:Decodable {let format:String;let voxel_mm:Float;let origin_mm:[Float];let remaining_occupied:UInt64;let operations:[FindingOperation]}
+private struct FindingReport:Decodable {let format:String;let voxel_mm:Float;let origin_mm:[Float];let remaining_occupied:UInt64;let operations:[FindingOperation];let first_operation:Int?}
 
 extension VoxelRenderer {
     func loadFindings() throws -> [Finding] {
@@ -42,12 +42,13 @@ extension VoxelRenderer {
             if header?["format"] as? String == "menkh-job-report-v1" {
                 let r=try decoder.decode(FindingReport.self,from:data)
                 guard r.voxel_mm==history.voxel_mm,r.origin_mm==(history.origin_mm ?? [0,0,0]),r.remaining_occupied==history.final_occupied,r.operations.map({$0.id})==history.frames.map({$0.stage}) else {throw MeshError.invalidOBJ("Report does not match history")}
+                if history.live_sequence != nil {guard r.first_operation==operationOffset else {throw MeshError.invalidOBJ("Finding range mismatch")}}
                 for (i,op) in r.operations.enumerated() {
                     for (name,c) in [("Shank / stock",op.shank_stock),("Holder / stock",op.holder_stock),("Shank / fixture",op.shank_fixture),("Holder / fixture",op.holder_fixture),("Cutter / fixture",op.cutter_fixture)] {
                         let contact=c.occupied_centers>0
                         guard contact || c.clearance=="unresolved_voxel_contact" else {continue}
                         guard let bounds=contact ? c.region:c.first_unresolved_cell_bounds, bounds.valid else {throw MeshError.invalidOBJ("Missing contact bounds")}
-                        findings.append(Finding(title:"\(op.id) · \(name) · \(contact ? "contact":"unresolved")",detail:contact ? "\(c.occupied_centers) occupied centers along sweep; assembly shown at segment end; stock checks use pre-operation stock":"Possible voxel face/corner contact; first unresolved cell shown",bounds:bounds,frame:i+1))
+                        findings.append(Finding(title:"Operation \(operationOffset+i+1) · \(op.id) · \(name) · \(contact ? "contact":"unresolved")",detail:contact ? "\(c.occupied_centers) occupied centers along sweep; assembly shown at segment end; stock checks use pre-operation stock":"Possible voxel face/corner contact; first unresolved cell shown",bounds:bounds,frame:i+1))
                     }
                 }
             }

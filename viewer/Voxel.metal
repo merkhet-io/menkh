@@ -75,7 +75,7 @@ float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device 
     float3 background=u.grid.z==0?float3(0.83,0.47,0.25):float3(0.055,0.07,0.095);
     if(u.grid.x==0)hit.found=false;
     bool missing=false;
-    if(u.dimensions.w!=0) {Hit th=trace(u.eye.xyz,ray,u,targetBlocks,targetPool);if(th.found && (!hit.found || th.t<hit.t-0.01f)){hit=th;missing=true;}}
+    if(u.dimensions.w!=0) {Hit th=trace(u.eye.xyz,ray,u,targetBlocks,targetPool);if(th.found && (!hit.found || th.t<hit.t-0.01f)){hit=th;missing=!filled(th.cell,blocks,pool,u.dimensions.xyz,u.blockDimensions.xyz);}}
     bool fixture=false;
     if(u.blockDimensions.w!=0){Hit fh=trace(u.eye.xyz,ray,u,fixtureBlocks,fixturePool);if(fh.found && (!hit.found || fh.t<hit.t)){hit=fh;fixture=true;}}
     Hit sh=cylinderHit(u.eye.xyz,ray,u.shank,u.shankAxis),ho=cylinderHit(u.eye.xyz,ray,u.holder,u.holderAxis);

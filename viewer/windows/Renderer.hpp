@@ -50,12 +50,37 @@ struct Camera {
     float distance = 1, yaw = -.8f, elevation = .5f, section = 1;
     uint32_t colorMode = 0; // 0 material, 1 exposing operation, 2 exposing tool
     bool dark = false, tool = true, antialias = true;
+    bool compare=false,fixtures=true,stock=true,targetVisible=false;
+    uint32_t sectionAxis=2;
     void reset(const History &h) {
         target = mul(add(h.low, h.high), .5f);
         distance = std::max(1.f, length(sub(h.high, h.low)) * 1.5f);
         yaw = -.8f;
         elevation = .5f;
         section = 1;
+    }
+    Json pick(const History &h,float x,float y,uint32_t width,uint32_t height) const {
+        const auto u=uniforms(h,width,height);
+        const Vec eye{u.eye.x,u.eye.y,u.eye.z},f{u.forward.x,u.forward.y,u.forward.z},r{u.right.x,u.right.y,u.right.z},up{u.up.x,u.up.y,u.up.z};
+        const auto ray=unit(add(f,mul(add(mul(r,(2*x-1)*float(width)/height),mul(up,1-2*y)),u.settings.w)));
+        Vec inverse{},slabNear{},slabFar{};const Vec low{u.low.x,u.low.y,u.low.z},high{u.high.x,u.high.y,u.high.z};
+        for(size_t i=0;i<3;++i){inverse[i]=1/(std::abs(ray[i])<1e-15f?1e-15f:ray[i]);const float a=(low[i]-eye[i])*inverse[i],b=(high[i]-eye[i])*inverse[i];slabNear[i]=std::min(a,b);slabFar[i]=std::max(a,b);}
+        size_t axis=size_t(std::max_element(slabNear.begin(),slabNear.end())-slabNear.begin());
+        float t=std::max(0.f,slabNear[axis]),end=*std::min_element(slabFar.begin(),slabFar.end());
+        for(uint64_t step=0;t<=end && step<uint64_t(h.n[0])+h.n[1]+h.n[2]+8;++step){
+            const auto pos=add(eye,mul(ray,t+.001f));std::array<int,3> cell{int(std::floor(pos[0])),int(std::floor(pos[1])),int(std::floor(pos[2]))};
+            for(size_t i=0;i<3;++i)if(cell[i]<0 || uint32_t(cell[i])>=h.n[i])return nullptr;
+            if(h.filled(cell)){
+                const auto surface=add(eye,mul(ray,t));auto neighbor=cell;neighbor[axis]+=ray[axis]>0?-1:1;
+                std::array<uint32_t,2> exposure{};
+                if(std::abs(surface[axis]-std::round(surface[axis]))<.01f && neighbor[0]>=0 && neighbor[1]>=0 && neighbor[2]>=0 && uint32_t(neighbor[0])<h.n[0] && uint32_t(neighbor[1])<h.n[1] && uint32_t(neighbor[2])<h.n[2])
+                    exposure=h.exposure((uint64_t(neighbor[2])*h.n[1]+neighbor[1])*h.n[0]+neighbor[0]);
+                return Json{{"position_mm",add(h.origin,mul(surface,h.h))},{"cell",cell},{"exposure_neighbor",neighbor},{"occupied",true},{"in_target",h.targetBlocks.empty()?Json(nullptr):Json(h.filled(cell,1))},{"operation",exposure[0]},{"tool_id",exposure[1]},{"completed_operation",uint64_t(h.firstOperation)+h.frame},{"surface","material; tool/fixture overlays ignored"}};
+            }
+            Vec next{};for(size_t i=0;i<3;++i)next[i]=(float(cell[i]+(ray[i]>0?1:0))-eye[i])*inverse[i];
+            axis=size_t(std::min_element(next.begin(),next.end())-next.begin());t=std::max(next[axis],t+.001f);
+        }
+        return nullptr;
     }
     Uniforms uniforms(const History &h, uint32_t width, uint32_t height) const {
         const Vec offset = mul(Vec{std::cos(elevation) * std::cos(yaw),
@@ -73,13 +98,13 @@ struct Camera {
             low[i] = std::max(0.f, (h.low[i] - h.origin[i]) / h.h - 1);
             high[i] = std::min(float(h.n[i]), (h.high[i] - h.origin[i]) / h.h + 1);
         }
-        high[2] = std::min(high[2], float(h.n[2]) * section);
+        high[sectionAxis] = std::min(high[sectionAxis], float(h.n[sectionAxis]) * section);
         v.low = four(low);
         v.high = four(high);
         v.settings = {h.h, float(width), float(height), .41421356f};
-        v.dimensions = {h.n[0], h.n[1], h.n[2], uint32_t(h.frame)};
-        v.blockDimensions = {h.nb[0], h.nb[1], h.nb[2], 0};
-        v.flags = {uint32_t(dark), uint32_t(antialias), h.provenanceAvailableAtFrame() ? colorMode : 0, uint32_t(h.provenance.size()/4)};
+        v.dimensions = {h.n[0], h.n[1], h.n[2], uint32_t(h.firstOperation+h.frame)};
+        v.blockDimensions = {h.nb[0], h.nb[1], h.nb[2], uint32_t(compare && !h.targetBlocks.empty()) | (uint32_t(fixtures && !h.fixtureBlocks.empty())<<1) | (uint32_t(!stock)<<2) | (uint32_t(targetVisible && !h.targetBlocks.empty())<<3)};
+        v.flags = {uint32_t(dark), uint32_t(antialias), h.provenanceAvailableAtFrame() && !compare ? colorMode : 0, uint32_t(h.provenance.size()/4)};
         if (tool && h.frame) {
             const auto &s = h.steps[h.frame - 1];
             auto set = [&](Part p, F4 &radial, F4 &axial) {
@@ -113,7 +138,7 @@ class Renderer {
         uint8_t *mapped = nullptr;
         size_t size = 0;
     };
-    Buffer blocks, pool, provenance;
+    Buffer blocks, pool, provenance, targetBlocks, targetPool, fixtureBlocks, fixturePool;
     uint32_t width = 0, height = 0;
     bool initial = true;
     std::wstring adapterLabel;
@@ -282,7 +307,7 @@ class Renderer {
         range.NumDescriptors = 1;
         D3D12_DESCRIPTOR_RANGE srvs{};
         srvs.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        srvs.NumDescriptors = 3;
+        srvs.NumDescriptors = 7;
         srvs.OffsetInDescriptorsFromTableStart = 1;
         D3D12_ROOT_PARAMETER params[3]{};
         params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -308,16 +333,20 @@ class Renderer {
            "Create compute pipeline");
         D3D12_DESCRIPTOR_HEAP_DESC hd{};
         hd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        hd.NumDescriptors = 4;
+        hd.NumDescriptors = 8;
         hd.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         hr(device->CreateDescriptorHeap(&hd, IID_PPV_ARGS(&heap)), "Create descriptor heap");
         blocks = dataBuffer(history.blocks.size() * 4);
         pool = dataBuffer(history.pool.size() * 8);
         provenance = dataBuffer(std::max(size_t(4), history.provenance.size()) * 4);
+        targetBlocks=dataBuffer(std::max(size_t(4),history.targetBlocks.size()*4));
+        targetPool=dataBuffer(std::max(size_t(8),history.targetPool.size()*8));
+        fixtureBlocks=dataBuffer(std::max(size_t(4),history.fixtureBlocks.size()*4));
+        fixturePool=dataBuffer(std::max(size_t(8),history.fixturePool.size()*8));
         auto handle = heap->GetCPUDescriptorHandleForHeapStart();
         const auto increment =
             device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        for (const auto *b : {&blocks, &pool, &provenance}) {
+        for (const auto *b : {&blocks, &pool, &provenance, &targetBlocks, &targetPool, &fixtureBlocks, &fixturePool}) {
             handle.ptr += increment;
             D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
             srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
@@ -343,6 +372,8 @@ class Renderer {
         blocks.upload.Reset(); blocks.gpu.Reset();
         pool.upload.Reset(); pool.gpu.Reset();
         provenance.upload.Reset(); provenance.gpu.Reset();
+        targetBlocks.upload.Reset();targetBlocks.gpu.Reset();targetPool.upload.Reset();targetPool.gpu.Reset();
+        fixtureBlocks.upload.Reset();fixtureBlocks.gpu.Reset();fixturePool.upload.Reset();fixturePool.gpu.Reset();
         output.Reset(); heap.Reset(); pipeline.Reset(); root.Reset();
         commands.Reset(); allocator.Reset(); fence.Reset();
         std::cerr << "D3D12 shutdown: queue\n";
@@ -406,6 +437,10 @@ class Renderer {
             const uint32_t zero[4]{};
             std::vector<size_t> dirty;
             update(provenance, h.provenance.empty() ? zero : h.provenance.data(), dirty, 4);
+            update(targetBlocks,h.targetBlocks.empty()?static_cast<const void*>(zero):h.targetBlocks.data(),dirty,4);
+            update(targetPool,h.targetPool.empty()?static_cast<const void*>(zero):h.targetPool.data(),dirty,8);
+            update(fixtureBlocks,h.fixtureBlocks.empty()?static_cast<const void*>(zero):h.fixtureBlocks.data(),dirty,4);
+            update(fixturePool,h.fixturePool.empty()?static_cast<const void*>(zero):h.fixturePool.data(),dirty,8);
         }
         initial = false;
     }
@@ -415,6 +450,8 @@ class Renderer {
         auto allocation=[&](ID3D12Resource *resource)->uint64_t {if(!resource)return 0;const auto desc=resource->GetDesc();return device->GetResourceAllocationInfo(0,1,&desc).SizeInBytes;};
         return Json{{"gpu_committed_material_bytes",allocation(blocks.gpu.Get())+allocation(pool.gpu.Get())+allocation(provenance.gpu.Get())},
                     {"upload_committed_material_bytes",allocation(blocks.upload.Get())+allocation(pool.upload.Get())+allocation(provenance.upload.Get())},
+                    {"gpu_committed_asset_bytes",allocation(targetBlocks.gpu.Get())+allocation(targetPool.gpu.Get())+allocation(fixtureBlocks.gpu.Get())+allocation(fixturePool.gpu.Get())},
+                    {"upload_committed_asset_bytes",allocation(targetBlocks.upload.Get())+allocation(targetPool.upload.Get())+allocation(fixtureBlocks.upload.Get())+allocation(fixturePool.upload.Get())},
                     {"output_texture_committed_bytes",allocation(output.Get())},{"constants_committed_bytes",allocation(constants.Get())}};
     }
     void render(History &h, const Camera &camera) {

@@ -18,7 +18,8 @@ struct App {
     HWND window = nullptr, viewport = nullptr, slider = nullptr, playButton = nullptr,
          status = nullptr;
     bool live = false;
-    std::wstring liveBanner;
+    std::wstring liveBanner, inspectionDetail;
+    size_t findingCursor=0;
     std::function<void()> onScrub;
     bool playing = false, dragging = false, panning = false, dirty = true;
     POINT last{};
@@ -28,6 +29,7 @@ struct App {
         if(onScrub)onScrub();
         playing = false;
         history.seek(value);
+        inspectionDetail.clear();
         dirty = true;
         refresh();
     }
@@ -43,6 +45,9 @@ struct App {
         if (history.frame && history.steps[history.frame - 1].unsupportedCutter)
             text << L"   |   non-flat cutter display unavailable";
         if(camera.colorMode) text << (history.provenanceAvailableAtFrame() ? (history.provenanceAllFrames ? L"   | playback attribution":L"   | final-surface attribution") : L"   | attribution inactive (final only)");
+        text << L"   | operation " << history.firstOperation+history.frame;
+        if(camera.compare)text << L" | excess yellow / missing red";
+        text << inspectionDetail;
         SetWindowTextW(status, text.str().c_str());
     }
     void layout() {
@@ -82,6 +87,15 @@ struct App {
             camera.colorMode=(camera.colorMode+1)%3;
             if(camera.colorMode && !history.provenanceAllFrames) seek(history.steps.size());
         }
+        else if(key=='G') {camera.compare=!camera.compare;inspectionDetail=wide(" | "+history.comparison().dump());}
+        else if(key=='F') camera.fixtures=!camera.fixtures;
+        else if(key=='S') camera.stock=!camera.stock;
+        else if(key=='V') camera.targetVisible=!camera.targetVisible;
+        else if(key=='X' || key=='Y' || key=='Z')camera.sectionAxis=uint32_t(key-'X');
+        else if(key=='N') {
+            if(history.contacts.empty())inspectionDetail=L" | No reported shank/holder/fixture contacts in this range";
+            else {const auto &f=history.contacts.at(findingCursor++%history.contacts.size());seek(f.at("frame").get<size_t>());inspectionDetail=wide(" | "+f.at("kind").get<std::string>()+" at operation "+f.at("operation").dump()+"; pre-cut stock "+f.at("stock_state_before_operation").dump()+"; "+f.at("contact").at("clearance").get<std::string>());}
+        }
         else if (key == 'B')
             camera.dark = !camera.dark;
         else if (key == 'T')
@@ -98,6 +112,7 @@ struct App {
     void mouse(UINT message, WPARAM w, LPARAM l) {
         if (message == WM_LBUTTONDOWN || message == WM_RBUTTONDOWN) {
             SetFocus(viewport);
+            if(message==WM_LBUTTONDOWN && (w&MK_CONTROL)){RECT r{};GetClientRect(viewport,&r);const auto picked=camera.pick(history,float(GET_X_LPARAM(l))/std::max(1L,r.right),float(GET_Y_LPARAM(l))/std::max(1L,r.bottom),uint32_t(std::max(1L,r.right)),uint32_t(std::max(1L,r.bottom)));inspectionDetail=wide(" | "+picked.dump());refresh();return;}
             SetCapture(viewport);
             dragging = true;
             panning = message == WM_RBUTTONDOWN;
@@ -226,7 +241,7 @@ void openWindow(App &app) {
         app.window =
             CreateWindowExW(0, wc.lpszClassName,
                             L"Menkh - D3D12 voxel viewer | drag: orbit, right drag: pan, wheel: "
-                            L"zoom | Space, arrows, R, B, T, A, [ ]",
+                            L"zoom | C colors, G comparison, F fixtures, V target, S stock, XYZ sections, [ ], N contacts, Ctrl-click pick",
                             WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
                             1280, 960, nullptr, nullptr, wc.hInstance, &app);
         require(app.window != nullptr, "Create window failed");
@@ -266,11 +281,22 @@ int wmain(int argc, wchar_t **argv) {
         int cancelAfter=-1;
         bool warp = false, debug = false, verify = false;
         uint32_t colorMode=0;
-        fs::path smoke, snapshot, windowSmoke, exposureOracle;
+        fs::path smoke, snapshot, windowSmoke, exposureOracle, inspectionReport;
+        bool compare=false,showTarget=false,hideFixtures=false,hideStock=false,hideTool=false,pickCenter=false;
+        float section=1;uint32_t sectionAxis=2;
         size_t frame = 0;
         for (int i = 2; i < argc; i++) {
             std::wstring a = argv[i];
-            if (a == L"--run-only") runOnly=true;
+            if(a==L"--compare-target")compare=true;
+            else if(a==L"--show-target")showTarget=true;
+            else if(a==L"--hide-fixtures")hideFixtures=true;
+            else if(a==L"--hide-stock")hideStock=true;
+            else if(a==L"--hide-tool")hideTool=true;
+            else if(a==L"--pick-center")pickCenter=true;
+            else if(a==L"--inspection-report" && i+1<argc)inspectionReport=argv[++i];
+            else if(a==L"--section" && i+1<argc){section=std::stof(argv[++i]);require(std::isfinite(section)&&section>0&&section<=1,"Invalid section");}
+            else if(a==L"--section-axis" && i+1<argc){sectionAxis=uint32_t(std::stoul(argv[++i]));require(sectionAxis<3,"Invalid section axis");}
+            else if (a == L"--run-only") runOnly=true;
             else if(a == L"--live")live=true;
             else if(a == L"--live-evidence" && i+1<argc)liveEvidence=argv[++i];
             else if ((a==L"--engine" || a==L"--library" || a==L"--job-output" || a==L"--working-dir" || a==L"--cancel-after-ms") && i+1<argc) {
@@ -310,7 +336,7 @@ int wmain(int argc, wchar_t **argv) {
         const bool calculated=header.contains("version") && !header.contains("format");
         require(liveEvidence.empty() || live,"--live-evidence requires --live");
         if(calculated) {
-            LiveView inspection(warp,debug,liveEvidence);
+            LiveView inspection(warp,debug,liveEvidence,colorMode,compare);
             LiveHooks hooks;hooks.update=[&](const fs::path &out,RunWindow &controls){inspection.update(out,controls);};
             try {
                 const auto result=calculateJob(input,engine,jobOutput,workingDirectory,cancelAfter,library,live?&hooks:nullptr);
@@ -358,6 +384,9 @@ int wmain(int argc, wchar_t **argv) {
             return 0;
         }
         app.history.seek(frame);
+        app.camera.compare=compare;app.camera.targetVisible=showTarget;app.camera.fixtures=!hideFixtures;app.camera.stock=!hideStock;app.camera.tool=!hideTool;app.camera.section=section;app.camera.sectionAxis=sectionAxis;
+        Json picked=nullptr;if(pickCenter){picked=app.camera.pick(app.history,.5f,.5f,1280,900);require(!picked.is_null(),"Center material pick missed");std::cout<<picked.dump()<<'\n';}
+        if(!inspectionReport.empty()){std::ofstream report(inspectionReport);report<<Json{{"comparison",app.history.comparison()},{"pick",picked},{"contacts",app.history.contacts}}.dump(2);require(bool(report),"Cannot write inspection report");}
         if (!snapshot.empty()) {
             app.renderer->resize(1280, 900);
             app.renderer->render(app.history, app.camera);
