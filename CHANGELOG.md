@@ -11,16 +11,20 @@ mathematical models, not the complete executable.
 
 ## In review
 
-- **Windows live inspection:** `--live` follows leased completed-operation
-  windows in DLL and subprocess mode, with pause/resume, held-history seeking,
-  cooperative cancellation and handoff to full-history playback. Native Win32
-  and D3D12 tests cover both runners. Optional live comparison/provenance
-  overlays remain separate follow-ups. ([#37](https://github.com/merkhet-io/menkh/pull/37))
+- **Windows demo colors:** include exposure metadata/buffers in the ZIP, enable
+  playback-wide attribution for the bundled pocket, and add `open-colors.bat`.
+  The default demo starts in operation-color mode; C explains missing data.
+  CI renders operation/tool colors from the extracted package. ([#38](https://github.com/merkhet-io/menkh/pull/38))
 
 ## 2026-10-31
 
 ### Added
 
+- **Windows live inspection:** `--live` follows leased completed-operation
+  windows in DLL and subprocess mode, with pause/resume, held-history seeking,
+  cooperative cancellation and handoff to full-history playback. Native Win32
+  and D3D12 tests cover both runners. Optional live comparison/provenance
+  overlays remain separate follow-ups. ([#37](https://github.com/merkhet-io/menkh/pull/37))
 - **Live inspection on macOS:** completed-operation material windows, independent
   follow/hold controls, pause/resume, cooperative cancellation and retained-range
   scrubbing. Three leased slots bound publication; a 25 µm ball-end demo and
