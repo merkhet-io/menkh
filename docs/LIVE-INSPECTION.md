@@ -1,6 +1,6 @@
 # Inspecting a calculation in progress
 
-On macOS, `menkh-viewer job.json --live` opens consistent completed-operation
+On macOS and Windows, `menkh-viewer job.json --live` opens consistent completed-operation
 material windows while the engine continues cutting. The existing standalone
 history viewer and final archive are unchanged.
 
@@ -46,7 +46,7 @@ The optional job member enables publication for the CLI and whole-job C API too:
 Those are the defaults. History is limited to 1–256 operations, publication
 stride to 1–history_operations, minimum interval to 0–60,000 ms, and payload
 budget to 4 KiB–1 GiB. Invalid settings fail before stock initialization.
-`--live` on the macOS viewer preserves an existing configuration or supplies
+`--live` in either native viewer preserves an existing configuration or supplies
 these defaults in a separate launch-job copy; it never rewrites the source job.
 Relative input resources still resolve against the original job directory.
 
@@ -134,12 +134,59 @@ publication disabled. Unit tests inject allocator failures. macOS and Windows CI
 run the transport regression; a Metal device is not required there.
 
 The macOS live view supports material, rendered cutter/assembly, sections, picking
-and retained-range playback. Live windows currently omit target, fixture, defect
-and provenance sidecars. They remain available in the completed result. The
-Windows engine can publish this channel, but the Windows viewer has **no live
-follower UI yet**; its completed-result workflow remains supported. These
-limitations remain tracked under #24.
+and retained-range playback. Windows supports material, its existing flat-tool/assembly
+display, Z sections and retained-range playback; non-flat cutter display and picking
+remain outside its current renderer capabilities. Live windows currently omit target, fixture, defect
+and provenance sidecars. They remain available in the completed result. Live target/fixture comparison is tracked in [#35](https://github.com/merkhet-io/menkh/issues/35)
+and live exposure provenance in [#36](https://github.com/merkhet-io/menkh/issues/36).
 
 File publication, locking, the native viewer and this transport test are outside
 the Lean model. Existing proofs and bridge tests were rerun; no additional formal
 verification claim is made. See [measured evidence](evidence/live-inspection/README.md).
+
+## Windows live viewer
+
+```powershell
+.\out\windows-viewer\menkh-viewer.exe examples/pocket-25um.json --live --job-output out/windows-live-pocket
+# Explicit subprocess mode instead of the adjacent DLL:
+.\out\windows-viewer\menkh-viewer.exe examples/pocket-25um.json --live --engine zig-out/bin/menkh.exe --job-output out/windows-live-cli
+```
+
+The progress window has **Pause calculation / Resume calculation**, **Follow latest**
+and **Cancel**. Scrubbing, Home/End, arrow keys or playback automatically uncheck
+Follow latest so an incoming publication cannot discard the inspected state.
+Recheck it to catch up. Closing the live material window hides it; toggling Follow
+latest off/on shows it again. Closing the calculation window requests cancellation.
+After cancellation or failure, interactive mode retains the last leased window
+until it is closed. Successful calculation opens the full ordinary history.
+
+The runner keeps relative resources rooted at the original job directory (or the
+explicit `--working-dir`). It creates a temporary live-enabled launch copy for the
+engine and retains that copy as `live-job.json` after the worker exits. The original
+job is unchanged. Live DLL cancellation polls the callback even while paused;
+subprocess cancellation uses the channel's control file. No simulation state is
+read directly from the DLL worker.
+
+`live-viewer.jsonl` separates history loading/seeking, D3D12 renderer setup, material
+upload (CPU copy plus GPU transfer and fence wait), and attachment/first rendering.
+It reports CPU material/history/dirty-buffer capacities, explicit D3D12 resource
+allocation sizes and process peak working set. D3D12 allocation figures exclude
+swapchain buffers and driver overhead; process RSS is not dedicated GPU memory.
+DLL mode includes engine and viewer in the same process, whereas subprocess mode
+reports viewer RSS separately from the engine's report. Both modes reload material
+buffers at publication boundaries; within a window, seeking uses changed-block
+updates. Renderer and buffers can coexist briefly during handover.
+Compiled shader bytecode is cached for the process; restart the viewer after
+editing `Voxel.hlsl`. Device/pipeline creation and full material uploads still
+occur at publication boundaries, and the first view includes shader compilation.
+
+Use `--live-evidence DIR --warp --debug --run-only` for automated validation with
+CPU-state dumps and real D3D12 images. It verifies each observed window's history
+and exact rendered rewind, so its load/seek and RSS measurements include extra
+verification work. WARP is software rendering, not hardware-GPU FPS evidence.
+The Windows CI script `scripts/test-windows-live.py` drives actual controls for both
+DLL and subprocess runs and compares every observed material state with an
+independently decoded CLI archive. It exercises held-reader backpressure,
+pause/resume, keyboard seeking, cancellation and an injected history-write failure.
+See the [Windows native validation and measurements](evidence/windows-live/README.md)
+for the actual 25 µm run, screenshots and remaining UI latency limitations.

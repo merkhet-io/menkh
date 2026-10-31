@@ -1,0 +1,27 @@
+[
+  {
+    "source_commit": "bcb8b01",
+    "run": 41193605946,
+    "failure": "Python polling reader received PermissionError during atomic pointer replacement",
+    "resolution": "Bounded polling retries transient Windows read sharing/access conflicts; native reader uses DELETE sharing."
+  },
+  {
+    "source_commit": "a39b9eb",
+    "run": 41193971008,
+    "failure": "Live D3D12 test rejected initial buffer-state debug-layer warnings",
+    "resolution": "Create default buffers in COMMON and transition from COMMON after fenced batches."
+  },
+  {
+    "source_commit": "b14d721",
+    "run": 41194460285,
+    "failure": "Subprocess cases passed; DLL live publication terminated with STATUS_STACK_OVERFLOW (0xc00000fd)",
+    "resolution": "Flat slot cleanup removes one oversized frame, but was insufficient alone. See the subsequent failure."
+  },
+  {
+    "source_commit": "aaf197e",
+    "run": 41195078542,
+    "failure": "DLL still exceeded the default MSVC 1 MiB thread stack during initial manifest publication",
+    "evidence": "Optimized x86_64-windows-gnu assembly: menkh_run_job_v1 133288 bytes, job.runControlled 146440, Publisher.publish 362776, atomicBytes 267208, atomicFile 131440, sliceToPrefixedFileW 131176. These are individual frame sizes, not a measured peak or certified call-chain bound.",
+    "resolution": "Native calculation worker reserves 16 MiB through _beginthreadex, matching Zig 0.15.2 thread default. Windows C whole-job stack requirement documented."
+  }
+]

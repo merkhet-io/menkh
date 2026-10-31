@@ -54,6 +54,8 @@ menkh_status menkh_state_read_v1(const void *buffer, size_t bytes, menkh_handle 
  * Re-entry into another independent job is allowed; callbacks must not unwind.
  */
 typedef uint32_t (*menkh_progress_v1)(void *context, uint32_t phase, uint64_t completed, uint64_t total);
+/* Windows callers: reserve 16 MiB of stack for whole-job execution (the Zig
+ * thread default). Nested filesystem calls can exceed MSVC's 1 MiB default. */
 menkh_status menkh_run_job_v1(const char *job, const char *output, const char *working_dir, menkh_progress_v1 callback, void *context);
 /* Copy the last successful cut's delta; own the returned bytes before the next cut.
  * Replay is transactional. A successful replay invalidates this handle's last delta.

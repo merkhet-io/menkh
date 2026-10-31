@@ -123,6 +123,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Viewer batch build failed' }
           cmd /c "viewer\windows\build.bat --project" 2>&1 | Tee-Object out/windows-viewer-project.log
           if ($LASTEXITCODE -ne 0) { throw 'Viewer project build failed' }
+      - name: Live D3D12 inspection, controls and failure recovery
+        shell: pwsh
+        run: |
+          python scripts/test-windows-live.py --viewer out/windows-viewer/menkh-viewer.exe --engine zig-out/bin/menkh.exe --library zig-out/bin/menkh.dll
+          if ($LASTEXITCODE -ne 0) { throw 'Windows live inspection failed' }
       - name: Default drill animation opens in Windows viewer
         shell: pwsh
         run: |
@@ -187,6 +192,7 @@ jobs:
           name: windows-d3d12-viewer
           path: |
             out/live-test/
+            out/windows-live/
             out/windows-viewer/menkh.exe
             out/windows-viewer/menkh-viewer.exe
             out/windows-viewer/Voxel.hlsl

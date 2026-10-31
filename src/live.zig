@@ -101,7 +101,7 @@ pub const Publisher = struct {
             defer lock.close();
             var slot_buf: [32]u8 = undefined;
             const slot_name = try std.fmt.bufPrint(&slot_buf, "slot-{d}", .{slot});
-            try p.dir.deleteTree(slot_name);
+            try removeSlot(p.dir, slot_name);
             var dest = try p.dir.makeOpenPath(slot_name, .{});
             defer dest.close();
             try dest.writeFile(.{ .sub_path = "initial.blocks", .data = p.blocks });
@@ -123,6 +123,41 @@ pub const Publisher = struct {
         p.skipped += 1; // All reusable slots leased: bounded, nonblocking backpressure.
     }
 };
+// Slots contain only regular files. Zig 0.15.2 deleteTree reserves sixteen
+// directory iterators on the stack (>1 MiB on Windows), overflowing a default
+// MSVC worker thread. One iterator avoids that cost and never follows a nested
+// directory or symlink. The caller holds the exclusive slot lease.
+fn removeSlot(parent: std.fs.Dir, name: []const u8) !void {
+    {
+        var dir = parent.openDir(name, .{ .iterate = true, .no_follow = true }) catch |err| switch (err) {
+            error.FileNotFound => return,
+            else => return err,
+        };
+        defer dir.close();
+        var it = dir.iterate();
+        while (try it.next()) |entry| {
+            if (entry.kind != .file) return error.InvalidLiveSlotContents;
+            try dir.deleteFile(entry.name);
+        }
+    }
+    try parent.deleteDir(name);
+}
+
+test "live slot cleanup is flat and rejects nested contents" {
+    var temp = std.testing.tmpDir(.{});
+    defer temp.cleanup();
+    try removeSlot(temp.dir, "absent");
+    try temp.dir.makeDir("slot");
+    try temp.dir.writeFile(.{ .sub_path = "slot/initial.blocks", .data = "data" });
+    try temp.dir.writeFile(.{ .sub_path = "slot/temporary", .data = "partial" });
+    try removeSlot(temp.dir, "slot");
+    try std.testing.expectError(error.FileNotFound, temp.dir.access("slot", .{}));
+    try temp.dir.makePath("slot/unexpected");
+    try temp.dir.writeFile(.{ .sub_path = "slot/unexpected/keep", .data = "intact" });
+    try std.testing.expectError(error.InvalidLiveSlotContents, removeSlot(temp.dir, "slot"));
+    try temp.dir.access("slot/unexpected/keep", .{});
+}
+
 pub fn atomicJson(a: std.mem.Allocator, dir: std.fs.Dir, name: []const u8, value: anytype) !void {
     const bytes = try std.json.Stringify.valueAlloc(a, value, .{});
     defer a.free(bytes);

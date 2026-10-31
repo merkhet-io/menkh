@@ -83,7 +83,9 @@ executable:
 The adjacent DLL is selected automatically. `--library PATH` chooses a DLL;
 `--engine PATH` explicitly chooses the supervised CLI subprocess instead.
 The UI stays responsive while the library runs on a worker thread. Cancellation
-waits for the current operation boundary. The completed result opens automatically;
-live material inspection during execution is not yet supported. Output directories
+waits for the current operation boundary. Add `--live` for leased material windows,
+Follow latest/hold, scrubbing and calculation pause/resume. Live mode also uses
+cooperative cancellation with the subprocess runner. The completed result opens
+automatically after success. See [live controls and measurements](LIVE-INSPECTION.md). Output directories
 must be new. For static embedding, build `sdk-static` and follow the
 [C host examples and ownership contract](C-API.md).

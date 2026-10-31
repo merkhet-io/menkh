@@ -21,6 +21,12 @@ No global packages are installed. Normal CLI builds remain independent.
 
 ## Ownership, concurrency and compatibility
 
+- Windows whole-job hosts should provide a **16 MiB reserved worker stack**,
+  matching Zig 0.15.2's thread default. The DLL executes on the calling thread;
+  nested long-path filesystem buffers can exceed MSVC's 1 MiB default during
+  live publication. The native viewer uses `_beginthreadex` with
+  `STACK_SIZE_PARAM_IS_A_RESERVATION`; committed/resident memory grows on demand.
+  This is a host requirement, not an increase in per-voxel allocation.
 - `menkh_abi_version()` returns 1. Existing `_v1` entry-point layouts remain fixed;
   the job/history entry points are additive. Hosts must check their required
   symbols as well as the ABI version. No C++ ABI is exposed.
@@ -78,7 +84,7 @@ Progress callbacks do not expose mutable material. Jobs can opt into the separat
 [leased live-publication channel](LIVE-INSPECTION.md) with `live_inspection`.
 The file transport also supports retained-range seeking. During a requested pause,
 callbacks repeat at the completed-operation boundary so hosts can still cancel.
-The Windows viewer currently opens only the completed result.
+The Windows viewer can consume these leased windows with `--live`, including while the DLL worker is paused. It still opens the normal completed result after success.
 
 ## Windows viewer
 

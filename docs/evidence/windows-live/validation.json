@@ -1,0 +1,212 @@
+{
+  "platform": "Windows-2025Server-10.0.26100-SP0",
+  "processor": "AMD64 Family 25 Model 1 Stepping 1, AuthenticAMD",
+  "logical_cpus": 4,
+  "source_commit": "957befa6af05581d4d15bdf19147bd3e0cc65d83",
+  "viewer_sha256": "7c00e3278f2a7b52bbffc5c9d8fa236e8ac36fade43167f437ef1c8f32dd3cab",
+  "engine_sha256": "a44481e391c3486603b12646753c22d21482e91016064e298c6f63eff5336ace",
+  "compiler": "0.15.2",
+  "build_mode": "ReleaseFast",
+  "workers": 1,
+  "cases": [
+    {
+      "case": "process-complete",
+      "paused_operation": 59,
+      "windows_checked": 21,
+      "metrics": {
+        "load_seek_ms": {
+          "median": 2.2982,
+          "min": 0.346,
+          "max": 4.1488
+        },
+        "renderer_setup_ms": {
+          "median": 1.9549,
+          "min": 1.7308,
+          "max": 1822.6341
+        },
+        "upload_ms": {
+          "median": 0.3787,
+          "min": 0.2977,
+          "max": 1.7949
+        },
+        "attach_render_ms": {
+          "median": 195.6857,
+          "min": 114.2356,
+          "max": 530.7106
+        },
+        "process_peak_rss_bytes": {
+          "median": 75751424,
+          "min": 70627328,
+          "max": 75829248
+        }
+      }
+    },
+    {
+      "case": "process-cancel",
+      "paused_operation": 58,
+      "windows_checked": 3,
+      "metrics": {
+        "load_seek_ms": {
+          "median": 0.9288,
+          "min": 0.3438,
+          "max": 2.1312
+        },
+        "renderer_setup_ms": {
+          "median": 2.0339,
+          "min": 1.7781,
+          "max": 1296.7749
+        },
+        "upload_ms": {
+          "median": 0.342,
+          "min": 0.3051,
+          "max": 0.8606
+        },
+        "attach_render_ms": {
+          "median": 113.685,
+          "min": 108.8984,
+          "max": 512.1532
+        },
+        "process_peak_rss_bytes": {
+          "median": 70361088,
+          "min": 68911104,
+          "max": 72859648
+        }
+      }
+    },
+    {
+      "case": "process-failure",
+      "paused_operation": 61,
+      "windows_checked": 3,
+      "metrics": {
+        "load_seek_ms": {
+          "median": 1.1136,
+          "min": 0.3442,
+          "max": 2.7773
+        },
+        "renderer_setup_ms": {
+          "median": 2.0476,
+          "min": 1.7617,
+          "max": 1288.9225
+        },
+        "upload_ms": {
+          "median": 0.3273,
+          "min": 0.2991,
+          "max": 0.8409
+        },
+        "attach_render_ms": {
+          "median": 115.433,
+          "min": 112.6509,
+          "max": 504.9851
+        },
+        "process_peak_rss_bytes": {
+          "median": 70193152,
+          "min": 68694016,
+          "max": 73371648
+        }
+      }
+    },
+    {
+      "case": "library-complete",
+      "paused_operation": 70,
+      "windows_checked": 19,
+      "metrics": {
+        "load_seek_ms": {
+          "median": 2.2172,
+          "min": 0.3133,
+          "max": 4.9543
+        },
+        "renderer_setup_ms": {
+          "median": 1.9422,
+          "min": 1.676,
+          "max": 1283.848
+        },
+        "upload_ms": {
+          "median": 0.37,
+          "min": 0.2757,
+          "max": 0.8904
+        },
+        "attach_render_ms": {
+          "median": 182.3496,
+          "min": 114.4682,
+          "max": 503.1857
+        },
+        "process_peak_rss_bytes": {
+          "median": 84410368,
+          "min": 77467648,
+          "max": 93765632
+        }
+      }
+    },
+    {
+      "case": "library-cancel",
+      "paused_operation": 56,
+      "windows_checked": 3,
+      "metrics": {
+        "load_seek_ms": {
+          "median": 1.5821,
+          "min": 0.3535,
+          "max": 3.9087
+        },
+        "renderer_setup_ms": {
+          "median": 1.9753,
+          "min": 1.7565,
+          "max": 1301.5307
+        },
+        "upload_ms": {
+          "median": 0.3209,
+          "min": 0.2689,
+          "max": 0.838
+        },
+        "attach_render_ms": {
+          "median": 114.8716,
+          "min": 113.4114,
+          "max": 504.0597
+        },
+        "process_peak_rss_bytes": {
+          "median": 79740928,
+          "min": 77713408,
+          "max": 82108416
+        }
+      }
+    },
+    {
+      "case": "library-failure",
+      "paused_operation": 58,
+      "windows_checked": 3,
+      "metrics": {
+        "load_seek_ms": {
+          "median": 0.3563,
+          "min": 0.3272,
+          "max": 2.023
+        },
+        "renderer_setup_ms": {
+          "median": 1.8888,
+          "min": 1.7289,
+          "max": 1288.7564
+        },
+        "upload_ms": {
+          "median": 0.3179,
+          "min": 0.2683,
+          "max": 0.9315
+        },
+        "attach_render_ms": {
+          "median": 113.7608,
+          "min": 111.8262,
+          "max": 503.6551
+        },
+        "process_peak_rss_bytes": {
+          "median": 79343616,
+          "min": 77451264,
+          "max": 81653760
+        }
+      }
+    }
+  ],
+  "operations": 2440,
+  "voxel_mm": 0.025,
+  "independent_occupancy": true,
+  "rendered_replay_exact": true,
+  "cli_final_state_exact": true,
+  "actual_ui_controls": true,
+  "note": "D3D12 WARP software renderer; times include evidence-mode replay checks, not hardware FPS. DLL RSS includes engine and viewer in one process."
+}

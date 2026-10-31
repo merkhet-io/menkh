@@ -51,7 +51,7 @@ To build from source, use PowerShell with Visual Studio C++ desktop tools and th
 
 Zig 0.15.2 builds the engine; MSVC builds the viewer. The bootstrap installs Zig inside the repository, with no global installation. Alternatively, open `viewer/windows/menkh-viewer.vcxproj` in Visual Studio 2026 with toolset **v145**, Release/x64.
 
-The viewer loads the adjacent **menkh.dll** and calculates on a worker thread, showing progress and cancellation before opening the completed result. `--library PATH` selects another DLL; `--engine PATH` selects the CLI subprocess runner. Choose a fresh `--job-output` directory for each run. Cancellation in library mode waits for an operation boundary; live material inspection during calculation is still unsupported.
+The viewer loads the adjacent **menkh.dll** and calculates on a worker thread, showing progress and cancellation before opening the completed result. `--library PATH` selects another DLL; `--engine PATH` selects the CLI subprocess runner. Choose a fresh `--job-output` directory for each run. Cancellation in library mode waits for an operation boundary. Add `--live` to inspect completed-operation windows while cutting continues, with Follow latest, hold/scrub and calculation pause/resume controls. Live mode uses cooperative cancellation in both DLL and subprocess execution. See the [live inspection guide](docs/LIVE-INSPECTION.md).
 
 Open an existing result with:
 
@@ -281,7 +281,7 @@ in a job and use `--color-operation` or `--color-tool` in either native voxel vi
 - [Sparse mutation experiment](docs/SPARSE-MUTATION.md): cuts and retained roots in a 65,536³ virtual cube; separate from regular jobs, not the billion-face memory qualification.
 - Windows playback operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
 
-The [C API](docs/C-API.md) supports shared/static embedding and Windows viewer-owned calculation. On macOS, `./scripts/live-demo.sh` demonstrates [live inspection](docs/LIVE-INSPECTION.md): consistent material windows, retained-range scrubbing and pause/resume while a 25 µm ball-end job runs. Use `menkh-viewer job.json --live` for your own jobs. Windows live-follow controls and live target/provenance overlays remain tracked in [#24](https://github.com/merkhet-io/menkh/issues/24).
+The [C API](docs/C-API.md) supports shared/static embedding and Windows viewer-owned calculation. On macOS, `./scripts/live-demo.sh` demonstrates [live inspection](docs/LIVE-INSPECTION.md): consistent material windows, retained-range scrubbing and pause/resume while a 25 µm ball-end job runs. Use `menkh-viewer job.json --live` for your own jobs. The Windows viewer also accepts `--live`. Live target/fixture overlays and provenance are tracked separately in [#35](https://github.com/merkhet-io/menkh/issues/35) and [#36](https://github.com/merkhet-io/menkh/issues/36).
 
 ## License
 

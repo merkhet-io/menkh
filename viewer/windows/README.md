@@ -147,3 +147,21 @@ result loading are available in either mode; library cancellation waits for the
 current operation boundary. The DLL remains loaded until its worker exits.
 See [the API contract](../../docs/C-API.md). This does not yet provide live
 material inspection while calculating.
+
+## Inspect while calculating
+
+Add `--live` when opening a job to display completed-operation material windows:
+
+```powershell
+menkh-viewer.exe examples/pocket-25um.json --live --job-output out/live-pocket
+```
+
+Use the progress window's **Follow latest**, **Pause/Resume calculation** and
+**Cancel** controls. Seeking or playing a retained window automatically holds it;
+re-enable Follow latest to catch up. The lease protects its lazy history files while
+the producer continues. Both DLL and explicit `--engine` modes are supported.
+
+See [the live inspection contract](../../docs/LIVE-INSPECTION.md) for resource
+bounds, measurements and failure behavior. Live overlays for target/fixtures,
+defects and exposure provenance are separate follow-ups; completed-result
+inspection stays unchanged. Windows still does not draw non-flat cutters.

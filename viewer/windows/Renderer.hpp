@@ -12,6 +12,7 @@
 #include <dxgi1_6.h>
 #include <iostream>
 #include <sstream>
+#include <mutex>
 #include <windows.h>
 #include <wrl/client.h>
 namespace menkh {
@@ -116,6 +117,28 @@ class Renderer {
     uint32_t width = 0, height = 0;
     bool initial = true;
     std::wstring adapterLabel;
+    static ComPtr<ID3DBlob> shaderCode(const fs::path &path) {
+        // A live publication changes material, not the shader. Keep one compiled
+        // shader per process instead of blocking the UI on every window load.
+        // Restart the viewer after editing the shader at the same path.
+        static std::mutex lock;
+        static fs::path cachedPath;
+        static ComPtr<ID3DBlob> cached;
+        std::lock_guard<std::mutex> guard(lock);
+        if (!cached || cachedPath != path) {
+            ComPtr<ID3DBlob> code, error;
+            const auto result = D3DCompileFromFile(
+                path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "cs_5_0",
+                D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &error);
+            if (FAILED(result))
+                throw std::runtime_error(error ? std::string(
+                    static_cast<const char *>(error->GetBufferPointer()), error->GetBufferSize())
+                    : "Cannot compile Voxel.hlsl beside executable");
+            cachedPath = path;
+            cached = std::move(code);
+        }
+        return cached;
+    }
     ComPtr<ID3D12Resource> buffer(size_t bytes, D3D12_HEAP_TYPE type, D3D12_RESOURCE_STATES state) {
         D3D12_HEAP_PROPERTIES hp{};
         hp.Type = type;
@@ -137,7 +160,7 @@ class Renderer {
         Buffer b;
         b.size = bytes;
         b.gpu =
-            buffer(bytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            buffer(bytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
         b.upload = buffer(bytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
         D3D12_RANGE range{0, 0};
         hr(b.upload->Map(0, &range, reinterpret_cast<void **>(&b.mapped)), "Map staging buffer");
@@ -185,7 +208,9 @@ class Renderer {
     void update(Buffer &b, const void *source, std::vector<size_t> &dirty, size_t stride) {
         if (!initial && dirty.empty())
             return;
-        transition(b.gpu.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        // Buffers start in COMMON and decay back to COMMON after each completed
+        // ExecuteCommandLists. submit() fences every batch before the next update.
+        transition(b.gpu.Get(), D3D12_RESOURCE_STATE_COMMON,
                    D3D12_RESOURCE_STATE_COPY_DEST);
         if (initial) {
             std::memcpy(b.mapped, source, b.size);
@@ -213,9 +238,12 @@ class Renderer {
   public:
     Renderer(const History &history, const fs::path &shader, bool warp, bool debug) {
         if (debug) {
-            ComPtr<ID3D12Debug> layer;
-            hr(D3D12GetDebugInterface(IID_PPV_ARGS(&layer)), "D3D12 debug layer unavailable");
-            layer->EnableDebugLayer();
+            static std::once_flag enabled;
+            std::call_once(enabled, [] {
+                ComPtr<ID3D12Debug> layer;
+                hr(D3D12GetDebugInterface(IID_PPV_ARGS(&layer)), "D3D12 debug layer unavailable");
+                layer->EnableDebugLayer();
+            });
         }
         hr(CreateDXGIFactory1(IID_PPV_ARGS(&factory)), "Create DXGI factory");
         ComPtr<IDXGIAdapter1> adapter;
@@ -272,15 +300,7 @@ class Renderer {
         hr(device->CreateRootSignature(0, serialized->GetBufferPointer(),
                                        serialized->GetBufferSize(), IID_PPV_ARGS(&root)),
            "Create root signature");
-        ComPtr<ID3DBlob> code;
-        auto compiled = D3DCompileFromFile(
-            shader.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "cs_5_0",
-            D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &error);
-        if (FAILED(compiled))
-            throw std::runtime_error(
-                error ? std::string(static_cast<const char *>(error->GetBufferPointer()),
-                                    error->GetBufferSize())
-                      : "Cannot compile Voxel.hlsl beside executable");
+        const auto code = shaderCode(shader);
         D3D12_COMPUTE_PIPELINE_STATE_DESC pd{};
         pd.pRootSignature = root.Get();
         pd.CS = {code->GetBufferPointer(), code->GetBufferSize()};
@@ -379,12 +399,7 @@ class Renderer {
         device->CreateUnorderedAccessView(output.Get(), nullptr, &uav,
                                           heap->GetCPUDescriptorHandleForHeapStart());
     }
-    void render(History &h, const Camera &camera) {
-        // Keep the acquired swapchain resource alive until command execution completes.
-        ComPtr<ID3D12Resource> back;
-        const auto u = camera.uniforms(h, width, height);
-        std::memcpy(constantData, &u, sizeof(u));
-        begin();
+    void materials(History &h) {
         update(blocks, h.blocks.data(), h.dirtyBlocks, 4);
         update(pool, h.pool.data(), h.dirtySlots, 64);
         if (initial) {
@@ -393,6 +408,22 @@ class Renderer {
             update(provenance, h.provenance.empty() ? zero : h.provenance.data(), dirty, 4);
         }
         initial = false;
+    }
+    // Complete the CPU copy and GPU transfer before timing the first render.
+    void uploadMaterial(History &h) { begin(); materials(h); submit(); }
+    Json materialMemory() const {
+        auto allocation=[&](ID3D12Resource *resource)->uint64_t {if(!resource)return 0;const auto desc=resource->GetDesc();return device->GetResourceAllocationInfo(0,1,&desc).SizeInBytes;};
+        return Json{{"gpu_committed_material_bytes",allocation(blocks.gpu.Get())+allocation(pool.gpu.Get())+allocation(provenance.gpu.Get())},
+                    {"upload_committed_material_bytes",allocation(blocks.upload.Get())+allocation(pool.upload.Get())+allocation(provenance.upload.Get())},
+                    {"output_texture_committed_bytes",allocation(output.Get())},{"constants_committed_bytes",allocation(constants.Get())}};
+    }
+    void render(History &h, const Camera &camera) {
+        // Keep the acquired swapchain resource alive until command execution completes.
+        ComPtr<ID3D12Resource> back;
+        const auto u = camera.uniforms(h, width, height);
+        std::memcpy(constantData, &u, sizeof(u));
+        begin();
+        materials(h);
         commands->SetComputeRootSignature(root.Get());
         ID3D12DescriptorHeap *heaps[] = {heap.Get()};
         commands->SetDescriptorHeaps(1, heaps);

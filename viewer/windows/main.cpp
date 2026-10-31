@@ -1,5 +1,8 @@
 #include "Renderer.hpp"
 #include "JobRunner.hpp"
+#include "LiveReader.hpp"
+#include <psapi.h>
+#pragma comment(lib, "psapi.lib")
 #include <chrono>
 #include <commctrl.h>
 #include <iostream>
@@ -7,17 +10,22 @@
 #include <windowsx.h>
 #pragma comment(lib, "comctl32.lib")
 using namespace menkh;
+bool automatedUI=false;
 struct App {
     History history;
     Camera camera;
     std::unique_ptr<Renderer> renderer;
     HWND window = nullptr, viewport = nullptr, slider = nullptr, playButton = nullptr,
          status = nullptr;
+    bool live = false;
+    std::wstring liveBanner;
+    std::function<void()> onScrub;
     bool playing = false, dragging = false, panning = false, dirty = true;
     POINT last{};
     std::chrono::steady_clock::time_point tick{};
     explicit App(const fs::path &file) : history(file) { camera.reset(history); }
     void seek(size_t value) {
+        if(onScrub)onScrub();
         playing = false;
         history.seek(value);
         dirty = true;
@@ -27,6 +35,7 @@ struct App {
         SendMessageW(slider, TBM_SETPOS, TRUE, LPARAM(history.frame));
         SetWindowTextW(playButton, playing ? L"Pause" : L"Play");
         std::wostringstream text;
+        text << liveBanner;
         text << L"Frame " << history.frame << L" / " << history.steps.size() << L"   |   "
              << history.h * 1000 << L" um   |   "
              << (history.frame ? history.steps[history.frame - 1].occupied : history.initial)
@@ -49,6 +58,7 @@ struct App {
     }
     void key(WPARAM key) {
         if (key == VK_SPACE) {
+            if(onScrub)onScrub();
             playing = !playing;
             if (playing && history.frame == history.steps.size())
                 history.seek(0);
@@ -112,6 +122,14 @@ struct App {
             dirty = true;
         }
     }
+    void advance() {
+        const auto now=std::chrono::steady_clock::now();
+        if(playing && now-tick>=std::chrono::milliseconds(80)) {
+            if(history.frame<history.steps.size())history.seek(history.frame+1);else playing=false;
+            tick=now;dirty=true;refresh();
+        }
+        draw();
+    }
     void draw() {
         if (!renderer || !dirty || IsIconic(window))
             return;
@@ -170,30 +188,73 @@ LRESULT CALLBACK procedure(HWND w, UINT msg, WPARAM wp, LPARAM lp) {
             app->mouse(msg, wp, lp);
             return 0;
         case WM_CLOSE:
+            if(app->live){ShowWindow(w,SW_HIDE);return 0;}
             app->renderer.reset();
             DestroyWindow(w);
             return 0;
         case WM_DESTROY:
-            if (w == app->window)
+            if (w == app->window && !app->live)
                 PostQuitMessage(0);
             return 0;
         }
     } catch (const std::exception &e) {
-        MessageBoxA(w, e.what(), "Menkh viewer error", MB_OK | MB_ICONERROR);
+        std::cerr<<"Menkh live/window error: "<<e.what()<<'\n';
+        if(!automatedUI)MessageBoxA(w, e.what(), "Menkh viewer error", MB_OK | MB_ICONERROR);
         PostQuitMessage(1);
         return 0;
     }
     return DefWindowProcW(w, msg, wp, lp);
 }
+void openWindow(App &app) {
+        SetProcessDPIAware();
+        INITCOMMONCONTROLSEX controls{sizeof(controls), ICC_BAR_CLASSES};
+        require(InitCommonControlsEx(&controls) != FALSE, "Initialize controls failed");
+        WNDCLASSW wc{};
+        wc.lpfnWndProc = procedure;
+        wc.hInstance = GetModuleHandleW(nullptr);
+        wc.lpszClassName = L"MenkhD3D12";
+        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+        require(RegisterClassW(&wc) != 0 || GetLastError()==ERROR_CLASS_ALREADY_EXISTS, "Register window class failed");
+        app.window =
+            CreateWindowExW(0, wc.lpszClassName,
+                            L"Menkh - D3D12 voxel viewer | drag: orbit, right drag: pan, wheel: "
+                            L"zoom | Space, arrows, R, B, T, A, [ ]",
+                            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
+                            1280, 960, nullptr, nullptr, wc.hInstance, &app);
+        require(app.window != nullptr, "Create window failed");
+        app.viewport = CreateWindowExW(0, wc.lpszClassName, L"", WS_CHILD | WS_VISIBLE, 0, 0, 1, 1,
+                                       app.window, nullptr, wc.hInstance, &app);
+        app.playButton =
+            CreateWindowExW(0, L"BUTTON", L"Play", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 64,
+                            26, app.window, reinterpret_cast<HMENU>(101), wc.hInstance, nullptr);
+        CreateWindowExW(0, L"BUTTON", L"Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 64, 26,
+                        app.window, reinterpret_cast<HMENU>(102), wc.hInstance, nullptr);
+        app.slider = CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_NOTICKS,
+                                     0, 0, 1, 1, app.window, nullptr, wc.hInstance, nullptr);
+        app.status = CreateWindowExW(0, L"STATIC", L"", WS_CHILD | WS_VISIBLE, 0, 0, 1, 1,
+                                     app.window, nullptr, wc.hInstance, nullptr);
+        require(app.viewport && app.playButton && app.slider && app.status,
+                "Create controls failed");
+        SendMessageW(app.slider, TBM_SETRANGE, TRUE, MAKELPARAM(0, 0));
+        SendMessageW(app.slider, TBM_SETRANGEMAX, TRUE, LPARAM(app.history.steps.size()));
+        app.renderer->attach(app.viewport);
+        app.layout();
+        app.refresh();
+        ShowWindow(app.window, SW_SHOW);
+        SetFocus(app.viewport);
+}
+#include "LiveView.hpp"
 int wmain(int argc, wchar_t **argv) {
     bool automated = false;
-    for (int i=1; i<argc; ++i) {const std::wstring option=argv[i];if(option==L"--run-only" || option==L"--smoke" || option==L"--snapshot" || option==L"--window-smoke" || option==L"--verify-history" || option==L"--cancel-after-ms") automated=true;}
+    for (int i=1; i<argc; ++i) {const std::wstring option=argv[i];if(option==L"--live-evidence" || option==L"--run-only" || option==L"--smoke" || option==L"--snapshot" || option==L"--window-smoke" || option==L"--verify-history" || option==L"--cancel-after-ms") automated=true;}
+    automatedUI=automated;
     try {
         fs::path input = argc < 2 ? chooseInput() : fs::path(argv[1]);
         if(input.empty()) return 0;
-        if(input==L"--help") {std::cout << "menkh-viewer.exe [JOB_OR_HISTORY.json] [--engine PATH | --library DLL] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";return 0;}
+        if(input==L"--help") {std::cout << "menkh-viewer.exe [JOB_OR_HISTORY.json] [--engine PATH | --library DLL] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--live-evidence DIR] [--warp] [--debug] [--verify-history] [--smoke DIR] [--snapshot FILE.ppm] [--window-smoke DIR] [--frame N]\n";return 0;}
         fs::path engine, jobOutput, workingDirectory, library;
-        bool runOnly=false, frameExplicit=false;
+        bool runOnly=false, frameExplicit=false, live=false;
+        fs::path liveEvidence;
         int cancelAfter=-1;
         bool warp = false, debug = false, verify = false;
         uint32_t colorMode=0;
@@ -202,6 +263,8 @@ int wmain(int argc, wchar_t **argv) {
         for (int i = 2; i < argc; i++) {
             std::wstring a = argv[i];
             if (a == L"--run-only") runOnly=true;
+            else if(a == L"--live")live=true;
+            else if(a == L"--live-evidence" && i+1<argc)liveEvidence=argv[++i];
             else if ((a==L"--engine" || a==L"--library" || a==L"--job-output" || a==L"--working-dir" || a==L"--cancel-after-ms") && i+1<argc) {
                 const std::wstring value=argv[++i];
                 if(a==L"--engine")engine=value;else if(a==L"--library")library=value;else if(a==L"--job-output")jobOutput=value;else if(a==L"--working-dir")workingDirectory=value;
@@ -237,8 +300,17 @@ int wmain(int argc, wchar_t **argv) {
         }
         const auto header=Json::parse(read(input,64<<20));
         const bool calculated=header.contains("version") && !header.contains("format");
-        if(calculated) {const auto result=calculateJob(input,engine,jobOutput,workingDirectory,cancelAfter,library);if(!result)return 2;input=*result;}
-        else require(!runOnly && engine.empty() && library.empty() && jobOutput.empty() && workingDirectory.empty() && cancelAfter<0,"Calculation options require a job JSON");
+        require(liveEvidence.empty() || live,"--live-evidence requires --live");
+        if(calculated) {
+            LiveView inspection(warp,debug,liveEvidence);
+            LiveHooks hooks;hooks.update=[&](const fs::path &out,RunWindow &controls){inspection.update(out,controls);};
+            try {
+                const auto result=calculateJob(input,engine,jobOutput,workingDirectory,cancelAfter,library,live?&hooks:nullptr);
+                if(!result){inspection.finish("Cancelled: last consistent window",automated);return 2;}
+                input=*result;
+            } catch(const std::exception &e) {inspection.finish(std::string("Calculation failed: ")+e.what(),automated);throw;}
+        }
+        else require(!live && !runOnly && engine.empty() && library.empty() && jobOutput.empty() && workingDirectory.empty() && cancelAfter<0,"Calculation options require a job JSON");
         App app{input};
         if(colorMode) {require(app.history.hasProvenance,"Enable export_provenance in the job first");app.camera.colorMode=colorMode;if(!frameExplicit)frame=app.history.steps.size();}
         if(calculated && !frameExplicit)frame=app.history.steps.size();
@@ -284,42 +356,7 @@ int wmain(int argc, wchar_t **argv) {
             app.renderer->snapshot(snapshot);
             return 0;
         }
-        SetProcessDPIAware();
-        INITCOMMONCONTROLSEX controls{sizeof(controls), ICC_BAR_CLASSES};
-        require(InitCommonControlsEx(&controls) != FALSE, "Initialize controls failed");
-        WNDCLASSW wc{};
-        wc.lpfnWndProc = procedure;
-        wc.hInstance = GetModuleHandleW(nullptr);
-        wc.lpszClassName = L"MenkhD3D12";
-        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        require(RegisterClassW(&wc) != 0, "Register window class failed");
-        app.window =
-            CreateWindowExW(0, wc.lpszClassName,
-                            L"Menkh - D3D12 voxel viewer | drag: orbit, right drag: pan, wheel: "
-                            L"zoom | Space, arrows, R, B, T, A, [ ]",
-                            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
-                            1280, 960, nullptr, nullptr, wc.hInstance, &app);
-        require(app.window != nullptr, "Create window failed");
-        app.viewport = CreateWindowExW(0, wc.lpszClassName, L"", WS_CHILD | WS_VISIBLE, 0, 0, 1, 1,
-                                       app.window, nullptr, wc.hInstance, &app);
-        app.playButton =
-            CreateWindowExW(0, L"BUTTON", L"Play", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 64,
-                            26, app.window, reinterpret_cast<HMENU>(101), wc.hInstance, nullptr);
-        CreateWindowExW(0, L"BUTTON", L"Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 64, 26,
-                        app.window, reinterpret_cast<HMENU>(102), wc.hInstance, nullptr);
-        app.slider = CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_NOTICKS,
-                                     0, 0, 1, 1, app.window, nullptr, wc.hInstance, nullptr);
-        app.status = CreateWindowExW(0, L"STATIC", L"", WS_CHILD | WS_VISIBLE, 0, 0, 1, 1,
-                                     app.window, nullptr, wc.hInstance, nullptr);
-        require(app.viewport && app.playButton && app.slider && app.status,
-                "Create controls failed");
-        SendMessageW(app.slider, TBM_SETRANGE, TRUE, MAKELPARAM(0, 0));
-        SendMessageW(app.slider, TBM_SETRANGEMAX, TRUE, LPARAM(app.history.steps.size()));
-        app.renderer->attach(app.viewport);
-        app.layout();
-        app.refresh();
-        ShowWindow(app.window, SW_SHOW);
-        SetFocus(app.viewport);
+        openWindow(app);
         if (!windowSmoke.empty()) {
             fs::create_directories(windowSmoke);
             SetWindowPos(app.window, nullptr, 0, 0, 960, 720, SWP_NOMOVE | SWP_NOZORDER);

@@ -1,5 +1,9 @@
 # Live inspection evidence — 2026-10-31
 
+This records the macOS implementation in PR #33. Windows live-follow was added
+subsequently; see the [native Windows evidence](../windows-live/README.md).
+The Windows status statements below describe the earlier measurement revision.
+
 Apple M5 Max (Mac17,6), 128 GiB RAM, macOS 27.0.1, repository-local Zig 0.15.2,
 ReleaseFast, one cutting worker. Base commit:
 `4889862863871ccbcf32dad9cf944374e3cc0388`; measurements include this PR's

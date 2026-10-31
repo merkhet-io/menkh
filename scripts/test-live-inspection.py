@@ -34,6 +34,9 @@ def wait(pred, seconds=30):
 def read(path):
  try:return json.loads(path.read_text())
  except (FileNotFoundError,json.JSONDecodeError):return {}
+ except PermissionError:
+  if os.name=='nt':return {} # Transient denial while the atomic pointer is replaced; wait() bounds retries.
+  raise
 def launch(name,config):
  out=root/name
  if out.exists():shutil.rmtree(out)
