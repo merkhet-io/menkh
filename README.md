@@ -4,7 +4,7 @@
 
 Menkh calculates the material left after machining, using a **Zig CPU engine** and voxel occupancy as its geometric truth. It runs on **macOS / Apple Silicon** and **Windows x86-64**, with native **Swift/Metal** and **C++/D3D12** viewers. Lean proofs cover selected core mathematical models; a versioned C API supports embedding the engine.
 
-[Get started](#get-started) · [Windows guide](docs/WINDOWS.md) · [C API](docs/C-API.md) · [Capabilities](docs/CAPABILITIES.md)
+[Get started](#get-started) · [Windows guide](docs/WINDOWS.md) · [C API](docs/C-API.md) · [Capabilities](docs/CAPABILITIES.md) · [Changelog](CHANGELOG.md)
 
 ## Why “Menkh”?
 
