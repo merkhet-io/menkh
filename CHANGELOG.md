@@ -9,6 +9,22 @@ Benchmark results remain tied to their documented hardware, workload and build.
 Voxel spacing is not a guaranteed surface-error bound; Lean proofs cover selected
 mathematical models, not the complete executable.
 
+## Unreleased
+
+- Experimental quantized Z-dexel cutting benchmark with transactional interval
+  buffers and exact voxel comparisons. It is currently slower on the screw
+  workload and does not replace the production backend.
+
+- Native `grinding-demo` command for a two-start helical screw, with configurable
+  voxel spacing and continuous XYZAC profile-wheel motion. It runs on macOS and
+  Windows without a Python generator. [Protocol](docs/SCREW-GRINDING.md).
+- Conservative temporal-group and oriented-cylinder rejection for non-flat
+  sweeps, preserving the original material predicates and motion tolerance.
+- Independent screw geometry checks, exhaustive-reference/resume tests, and a
+  matched benchmark runner with state hashes and repeated phase timings.
+- Optional `--movie-fps 1..120` for native macOS voxel-history video exports;
+  existing exports retain their 12 fps default.
+
 ## 2026-10-31
 
 ### Fixed

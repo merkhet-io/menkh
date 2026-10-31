@@ -179,7 +179,7 @@ class Delegate: NSObject, NSApplicationDelegate {
         } catch {
             fputs("viewer: \(error)\n",stderr)
             let args=CommandLine.arguments
-            if !args.contains("--run-only") && !args.contains("--snapshot") && !args.contains("--cancel-after-ms") {let alert=NSAlert();alert.messageText="Cannot open calculation";alert.informativeText=String(describing:error);alert.runModal()}
+            if !args.contains("--run-only") && !args.contains("--snapshot") && !args.contains("--movie") && !args.contains("--cancel-after-ms") {let alert=NSAlert();alert.messageText="Cannot open calculation";alert.informativeText=String(describing:error);alert.runModal()}
             exit(1)
         }
     }

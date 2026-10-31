@@ -1,0 +1,19 @@
+{
+  "format": "menkh-screw-grinding-protocol-v1",
+  "starts": 2,
+  "turns_per_start": 4,
+  "lead_mm": 8,
+  "blank_diameter_mm": 12,
+  "blank_length_mm": 40,
+  "nominal_root_radius_mm": 4,
+  "wheel_max_radius_mm": 8,
+  "wheel_width_mm": 2,
+  "steps_per_turn": 128,
+  "operations": 1024,
+  "voxel_mm": 0.025,
+  "motion_tolerance_mm": 0.01,
+  "centerline_chord_bound_mm": 0.0036141756455490004,
+  "virtual_grid": null,
+  "export_provenance": true,
+  "note": "Continuous piecewise-linear XYZAC grinding. Nominal screw dimensions describe the path, not a certified thread profile. Chord error, motion approximation and voxelization are separate."
+}

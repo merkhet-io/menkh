@@ -1,0 +1,41 @@
+{
+  "format": "menkh-experimental-quantized-dexels-v1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "grid": [
+    16384,
+    16384,
+    16384
+  ],
+  "origin": [
+    -204.8,
+    -204.8,
+    0
+  ],
+  "voxel_mm": 0.025,
+  "motion_tolerance_mm": 0.01,
+  "columns": 180960,
+  "intervals": 197175,
+  "allocated_bytes": 9613552,
+  "initial_occupied": 289536000,
+  "remaining_occupied": 288561874,
+  "init_ns": 8706417,
+  "cut_ns": 7734196792,
+  "peak_rss_before_oracle_bytes": 11763712,
+  "exact_grid_comparison": false,
+  "operations": [
+    {
+      "cut_ns": 7734196792,
+      "occupied": 288561874,
+      "intervals": 197175,
+      "allocated_bytes": 9613552,
+      "work": {
+        "interval_tests": 1228626,
+        "center_tests": 0,
+        "removed_whole_intervals": 226740
+      }
+    }
+  ],
+  "note": "Experimental quantized Z-column cutting, no history/export/viewer integration. Two compacted buffers, transactional preflight. Timings are not the full voxel job pipeline. --operations explicitly selects a prefix."
+}

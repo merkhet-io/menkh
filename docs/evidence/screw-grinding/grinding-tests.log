@@ -1,0 +1,3 @@
+Rotary job: scalar equality, checkpoint/resume equality, six rejected contracts, bounds and viewer poses passed
+Crowned/waisted profiles: reference equality, resume, idempotence, declared bounds, history metadata and invalid input passed
+Profile stationary, tiny, axial, diagonal and reversed motion passed

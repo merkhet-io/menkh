@@ -76,6 +76,11 @@ The 16k³ probe uses the same small physical blank in a much larger virtual worl
 not a 16k-resolution screw. Unlike the dense descriptor backend it can initialize
 that domain and execute a cut prefix without allocating the empty world. See
 `dexel-16k-prefix.json` in the evidence directory for actual measurements.
+A second probe matches the dense failure's 25 µm spacing and 409.6 mm virtual
+world extent: one grinding operation completed in 7.734 s using 9,613,552 B of
+column/interval capacity and 11,763,712 B peak process RSS. It retains 288,561,874 occupied
+centers. This is one operation, not the complete job; raw data is in
+`dexel-25um-16k-prefix.json`.
 Full-resolution 16k screw grinding has **not** been demonstrated.
 
 **Decision:** retain the measured voxel optimization as the production default.

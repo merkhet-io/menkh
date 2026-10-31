@@ -1,0 +1,6 @@
+
+Build Summary: 3/3 steps succeeded; 77/78 tests passed; 1 skipped
+test success
++- run test 77 passed 1 skipped 398ms MaxRSS:3M
+   +- compile test ReleaseFast aarch64-macos success 17s MaxRSS:568M
+

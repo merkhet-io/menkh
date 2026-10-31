@@ -1,0 +1,7 @@
+{
+  "baseline": "screw-baseline",
+  "optimized": "screw-grouped",
+  "byte_identical_files": 1025,
+  "deltas": 1024,
+  "final_checkpoint": true
+}

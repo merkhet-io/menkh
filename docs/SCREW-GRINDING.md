@@ -97,3 +97,18 @@ final-state validation. It retains full reports and logs. Without `--baseline`
 it measures the current binary alone. Writes are cached filesystem writes,
 not a durable-storage benchmark. Use `menkh inspect-state result/final.menkh`
 for allocation-free-in-the-counting-pass boundary voxel and face statistics.
+
+Export a smoother 30 fps video of the actual stored operation states on macOS:
+
+```sh
+zig-out/bin/menkh-viewer out/screw-25um/result/voxel-animation.json --frame 0 --hide-tool --smooth-lighting --movie-fps 30 --movie out/screw-25um/screw.mp4
+```
+
+`--smooth-lighting` averages display normals only; voxel occupancy and silhouettes
+remain rasterized. `--movie-fps` accepts 1–120 (default 12 for existing demos),
+with one second of opening stock and three seconds of final inspection. It
+changes playback timing, not machining feed, simulation precision or geometry.
+
+Actual runs, memory, geometry checks and the final 30 fps video are in the
+[evidence report](evidence/screw-grinding/README.md). The permitted alternate
+structure trial is documented in [DEXEL-EXPERIMENT.md](DEXEL-EXPERIMENT.md).

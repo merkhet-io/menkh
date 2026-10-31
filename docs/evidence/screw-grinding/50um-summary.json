@@ -1,0 +1,116 @@
+{
+  "format": "menkh-job-report-v1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "reference": false,
+  "input_voxel_mm": 0.05,
+  "voxel_override_mm": null,
+  "voxel_mm": 0.05,
+  "origin_mm": [
+    -6,
+    -6,
+    0
+  ],
+  "bounds": {
+    "lo": [
+      -6,
+      -6,
+      0
+    ],
+    "hi": [
+      6,
+      6,
+      40
+    ]
+  },
+  "raster_approximation": true,
+  "initial_occupied": 36195200,
+  "remaining_occupied": 28855048,
+  "remaining_volume_mm3": 3606.8810000000008,
+  "stats": {
+    "occupied": 28855048,
+    "empty_blocks": 25720,
+    "full_blocks": 48836,
+    "mixed_blocks": 15444,
+    "descriptor_bytes": 360000,
+    "pool_bytes": 1700736,
+    "pool_used_bytes": 1699328
+  },
+  "history_bytes": 18452784,
+  "live_publication": null,
+  "provenance_capacity_bytes": 67108864,
+  "provenance_entries": 3163394,
+  "provenance_scope": "all_frames",
+  "cut_scratch_capacity_bytes": 67540,
+  "process_peak_rss_bytes": 128925696,
+  "timing": {
+    "job_parse_validate_ns": 9314875,
+    "image_export_ns": 575584,
+    "checkpoint_encode_ns": 365458,
+    "checkpoint_write_ns": 277000,
+    "metadata_write_ns": 3396375,
+    "init_ns": 1596708,
+    "stock_input": {
+      "read_ns": 0,
+      "parse_bvh_ns": 0,
+      "voxelization_ns": 1592417,
+      "state_decode_ns": 0,
+      "parse_validate_ns": 0,
+      "bvh_ns": 0,
+      "intersection_validate_ns": 0,
+      "ray_cache_ns": 0,
+      "ray_cache_bytes": 0,
+      "uniform_blocks": 0,
+      "scanlines": 0,
+      "scanline_fallbacks": 0,
+      "scanline_scratch_bytes": 0,
+      "point_queries": 0
+    },
+    "auxiliary_input": {
+      "read_ns": 0,
+      "parse_bvh_ns": 0,
+      "voxelization_ns": 0,
+      "state_decode_ns": 0,
+      "parse_validate_ns": 0,
+      "bvh_ns": 0,
+      "intersection_validate_ns": 0,
+      "ray_cache_ns": 0,
+      "ray_cache_bytes": 0,
+      "uniform_blocks": 0,
+      "scanlines": 0,
+      "scanline_fallbacks": 0,
+      "scanline_scratch_bytes": 0,
+      "point_queries": 0
+    },
+    "auxiliary_voxelization_ns": 167,
+    "initial_history_write_ns": 614750,
+    "statistics_ns": 241042,
+    "defects_ns": 166,
+    "provenance_ns": 202513624,
+    "provenance_extract_ns": 53398665,
+    "provenance_finalize_ns": 149114959,
+    "inspection_ns": 708,
+    "surface_ns": 208,
+    "surface_analysis_ns": 125,
+    "export_ns": 1218042,
+    "total_ns": 69408121042
+  },
+  "target_comparison": null,
+  "target_surface_deviation": null,
+  "point_occupancy": [],
+  "ray_hits": [],
+  "operation_summary": {
+    "count": 1024,
+    "cut_ns": 68876423752,
+    "sweep_pieces": 81920,
+    "motion_over_removal_bound_mm": 0.008648791039563645,
+    "work": {
+      "candidate_blocks": 249104,
+      "partial_blocks": 242552,
+      "voxel_tests": 1351735442,
+      "point_pose_evaluations": 2703470884
+    }
+  },
+  "qualification_note": "Single completed run after the matched 100 um measurements."
+}

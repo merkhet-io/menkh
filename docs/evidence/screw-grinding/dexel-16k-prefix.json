@@ -1,0 +1,206 @@
+{
+  "format": "menkh-experimental-quantized-dexels-v1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 1,
+  "grid": [
+    16384,
+    16384,
+    16384
+  ],
+  "origin": [
+    -819.2,
+    -819.2,
+    0
+  ],
+  "voxel_mm": 0.1,
+  "motion_tolerance_mm": 0.01,
+  "columns": 11304,
+  "intervals": 13052,
+  "allocated_bytes": 584992,
+  "initial_occupied": 4521600,
+  "remaining_occupied": 4493382,
+  "init_ns": 603334,
+  "cut_ns": 5161188459,
+  "peak_rss_before_oracle_bytes": 3522560,
+  "exact_grid_comparison": false,
+  "operations": [
+    {
+      "cut_ns": 348263917,
+      "occupied": 4506370,
+      "intervals": 12315,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 54702,
+        "center_tests": 0,
+        "removed_whole_intervals": 9080
+      }
+    },
+    {
+      "cut_ns": 269854542,
+      "occupied": 4505503,
+      "intervals": 12366,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 40580,
+        "center_tests": 0,
+        "removed_whole_intervals": 1398
+      }
+    },
+    {
+      "cut_ns": 266554875,
+      "occupied": 4504645,
+      "intervals": 12411,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 40164,
+        "center_tests": 0,
+        "removed_whole_intervals": 1358
+      }
+    },
+    {
+      "cut_ns": 271761375,
+      "occupied": 4503784,
+      "intervals": 12460,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 40088,
+        "center_tests": 0,
+        "removed_whole_intervals": 1360
+      }
+    },
+    {
+      "cut_ns": 344270417,
+      "occupied": 4502932,
+      "intervals": 12510,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 40658,
+        "center_tests": 0,
+        "removed_whole_intervals": 1344
+      }
+    },
+    {
+      "cut_ns": 269253584,
+      "occupied": 4502048,
+      "intervals": 12561,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 43142,
+        "center_tests": 0,
+        "removed_whole_intervals": 1430
+      }
+    },
+    {
+      "cut_ns": 310368833,
+      "occupied": 4501183,
+      "intervals": 12611,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 45342,
+        "center_tests": 0,
+        "removed_whole_intervals": 1412
+      }
+    },
+    {
+      "cut_ns": 317536042,
+      "occupied": 4500307,
+      "intervals": 12660,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 46822,
+        "center_tests": 0,
+        "removed_whole_intervals": 1434
+      }
+    },
+    {
+      "cut_ns": 315890000,
+      "occupied": 4499447,
+      "intervals": 12707,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 47524,
+        "center_tests": 0,
+        "removed_whole_intervals": 1384
+      }
+    },
+    {
+      "cut_ns": 336412833,
+      "occupied": 4498575,
+      "intervals": 12760,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 50282,
+        "center_tests": 0,
+        "removed_whole_intervals": 1380
+      }
+    },
+    {
+      "cut_ns": 348112083,
+      "occupied": 4497764,
+      "intervals": 12804,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 51624,
+        "center_tests": 0,
+        "removed_whole_intervals": 1314
+      }
+    },
+    {
+      "cut_ns": 346507333,
+      "occupied": 4496841,
+      "intervals": 12856,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 52396,
+        "center_tests": 0,
+        "removed_whole_intervals": 1394
+      }
+    },
+    {
+      "cut_ns": 329606958,
+      "occupied": 4495976,
+      "intervals": 12907,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 52956,
+        "center_tests": 0,
+        "removed_whole_intervals": 1394
+      }
+    },
+    {
+      "cut_ns": 341080500,
+      "occupied": 4495108,
+      "intervals": 12955,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 53748,
+        "center_tests": 0,
+        "removed_whole_intervals": 1408
+      }
+    },
+    {
+      "cut_ns": 375656167,
+      "occupied": 4494256,
+      "intervals": 13004,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 54176,
+        "center_tests": 0,
+        "removed_whole_intervals": 1372
+      }
+    },
+    {
+      "cut_ns": 370059000,
+      "occupied": 4493382,
+      "intervals": 13052,
+      "allocated_bytes": 584992,
+      "work": {
+        "interval_tests": 54628,
+        "center_tests": 0,
+        "removed_whole_intervals": 1402
+      }
+    }
+  ],
+  "note": "Experimental quantized Z-column cutting, no history/export/viewer integration. Two compacted buffers, transactional preflight. Timings are not the full voxel job pipeline. --operations explicitly selects a prefix."
+}

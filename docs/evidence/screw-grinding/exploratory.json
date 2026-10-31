@@ -1,0 +1,26 @@
+[
+  {
+    "variant": "screw-baseline",
+    "cut_seconds": 94.096794655,
+    "total_seconds": 94.575413542,
+    "point_pose_evaluations": 2851452388,
+    "final_sha256": "1275f0b3a521ebdc93489e7ab7232a0dd2681e6fc2f59a0f0a14b1f59ba90dee",
+    "note": "Single exploratory run, not the repeated comparison. screw-optimized was bounds/cylinder rejection only; screw-grouped includes temporal grouping."
+  },
+  {
+    "variant": "screw-optimized",
+    "cut_seconds": 90.292181375,
+    "total_seconds": 90.708807208,
+    "point_pose_evaluations": 2849616740,
+    "final_sha256": "1275f0b3a521ebdc93489e7ab7232a0dd2681e6fc2f59a0f0a14b1f59ba90dee",
+    "note": "Single exploratory run, not the repeated comparison. screw-optimized was bounds/cylinder rejection only; screw-grouped includes temporal grouping."
+  },
+  {
+    "variant": "screw-grouped",
+    "cut_seconds": 22.899647375,
+    "total_seconds": 23.288369875,
+    "point_pose_evaluations": 558499036,
+    "final_sha256": "1275f0b3a521ebdc93489e7ab7232a0dd2681e6fc2f59a0f0a14b1f59ba90dee",
+    "note": "Single exploratory run, not the repeated comparison. screw-optimized was bounds/cylinder rejection only; screw-grouped includes temporal grouping."
+  }
+]

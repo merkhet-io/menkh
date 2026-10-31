@@ -21,8 +21,12 @@ Use `zig-out\bin\menkh.exe` on Windows. Open
 `out/screw/result/voxel-animation.json` in the native viewer. For 25 µm, use
 `--voxel 0.025` and a fresh output directory. See the
 [frozen protocol, commands and measured limits](docs/SCREW-GRINDING.md).
-This is a grinding experiment, not a certified thread profile or a claim of
-16k³ cutting capability.
+The measured kernel change cuts this workload 4.63× faster than the preceding
+implementation at 100 µm; the 25 µm run and video are recorded in the
+[evidence report](docs/evidence/screw-grinding/README.md). This is not a certified
+thread profile or a claim of 16k³ cutting capability. An experimental
+[quantized dexel backend](docs/DEXEL-EXPERIMENT.md) preserves exact occupancy for
+comparison; it is currently slower and is not the default.
 
 ## Why “Menkh”?
 

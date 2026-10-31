@@ -1,0 +1,2 @@
+viewer: invalidOBJ("--movie-fps requires an integer from 1 to 120")
+Exit code 1; no output file; no modal dialog.

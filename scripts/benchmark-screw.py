@@ -41,6 +41,13 @@ for i in range(a.repeats + 1):
                       voxel_tests=sum(o['work']['voxel_tests'] for o in report['operations']),
                       peak_rss_bytes=report['process_peak_rss_bytes'], final_sha256=digest,
                       remaining_occupied=report['remaining_occupied'], history_bytes=report['history_bytes'],
+                      timing=report['timing'],
+                      candidate_blocks=sum(o['work']['candidate_blocks'] for o in report['operations']),
+                      partial_blocks=sum(o['work']['partial_blocks'] for o in report['operations']),
+                      sweep_pieces=sum(o['sweep_pieces'] for o in report['operations']),
+                      motion_bound_mm=max(o['motion_over_removal_bound_mm'] for o in report['operations']),
+                      scratch_bytes=report['cut_scratch_capacity_bytes'],
+                      provenance_capacity_bytes=report['provenance_capacity_bytes'],
                       stats=report['stats'])
         records.append(record)
         (a.out/'runs.json').write_text(json.dumps(records, indent=2))
