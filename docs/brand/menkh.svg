@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200" role="img" aria-labelledby="title desc">
+  <title id="title">menkh — geometric cutting simulation</title>
+  <desc id="desc">An orange chisel cuts into a blue voxel block beside the Menkh wordmark.</desc>
+  <rect width="800" height="200" rx="16" fill="#142536"/>
+  <!-- Original geometric chisel and voxel mark; not a hieroglyph facsimile. -->
+  <g transform="translate(32 24)">
+    <path d="M16 72 72 44 128 72 72 100Z" fill="#8ab9e8"/>
+    <path d="M16 72 72 100V156L16 128Z" fill="#477cb4"/>
+    <path d="M72 100 128 72V128L72 156Z" fill="#2d5683"/>
+    <path d="M72 72 100 58 114 65 86 79V93L72 100Z" fill="#142536"/>
+    <path d="m106 10 16 8-30 58-16 8 1-18Z" fill="#ed9c52"/>
+    <path d="m106 10 16 8 4-8-16-8Z" fill="#ffd1a0"/>
+    <path d="m139 53 9-5 9 5-9 5Z" fill="#8ab9e8"/>
+    <path d="m139 53 9 5v10l-9-5Z" fill="#477cb4"/>
+    <path d="m148 58 9-5v10l-9 5Z" fill="#2d5683"/>
+    <path d="m151 28 7-4 7 4-7 4Z" fill="#ed9c52"/>
+  </g>
+  <text x="224" y="112" fill="#f4f0e8" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="700" letter-spacing="-3">menkh</text>
+  <text x="227" y="150" fill="#b7cadb" font-family="Arial, Helvetica, sans-serif" font-size="20" letter-spacing="1">GEOMETRIC CUTTING SIMULATION</text>
+</svg>
