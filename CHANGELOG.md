@@ -9,6 +9,14 @@ Benchmark results remain tied to their documented hardware, workload and build.
 Voxel spacing is not a guaranteed surface-error bound; Lean proofs cover selected
 mathematical models, not the complete executable.
 
+## In review
+
+- **Windows live inspection:** `--live` follows leased completed-operation
+  windows in DLL and subprocess mode, with pause/resume, held-history seeking,
+  cooperative cancellation and handoff to full-history playback. Native Win32
+  and D3D12 tests cover both runners. Optional live comparison/provenance
+  overlays remain separate follow-ups. ([#37](https://github.com/merkhet-io/menkh/pull/37))
+
 ## 2026-10-31
 
 ### Added
