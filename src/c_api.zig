@@ -16,7 +16,7 @@ fn failure(err: anyerror) Status {
     return switch (err) {
         error.OutOfMemory => .out_of_memory,
         error.OrientationChangeUnsupported, error.RotaryRequiresCylinder => .unsupported,
-        error.MotionToleranceTooSmall, error.PoolTooLarge, error.Overflow, error.GridTooLarge => .resource_limit,
+        error.MotionToleranceTooSmall, error.PoolTooLarge, error.Overflow, error.GridTooLargeOrEmpty => .resource_limit,
         else => .invalid_argument,
     };
 }

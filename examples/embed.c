@@ -48,6 +48,8 @@ int main(int argc,char **argv) {
     if(argc==2){FILE *f=fopen(argv[1],"wb");CHECK(f);CHECK(fwrite(one,1,n1,f)==n1);CHECK(fclose(f)==0);}
     free(one);free(two);free(bytes);menkh_destroy_v1(resumed);menkh_destroy_v1(h);menkh_destroy_v1(NULL);
     CHECK(menkh_create_box_v1(NULL,&bad)==MENKH_INVALID_ARGUMENT && bad==NULL);
+    menkh_box oversized={{0,0,0},{655.36,655.36,655.36},.01};
+    CHECK(menkh_create_box_v1(&oversized,&bad)==MENKH_RESOURCE_LIMIT && bad==NULL);
     puts("C ABI: 12000 independent occupancy queries, idempotence, invalid inputs, buffer bounds, checkpoint integrity and resumed rotary equality passed");
     return 0;
 }
