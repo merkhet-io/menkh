@@ -1,7 +1,12 @@
 #include "History.hpp"
+#include "Scene.hpp"
 #include <iostream>
 int main(int argc, char **argv) {
     try {
+        if(argc==4 && std::string(argv[1])=="--scene") {
+            auto selected=menkh::selectScene(std::filesystem::u8path(argv[2]),argv[3]);
+            menkh::History h(selected.history);h.verify();std::cout<<"Scene workpiece verified: "<<selected.id<<'\n';return 0;
+        }
         if (argc != 2 && argc != 3)
             throw std::runtime_error("Expected history JSON");
         menkh::History h(std::filesystem::u8path(argv[1]));
