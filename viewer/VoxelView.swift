@@ -23,6 +23,8 @@ struct VoxelUniforms {
 final class VoxelRenderer:NSObject,MTKViewDelegate {
     let history:VoxelHistory;let root:URL;let device:MTLDevice;let queue:MTLCommandQueue;let pipeline:MTLComputePipelineState
     let blocks:MTLBuffer;let pool:MTLBuffer
+    var provenanceAllFrames=false
+    var provenanceAvailableAtFrame:Bool {provenanceAllFrames || frame==history.frames.count}
     var provenanceBuffer:MTLBuffer?;var provenanceCount:UInt32=0;var provenanceMode:UInt32=0
     var targetBlocks:MTLBuffer?;var targetPool:MTLBuffer?
     var fixtureBlocks:MTLBuffer?;var fixturePool:MTLBuffer?
@@ -129,7 +131,7 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         if showHolder,frame>0 {let step=history.frames[frame-1];let axis=step.axis ?? [0,0,1]
             if axis.count==3,step.tool.count==3 {let u=SIMD3<Float>(axis[0],axis[1],axis[2]);let p=SIMD3<Float>(step.tool[0],step.tool[1],step.tool[2]);if let part=step.cutter,(part.kind=="flat" || part.kind=="ball") {cutter=SIMD4((p-origin)/h,part.radius/h);cutterAxis=SIMD4(u,part.length/h)};if let part=step.shank {shank=SIMD4((p+u*part.offset-origin)/h,part.radius/h);shankAxis=SIMD4(u,part.length/h)};if let part=step.holder {holder=SIMD4((p+u*part.offset-origin)/h,part.radius/h);holderAxis=SIMD4(u,part.length/h)}}
         }
-        return VoxelUniforms(eye:SIMD4((eye-origin)/h,frame>0 && history.frames[frame-1].cutter?.kind=="ball" ? 1:0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis,provenance:SIMD4(provenanceCount,frame==history.frames.count && !compareTarget ? provenanceMode:0,0,0))
+        return VoxelUniforms(eye:SIMD4((eye-origin)/h,frame>0 && history.frames[frame-1].cutter?.kind=="ball" ? 1:0),forward:SIMD4(forward,0),right:SIMD4(right,0),up:SIMD4(up,0),low:SIMD4(simd_max(low,SIMD3(repeating:0)),0),high:SIMD4(simd_min(high,SIMD3(Float(history.grid[0]),Float(history.grid[1]),Float(history.grid[2]))),0),settings:SIMD4(h,Float(width),Float(height),tan(Float.pi/8)),grid:SIMD4(showStock ? 1:0,UInt32(history.grid[0]),darkBackground ? 1:0,smoothLighting ? 1:0),dimensions:SIMD4(UInt32(history.grid[0]),UInt32(history.grid[1]),UInt32(history.grid[2]),compareTarget && targetBlocks != nil ? 1:0),blockDimensions:SIMD4(UInt32(history.block_grid[0]),UInt32(history.block_grid[1]),UInt32(history.block_grid[2]),showFixtures && fixtureBlocks != nil ? 1:0),shank:shank,shankAxis:shankAxis,holder:holder,holderAxis:holderAxis,cutter:cutter,cutterAxis:cutterAxis,provenance:SIMD4(provenanceCount,provenanceAvailableAtFrame && !compareTarget ? provenanceMode:0,UInt32(frame),0))
     }
     func encode(_ texture:MTLTexture)->MTLCommandBuffer? {
         guard let command=queue.makeCommandBuffer(),let encoder=command.makeComputeCommandEncoder() else {return nil}
@@ -163,8 +165,9 @@ final class VoxelRenderer:NSObject,MTKViewDelegate {
         let occupied=frame==0 ? history.initial_occupied:history.frames[frame-1].occupied
         let stage=frame==0 ? "Initial stock":frame==history.frames.count ? "Complete":history.frames[frame-1].stage
         let approximation=history.motion_tolerance_mm.map {String(format:" · motion budget %.4f mm",$0)} ?? ""
+        let exposureNotice = provenanceMode == 0 ? "" : compareTarget ? " · provenance inactive (target comparison)" : provenanceAvailableAtFrame ? (provenanceAllFrames ? " · playback surface provenance" : " · final surface provenance") : " · provenance inactive (final state only)"
         let toolNotice = frame>0 && history.frames[frame-1].cutter?.kind == "profile" ? " · profile wheel display unavailable" : ""
-        return "\(stage)\(toolNotice) · \(frame)/\(history.frames.count) · \(history.grid[0]) × \(history.grid[1]) × \(history.grid[2]) · \(String(format:"%.3f",history.voxel_mm*1000)) µm · \(occupied.formatted()) occupied · GPU \(String(format:"%.1f",lastGPUms)) ms\(approximation)\(provenanceMode == 0 ? "" : (frame == history.frames.count && !compareTarget ? " · final surface provenance" : " · provenance inactive (final state only; target comparison takes precedence)")) · \(picked)"
+        return "\(stage)\(toolNotice) · \(frame)/\(history.frames.count) · \(history.grid[0]) × \(history.grid[1]) × \(history.grid[2]) · \(String(format:"%.3f",history.voxel_mm*1000)) µm · \(occupied.formatted()) occupied · GPU \(String(format:"%.1f",lastGPUms)) ms\(approximation)\(exposureNotice) · \(picked)"
     }
 }
 final class VoxelMetalView:MTKView {
@@ -258,7 +261,7 @@ final class VoxelController:NSViewController {
     @objc func restart() {playing=true;seek(0)}
     @objc func scrub() {playing=false;seek(Int(slider.doubleValue.rounded()))}
     @objc func resetCamera() {renderer.resetView()}
-    @objc func provenance(_ sender:NSPopUpButton) {playing=false;renderer.provenanceMode=UInt32(sender.indexOfSelectedItem);if renderer.provenanceMode != 0 {seek(renderer.history.frames.count)};refresh()}
+    @objc func provenance(_ sender:NSPopUpButton) {playing=false;renderer.provenanceMode=UInt32(sender.indexOfSelectedItem);if renderer.provenanceMode != 0 && !renderer.provenanceAllFrames {seek(renderer.history.frames.count)};refresh()}
     @objc func stock(_ sender:NSButton) {renderer.showStock=sender.state == .on}
     @objc func fixtures(_ sender:NSButton) {renderer.showFixtures=sender.state == .on}
     @objc func holder(_ sender:NSButton) {renderer.showHolder=sender.state == .on}
@@ -298,10 +301,11 @@ extension Delegate {
         if args.contains("--color-operation") || args.contains("--color-tool") {guard renderer.provenanceBuffer != nil else {throw MeshError.invalidOBJ("No surface provenance; enable export_provenance in the job")};renderer.provenanceMode=args.contains("--color-tool") ? 2:1;if !args.contains("--frame") {try renderer.seek(renderer.history.frames.count)}}
         if args.contains("--pick-center") {renderer.focus(x:0.5,y:0.5,aspect:1280/900);guard !renderer.picked.isEmpty else {throw MeshError.invalidOBJ("Center pick missed material")}}
         if let i=args.firstIndex(of:"--movie"),i+1<args.count {try renderer.movie(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
+        if let i=args.firstIndex(of:"--verify-provenance-oracle"),i+1<args.count {try renderer.verifyProvenanceOracle(URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
         if let i=args.firstIndex(of:"--verify-history"),i+1<args.count {try renderer.verifyHistory(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return}
         if let i=args.firstIndex(of:"--render-bench"),i+1<args.count {
             var samples=[Double]();for j in 0..<13 {_ = try renderer.image();if j>=3 {samples.append(renderer.lastGPUms)}};samples.sort()
-            let record:[String:Any] = ["load_upload_seconds":loadSeconds,"seek_seconds":seekSeconds,"section_axis":renderer.sectionAxis,"grid":renderer.history.grid,"frame":renderer.frame,"width":1280,"height":900,"samples":10,"warmups":3,"gpu_ms_min":samples.first!,"gpu_ms_median":(samples[4]+samples[5])/2,"gpu_ms_max":samples.last!,"averaged_normals":renderer.smoothLighting,"samples_per_pixel":4,"target_comparison":renderer.compareTarget,"provenance_mode":renderer.provenanceMode,"provenance_records":renderer.provenanceCount,"provenance_active":renderer.provenanceMode != 0 && renderer.frame==renderer.history.frames.count && !renderer.compareTarget,"section_fraction":renderer.sectionFraction,"fixtures_visible":renderer.showFixtures,"holder_visible":renderer.showHolder,"note":"GPU command duration only, offscreen static view; not interactive FPS"]
+            let record:[String:Any] = ["load_upload_seconds":loadSeconds,"seek_seconds":seekSeconds,"section_axis":renderer.sectionAxis,"grid":renderer.history.grid,"frame":renderer.frame,"width":1280,"height":900,"samples":10,"warmups":3,"gpu_ms_min":samples.first!,"gpu_ms_median":(samples[4]+samples[5])/2,"gpu_ms_max":samples.last!,"averaged_normals":renderer.smoothLighting,"samples_per_pixel":4,"target_comparison":renderer.compareTarget,"provenance_mode":renderer.provenanceMode,"provenance_records":renderer.provenanceCount,"provenance_active":renderer.provenanceMode != 0 && renderer.provenanceAvailableAtFrame && !renderer.compareTarget,"section_fraction":renderer.sectionFraction,"fixtures_visible":renderer.showFixtures,"holder_visible":renderer.showHolder,"note":"GPU command duration only, offscreen static view; not interactive FPS"]
             try JSONSerialization.data(withJSONObject:record,options:[.prettyPrinted,.sortedKeys]).write(to:URL(fileURLWithPath:args[i+1]));NSApp.terminate(nil);return
         }
         if let i=args.firstIndex(of:"--snapshot"),i+1<args.count {
@@ -407,7 +411,7 @@ extension VoxelRenderer {
             if occupied {
                 let hit=(eye+ray*t)*history.voxel_mm+origin;let oldEye=eye*history.voxel_mm+origin
                 picked=String(format:"occupied @ (%.4f, %.4f, %.4f) mm",hit.x,hit.y,hit.z)
-                if provenanceBuffer != nil && frame==history.frames.count {
+                if provenanceBuffer != nil && provenanceAvailableAtFrame {
                     var neighbor=p;neighbor[faceAxis] += ray[faceAxis]>0 ? -1:1
                     if abs((eye+ray*t)[faceAxis] - round((eye+ray*t)[faceAxis]))<0.01, let (op,tool)=provenanceAt(neighbor) {picked += " · exposed by \(history.frames[Int(op)-1].stage) (operation \(op), tool \(tool == 0 ? "none":String(tool-1)))"}
                     else {picked += " · initial/prehistory boundary or section interior"}

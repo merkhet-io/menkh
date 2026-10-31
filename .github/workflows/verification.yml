@@ -36,6 +36,9 @@ jobs:
           xcrun clang++ -std=c++17 -O2 viewer/windows/history-test.cpp -o out/history-test
           python3 scripts/test-provenance.py
           python3 scripts/test-viewer-provenance.py --exe out/history-test
+          python3 scripts/test-playback-provenance.py
+          out/history-test out/playback-provenance/all_frames/voxel-animation.json out/playback-provenance/all_frames/oracle.json
+          python3 scripts/test-viewer-provenance.py --exe out/history-test --history out/playback-provenance/all_frames/voxel-animation.json
       - name: C embedding boundary and independent host
         run: |
           ./zig build sdk -Doptimize=ReleaseFast
@@ -146,6 +149,17 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Provenance reader failed' }
           ./out/windows-viewer/menkh-viewer.exe out/provenance-test/voxel-animation.json --color-operation --warp --debug --snapshot out/windows-provenance.ppm
           if ($LASTEXITCODE -ne 0) { throw 'Provenance render failed' }
+      - name: Playback exposure oracle and D3D12 rewind
+        shell: pwsh
+        run: |
+          python scripts/test-playback-provenance.py
+          if ($LASTEXITCODE -ne 0) { throw 'Playback extraction oracle failed' }
+          python scripts/test-viewer-provenance.py --exe out/windows-viewer/menkh-viewer.exe --viewer --history out/playback-provenance/all_frames/voxel-animation.json
+          if ($LASTEXITCODE -ne 0) { throw 'Playback metadata validation failed' }
+          ./out/windows-viewer/menkh-viewer.exe out/playback-provenance/all_frames/voxel-animation.json --verify-provenance-oracle out/playback-provenance/all_frames/oracle.json
+          if ($LASTEXITCODE -ne 0) { throw 'Playback query oracle failed' }
+          ./out/windows-viewer/menkh-viewer.exe out/playback-provenance/all_frames/voxel-animation.json --color-operation --warp --debug --smoke out/windows-playback-provenance
+          if ($LASTEXITCODE -ne 0) { throw 'Playback rendering failed' }
       - name: Reject malformed viewer histories
         shell: pwsh
         run: python scripts/test-viewer-history.py --exe out/windows-viewer/menkh-viewer.exe --history out/windows-pocket/voxel-animation.json --viewer
@@ -172,6 +186,8 @@ jobs:
             out/windows-job-render-images/
             out/windows-provenance.ppm
             out/windows-profile.ppm
+
+            out/windows-playback-provenance/
             out/windows-job-runner/
             out/windows-library-runner/
             out/windows-dll-render-images/

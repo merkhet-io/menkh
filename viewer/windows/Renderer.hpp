@@ -76,9 +76,9 @@ struct Camera {
         v.low = four(low);
         v.high = four(high);
         v.settings = {h.h, float(width), float(height), .41421356f};
-        v.dimensions = {h.n[0], h.n[1], h.n[2], 0};
+        v.dimensions = {h.n[0], h.n[1], h.n[2], uint32_t(h.frame)};
         v.blockDimensions = {h.nb[0], h.nb[1], h.nb[2], 0};
-        v.flags = {uint32_t(dark), uint32_t(antialias), h.frame == h.steps.size() ? colorMode : 0, uint32_t(h.provenance.size()/4)};
+        v.flags = {uint32_t(dark), uint32_t(antialias), h.provenanceAvailableAtFrame() ? colorMode : 0, uint32_t(h.provenance.size()/4)};
         if (tool && h.frame) {
             const auto &s = h.steps[h.frame - 1];
             auto set = [&](Part p, F4 &radial, F4 &axial) {

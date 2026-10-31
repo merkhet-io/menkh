@@ -55,7 +55,7 @@ uint exposure(int3 cell) {
     uint old=lo;lo+=uint(cell.x);hi+=uint(lo<old);
     uint left=0,right=flags.w;
     [loop] while(left<right){uint mid=left+(right-left)/2;uint l=provenance[mid*4],h=provenance[mid*4+1];if(h<hi||(h==hi&&l<lo))left=mid+1;else right=mid;}
-    if(left<flags.w&&provenance[left*4]==lo&&provenance[left*4+1]==hi)return provenance[left*4+(flags.z==2?3:2)];
+    if(left<flags.w&&provenance[left*4]==lo&&provenance[left*4+1]==hi&&provenance[left*4+2]<=dimensions.w)return provenance[left*4+(flags.z==2?3:2)];
     return 0;
 }
 float3 category(uint id) {

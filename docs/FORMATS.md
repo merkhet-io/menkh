@@ -121,3 +121,8 @@ mesh playback is unchanged.
 Profile cutters use `kind: "profile"` and `profile: [{z, radius}, ...]` in mm,
 with explicit `radius` (maximum) and `length`. Their validated polyline, lifetime,
 coverage and error contracts are specified in [GRINDING.md](GRINDING.md).
+
+Optional exposure metadata: `export_provenance: true` plus
+`provenance_scope: "final_surface"` (default) or `"all_frames"`. The latter records
+all historical surface exposures for playback, with a 1 GiB index limit and
+explicit resource failure. See [surface attribution](SURFACE-PROVENANCE.md).

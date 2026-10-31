@@ -10,7 +10,16 @@ def run(path,ok):
 run(source,True)
 with tempfile.TemporaryDirectory() as tmp:
  root=Path(tmp)/'history';shutil.copytree(source.parent,root);header=root/'surface-provenance.json';binary=root/'surface-provenance.bin';orig=json.loads(header.read_text());raw=binary.read_bytes();path=root/source.name
- for key,value in [('grid',[1,2,3]),('scope','all_frames'),('entries',-1),('bytes',orig['bytes']+1),('final_occupied',0)]:
+ # Probe scope and time gating even for cells not on the current visible surface.
+ rows=list(struct.iter_unpack('<QII',raw))[:100];frames=len(orig['operations']);oracle=[]
+ for frame in sorted({0,1,frames//2,frames}):
+  if frame>frames:continue
+  active=orig['scope']=='all_frames' or frame==frames
+  oracle.append(dict(frame=frame,neighbors=[[key,op if active and op<=frame else 0,tool if active and op<=frame else 0] for key,op,tool in rows]))
+ oracle_path=root/'query-oracle.json';oracle_path.write_text(json.dumps(oracle))
+ command=[exe,str(path)]+(['--verify-provenance-oracle'] if a.viewer else [])+[str(oracle_path)]
+ result=subprocess.run(command,capture_output=True);assert result.returncode==0,result.stderr.decode(errors='replace')
+ for key,value in [('grid',[1,2,3]),('scope','unknown_scope'),('entries',-1),('bytes',orig['bytes']+1),('final_occupied',orig['final_occupied']+1)]:
   bad=copy.deepcopy(orig);bad[key]=value;header.write_text(json.dumps(bad));run(path,False)
  header.write_text(json.dumps(orig))
  for offset,value in [(8,0),(8,len(orig['operations'])+1),(12,0xffffffff)]:

@@ -106,7 +106,7 @@ float3 shade(float2 pixel,constant Uniforms &u,device const uint *blocks,device 
             ulong cell=(ulong(neighbor.z)*u.dimensions.y+uint(neighbor.y))*u.dimensions.x+uint(neighbor.x);
             uint lo=0,hi=u.provenance.x;
             while(lo<hi){uint mid=lo+(hi-lo)/2;if(exposures[mid].cell<cell)lo=mid+1;else hi=mid;}
-            if(lo<u.provenance.x && exposures[lo].cell==cell)label=u.provenance.y==1?exposures[lo].operation:exposures[lo].tool;
+            if(lo<u.provenance.x && exposures[lo].cell==cell && exposures[lo].operation<=u.provenance.z)label=u.provenance.y==1?exposures[lo].operation:exposures[lo].tool;
         }
         uint hash=label*2654435761u;hash^=hash>>16;
         blue=label==0?float3(.58,.6,.63):float3(.25)+float3(float(hash&255u),float((hash>>8)&255u),float((hash>>16)&255u))*(.7/255.0);

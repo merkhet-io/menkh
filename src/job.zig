@@ -33,6 +33,7 @@ pub const Job = struct {
     export_mesh: bool = true,
     export_defects: bool = false,
     export_provenance: bool = false,
+    provenance_scope: enum { final_surface, all_frames } = .final_surface,
 };
 fn read(a: std.mem.Allocator, path: []const u8) ![]u8 {
     return std.fs.cwd().readFileAlloc(a, path, 1024 * 1024 * 1024);
@@ -208,7 +209,7 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
     try std.fs.cwd().makePath(out);
     var dir = try std.fs.cwd().openDir(out, .{});
     defer dir.close();
-    for ([_][]const u8{ "defects.json", "surface-provenance.json", "surface-provenance.bin" }) |name| dir.deleteFile(name) catch |err| switch (err) {
+    for ([_][]const u8{ "voxel-animation.json", "report.json", "defects.json", "surface-provenance.json", "surface-provenance.bin" }) |name| dir.deleteFile(name) catch |err| switch (err) {
         error.FileNotFound => {},
         else => return err,
     };
@@ -255,6 +256,11 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
     defer changes.deinit(a);
     var occupied = initial;
     var history_bytes: usize = 0;
+    var playback_provenance = @import("provenance.zig").Index.initAllFrames(a, g);
+    defer playback_provenance.deinit();
+    var provenance_extract_ns: u64 = 0;
+    var provenance_capacity_bytes: usize = 0;
+    var provenance_entries: usize = 0;
     try progress.emit("ready", 0, null);
     for (j.operations, 0..) |op, index| {
         var shape: e.Shape = undefined;
@@ -305,6 +311,9 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
         const collision_ns = timer.lap();
         try e.subtract(&g, shape, &changes, reference);
         const cut_ns = timer.lap();
+        if (j.export_provenance and j.provenance_scope == .all_frames)
+            try playback_provenance.consumeFrame(g, changes.bytes.items, @intCast(index + 1), if (op.tool) |t| @intCast(t + 1) else 0);
+        provenance_extract_ns += timer.lap();
         occupied -= changes.removed;
         const name = try std.fmt.allocPrint(a, "step-{d:0>4}.delta", .{index});
         names.appendAssumeCapacity(name);
@@ -328,17 +337,20 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
         try writeDefects(a, dir, j, g, t);
     }
     const defects_ns = timer.lap();
-    // Optional derived metadata: inspect only final exposed faces, then intersect
-    // their empty-neighbor masks with the already-written removal deltas.
+    // Final-only extraction intersects final neighbors with recorded deltas.
+    // Playback extraction already collected newly exposed neighbors per operation.
     if (j.export_provenance) {
-        var provenance = try @import("provenance.zig").Index.init(a, g);
-        defer provenance.deinit();
-        for (names.items, j.operations, 0..) |name, op, index| {
+        var final_provenance = if (j.provenance_scope == .final_surface) try @import("provenance.zig").Index.init(a, g) else @import("provenance.zig").Index.initAllFrames(a, g);
+        defer final_provenance.deinit();
+        const provenance = if (j.provenance_scope == .all_frames) &playback_provenance else &final_provenance;
+        if (j.provenance_scope == .final_surface) for (names.items, j.operations, 0..) |name, op, index| {
             const delta = try dir.readFileAlloc(a, name, 1024 * 1024 * 1024);
             defer a.free(delta);
             try provenance.consume(delta, @intCast(index + 1), if (op.tool) |t| @intCast(t + 1) else 0);
-        }
+        };
         provenance.sort();
+        provenance_entries = provenance.entries.items.len;
+        provenance_capacity_bytes = provenance.entries.capacity * @sizeOf(@import("provenance.zig").Entry);
         // Explicit little-endian wire encoding, independent of host struct padding.
         const provenance_bytes = try a.alloc(u8, try std.math.mul(usize, provenance.entries.items.len, 16));
         defer a.free(provenance_bytes);
@@ -348,9 +360,10 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
             std.mem.writeInt(u32, provenance_bytes[i * 16 + 12 ..][0..4], entry.tool, .little);
         }
         try dir.writeFile(.{ .sub_path = "surface-provenance.bin", .data = provenance_bytes });
-        try json(a, dir, "surface-provenance.json", .{ .format = "menkh-surface-provenance-v1", .scope = "final_surface", .grid = g.n, .origin_mm = g.origin, .voxel_mm = g.h, .final_occupied = occupied, .operations = j.operations, .entries = provenance.entries.items.len, .bytes = provenance_bytes.len, .record_bytes = 16, .initial_id = 0 });
+        try json(a, dir, "surface-provenance.json", .{ .format = "menkh-surface-provenance-v1", .scope = @tagName(j.provenance_scope), .grid = g.n, .origin_mm = g.origin, .voxel_mm = g.h, .final_occupied = occupied, .operations = j.operations, .entries = provenance.entries.items.len, .bytes = provenance_bytes.len, .record_bytes = 16, .initial_id = 0 });
     }
-    const provenance_ns = timer.lap();
+    const provenance_finalize_ns = timer.lap();
+    const provenance_ns = provenance_finalize_ns + provenance_extract_ns;
     const point_results = try a.alloc(bool, j.points.len);
     defer a.free(point_results);
     for (j.points, 0..) |p, i| {
@@ -408,7 +421,7 @@ pub fn runControlled(a: std.mem.Allocator, path: []const u8, out: []const u8, re
     const checkpoint_write_ns = timer.lap();
     const export_ns = image_export_ns + checkpoint_encode_ns + checkpoint_write_ns;
     try json(a, dir, "voxel-animation.json", .{ .format = "menkh-voxel-history-v1", .grid = g.n, .block_grid = g.nb, .origin_mm = g.origin, .voxel_mm = g.h, .stock_min = j.bounds.lo, .stock_max = j.bounds.hi, .initial_occupied = initial, .final_occupied = occupied, .initial_pool_slots = initial_slots, .pool_slots = g.pool.items.len, .motion_tolerance_mm = j.motion_tolerance_mm, .frames = frames });
-    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .input_voxel_mm = parsed.value.voxel_mm, .voxel_override_mm = voxel_override, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .defects_ns = defects_ns, .provenance_ns = provenance_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
+    try json(a, dir, "report.json", .{ .format = "menkh-job-report-v1", .zig = builtin.zig_version_string, .mode = @tagName(builtin.mode), .workers = 1, .reference = reference, .input_voxel_mm = parsed.value.voxel_mm, .voxel_override_mm = voxel_override, .voxel_mm = g.h, .origin_mm = g.origin, .bounds = j.bounds, .raster_approximation = true, .initial_occupied = initial, .remaining_occupied = occupied, .remaining_volume_mm3 = @as(f64, @floatFromInt(occupied)) * g.h * g.h * g.h, .stats = stats, .history_bytes = history_bytes, .provenance_capacity_bytes = provenance_capacity_bytes, .provenance_entries = provenance_entries, .provenance_scope = if (j.export_provenance) @tagName(j.provenance_scope) else null, .cut_scratch_capacity_bytes = changes.coverage.capacity * @sizeOf(e.Coverage) + changes.flat_columns.capacity * @sizeOf(e.FlatColumn) + changes.bytes.capacity, .process_peak_rss_bytes = try @import("platform.zig").peakResidentBytes(), .timing = .{ .job_parse_validate_ns = job_parse_validate_ns, .image_export_ns = image_export_ns, .checkpoint_encode_ns = checkpoint_encode_ns, .checkpoint_write_ns = checkpoint_write_ns, .metadata_write_ns = timer.read(), .init_ns = init_ns, .stock_input = stock_input, .auxiliary_input = auxiliary_input, .auxiliary_voxelization_ns = auxiliary_ns, .initial_history_write_ns = initial_write_ns, .statistics_ns = stats_ns, .defects_ns = defects_ns, .provenance_ns = provenance_ns, .provenance_extract_ns = provenance_extract_ns, .provenance_finalize_ns = provenance_finalize_ns, .inspection_ns = inspection_ns, .surface_ns = surface_ns, .surface_analysis_ns = surface_analysis_ns, .export_ns = export_ns, .total_ns = total.read() }, .operations = reports, .target_comparison = comparison, .target_surface_deviation = surface_deviation, .point_occupancy = point_results, .ray_hits = ray_results });
     try progress.emit("complete", j.operations.len, null);
 }
 

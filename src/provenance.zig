@@ -1,4 +1,4 @@
-//! Final-surface provenance for monotone subtraction histories. A surviving
+//! Surface provenance for monotone subtraction histories. A surviving
 //! face was exposed when its empty neighbor was removed, not when its own
 //! occupied voxel was last touched. Initial/world-boundary faces have ID zero.
 const std = @import("std");
@@ -10,6 +10,50 @@ pub const Index = struct {
     grid: c.Grid,
     wanted: std.AutoHashMap(usize, c.Bits),
     entries: std.ArrayList(Entry) = .empty,
+    all_frames: bool = false,
+    last_operation: u32 = 0,
+    max_entries: usize = 67108864, // Matches the readers' 1 GiB wire limit.
+    pub fn initAllFrames(a: std.mem.Allocator, g: c.Grid) Index {
+        return .{ .allocator = a, .grid = g, .wanted = .init(a), .all_frames = true };
+    }
+    pub fn consumeFrame(s: *Index, g: c.Grid, bytes: []const u8, operation: u32, tool: u32) !void {
+        if (!s.all_frames) return error.InvalidProvenanceScope;
+        s.grid = g; // Pool storage can move between operations.
+        try s.consume(bytes, operation, tool);
+    }
+    fn adjacent(s: Index, b: [3]usize) c.Bits {
+        var neighbors: [6]c.Bits = @splat(@splat(0));
+        for (0..3) |axis| {
+            var p = b;
+            if (b[axis] > 0) {
+                p[axis] = b[axis] - 1;
+                neighbors[axis * 2] = s.grid.bits(s.grid.blockIndex(p));
+            }
+            p = b;
+            if (b[axis] + 1 < s.grid.nb[axis]) {
+                p[axis] = b[axis] + 1;
+                neighbors[axis * 2 + 1] = s.grid.bits(s.grid.blockIndex(p));
+            }
+        }
+        const own = s.grid.bits(s.grid.blockIndex(b));
+        var result: c.Bits = undefined;
+        for (0..8) |z| {
+            result[z] = ((own[z] << 1) & 0xfefefefefefefefe) |
+                ((own[z] >> 1) & 0x7f7f7f7f7f7f7f7f) |
+                (own[z] << 8) | (own[z] >> 8) |
+                ((neighbors[0][z] & 0x8080808080808080) >> 7) |
+                ((neighbors[1][z] & 0x0101010101010101) << 7) |
+                (neighbors[2][z] >> 56) | (neighbors[3][z] << 56) |
+                (if (z > 0) own[z - 1] else neighbors[4][7]) |
+                (if (z < 7) own[z + 1] else neighbors[5][0]);
+        }
+        return result;
+    }
+    fn reserve(s: *Index, count: usize) !void {
+        const needed = try std.math.add(usize, s.entries.items.len, count);
+        if (needed > s.max_entries) return error.ProvenanceTooLarge;
+        if (needed > s.entries.capacity) try s.entries.ensureTotalCapacityPrecise(s.allocator, @min(s.max_entries, @max(needed, @max(64, s.entries.capacity * 2))));
+    }
     pub fn init(a: std.mem.Allocator, g: c.Grid) !Index {
         var result = Index{ .allocator = a, .grid = g, .wanted = .init(a) };
         errdefer result.deinit();
@@ -44,7 +88,7 @@ pub const Index = struct {
         return value;
     }
     pub fn consume(s: *Index, bytes: []const u8, operation: u32, tool: u32) !void {
-        if (operation == 0) return error.InvalidOperationId;
+        if (operation == 0 or operation <= s.last_operation) return error.InvalidOperationId;
         var cursor: usize = 0;
         while (cursor < bytes.len) {
             const id = try get(u32, bytes, &cursor);
@@ -60,13 +104,14 @@ pub const Index = struct {
                 }
             }
             for (masks[0], masks[1]) |before, after| if ((after & ~before) != 0) return error.NonMonotoneHistory;
-            const wanted = s.wanted.getPtr(id) orelse continue;
             const b = s.grid.blockCoords(id);
+            var boundary = if (s.all_frames) s.adjacent(b) else @as(c.Bits, @splat(0));
+            const wanted = if (s.all_frames) &boundary else s.wanted.getPtr(id) orelse continue;
             for (masks[0], masks[1], 0..) |before, after, z| {
                 var removed = before & ~after & wanted[z];
                 // Reserve before changing this candidate mask. Index is disposable
                 // on failure; authoritative stock and history are never changed.
-                try s.entries.ensureUnusedCapacity(s.allocator, @popCount(removed));
+                try s.reserve(@popCount(removed));
                 wanted[z] &= ~removed;
                 while (removed != 0) {
                     const bit = @ctz(removed);
@@ -77,6 +122,7 @@ pub const Index = struct {
                 }
             }
         }
+        s.last_operation = operation;
     }
     pub fn sort(s: *Index) void {
         std.mem.sort(Entry, s.entries.items, {}, struct {

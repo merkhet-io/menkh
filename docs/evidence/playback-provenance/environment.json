@@ -1,0 +1,16 @@
+{
+  "hardware": "Apple M5 Max",
+  "physical_memory_bytes": 137438953472,
+  "compiler": "0.15.2",
+  "build": "ReleaseFast",
+  "workers": 1,
+  "base_commit": "2e6afb7f2631d5cfc8c0dec336903909a2532006",
+  "binary_sha256": "e4ee239f16c9682ff954ad6854e570c692b368846a5d7d043fb9f3cb5096b478",
+  "source_sha256": {
+    "src/job.zig": "aed17980988070cd4694411e7052f8f82f195ec5379534fb915b1a5edf0beaec",
+    "src/provenance.zig": "d5b69acadd1f64dbba1304b55f2fd8218b257fff1d9772a3f329b6504b97f5f1",
+    "src/engine.zig": "16a62badc62462bdbf7f392601ebeeed14069b170831b9438695d1d30e882055",
+    "scripts/benchmark-provenance.py": "2a8c43d757dc3e125fc9551522f6aa6baa0ac47357cffd2fa4c3357027a3d844"
+  },
+  "note": "Measured after integrating profile wheels and the output-reuse failure guard; exact source/binary hashes retained."
+}
