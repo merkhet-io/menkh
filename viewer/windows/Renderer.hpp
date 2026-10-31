@@ -117,6 +117,28 @@ class Renderer {
     uint32_t width = 0, height = 0;
     bool initial = true;
     std::wstring adapterLabel;
+    static ComPtr<ID3DBlob> shaderCode(const fs::path &path) {
+        // A live publication changes material, not the shader. Keep one compiled
+        // shader per process instead of blocking the UI on every window load.
+        // Restart the viewer after editing the shader at the same path.
+        static std::mutex lock;
+        static fs::path cachedPath;
+        static ComPtr<ID3DBlob> cached;
+        std::lock_guard<std::mutex> guard(lock);
+        if (!cached || cachedPath != path) {
+            ComPtr<ID3DBlob> code, error;
+            const auto result = D3DCompileFromFile(
+                path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "cs_5_0",
+                D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &error);
+            if (FAILED(result))
+                throw std::runtime_error(error ? std::string(
+                    static_cast<const char *>(error->GetBufferPointer()), error->GetBufferSize())
+                    : "Cannot compile Voxel.hlsl beside executable");
+            cachedPath = path;
+            cached = std::move(code);
+        }
+        return cached;
+    }
     ComPtr<ID3D12Resource> buffer(size_t bytes, D3D12_HEAP_TYPE type, D3D12_RESOURCE_STATES state) {
         D3D12_HEAP_PROPERTIES hp{};
         hp.Type = type;
@@ -278,15 +300,7 @@ class Renderer {
         hr(device->CreateRootSignature(0, serialized->GetBufferPointer(),
                                        serialized->GetBufferSize(), IID_PPV_ARGS(&root)),
            "Create root signature");
-        ComPtr<ID3DBlob> code;
-        auto compiled = D3DCompileFromFile(
-            shader.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "cs_5_0",
-            D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &error);
-        if (FAILED(compiled))
-            throw std::runtime_error(
-                error ? std::string(static_cast<const char *>(error->GetBufferPointer()),
-                                    error->GetBufferSize())
-                      : "Cannot compile Voxel.hlsl beside executable");
+        const auto code = shaderCode(shader);
         D3D12_COMPUTE_PIPELINE_STATE_DESC pd{};
         pd.pRootSignature = root.Get();
         pd.CS = {code->GetBufferPointer(), code->GetBufferSize()};

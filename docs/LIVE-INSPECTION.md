@@ -176,6 +176,9 @@ DLL mode includes engine and viewer in the same process, whereas subprocess mode
 reports viewer RSS separately from the engine's report. Both modes reload material
 buffers at publication boundaries; within a window, seeking uses changed-block
 updates. Renderer and buffers can coexist briefly during handover.
+Compiled shader bytecode is cached for the process; restart the viewer after
+editing `Voxel.hlsl`. Device/pipeline creation and full material uploads still
+occur at publication boundaries, and the first view includes shader compilation.
 
 Use `--live-evidence DIR --warp --debug --run-only` for automated validation with
 CPU-state dumps and real D3D12 images. It verifies each observed window's history
