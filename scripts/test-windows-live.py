@@ -52,6 +52,7 @@ user.GetWindowThreadProcessId.argtypes=[ctypes.c_void_p,ctypes.POINTER(ctypes.c_
 user.GetClassNameW.argtypes=[ctypes.c_void_p,ctypes.c_wchar_p,ctypes.c_int]
 user.GetWindowTextW.argtypes=[ctypes.c_void_p,ctypes.c_wchar_p,ctypes.c_int]
 user.GetDlgItem.argtypes=[ctypes.c_void_p,ctypes.c_int];user.GetDlgItem.restype=ctypes.c_void_p
+user.GetPropW.argtypes=[ctypes.c_void_p,ctypes.c_wchar_p];user.GetPropW.restype=ctypes.c_void_p
 user.SendMessageTimeoutW.argtypes=[ctypes.c_void_p,ctypes.c_uint,ctypes.c_size_t,ctypes.c_ssize_t,ctypes.c_uint,ctypes.c_uint,ctypes.POINTER(ctypes.c_size_t)];user.SendMessageTimeoutW.restype=ctypes.c_size_t
 
 def message(hwnd,code,w=0,l=0):
@@ -118,13 +119,25 @@ for mode in ['process','library']:
   # Actual keyboard scrubbing automatically holds the lease and unchecks Follow.
   message(view,0x100,0x24);wait(lambda:'Frame 0 /' in status(view),proc)
   assert message(user.GetDlgItem(run,3),0xF0)==0
+  # A forced pause publication may share completed_operations with an older
+  # log row but occupy another slot. Pin the actual displayed/held sequence,
+  # not the row observed before the UI finished its last publication handover.
+  def held_publication():
+   sequence=user.GetPropW(view,'MenkhLiveSequence')
+   row=next((r for r in reversed(records(out/'live-viewer.jsonl')) if r['sequence']==sequence),None)
+   return row if row and sequence==user.GetPropW(view,'MenkhLiveSequence') else None
+  latest=wait(held_publication,proc)
+  assert latest['completed_operations']==completed
   message(view,0x100,0x23);wait(lambda:f"Frame {completed-latest['first_operation']} /" in status(view),proc)
   message(view,0x100,ord('G'));message(view,0x100,ord('G'))
   message(view,0x100,ord('F'));message(view,0x100,ord('F'))
   message(view,0x100,ord('X'));message(view,0x100,ord('Z'))
   message(view,0x201,9,(400<<16)|600) # Ctrl-click: occupied material coordinates.
   wait(lambda:'position_mm' in status(view),proc)
-  pinned=out/f"live/slot-{latest['publication']['slot']}";before=digest(pinned)
+  pinned=out/f"live/slot-{latest['publication']['slot']}"
+  assert read(pinned/'voxel-animation.json')['live_sequence']==latest['sequence']
+  assert user.GetPropW(view,'MenkhLiveSequence')==latest['sequence']
+  before=digest(pinned)
   time.sleep(.1);assert read(out/'live/status.json')['completed_operations']==completed
   if action=='complete':
    click(run,2);wait(lambda:any(x.get('completed_operations',0)>=completed+50 for x in records(out/'progress.jsonl')),proc)

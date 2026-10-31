@@ -220,6 +220,7 @@ LRESULT CALLBACK procedure(HWND w, UINT msg, WPARAM wp, LPARAM lp) {
             DestroyWindow(w);
             return 0;
         case WM_DESTROY:
+            RemovePropW(w,L"MenkhLiveSequence");
             if (w == app->window && !app->live)
                 PostQuitMessage(0);
             return 0;
