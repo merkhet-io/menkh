@@ -56,7 +56,7 @@ The current implementation:
 - Processes disjoint rays with deterministic CPU workers and stores long material
   spans as intervals rather than individual volume voxels.
 
-**Latest matched measurements:** M5 Max, 128 GiB, Zig 0.15.2 ReleaseFast, eight
+**Stage 1 matched measurements:** M5 Max, 128 GiB, Zig 0.15.2 ReleaseFast, eight
 workers; one warm-up and five measured runs per configuration, alternating the
 old and improved group-enclosure kernels.
 
@@ -86,6 +86,43 @@ A complete **6.25 µm** run was also performed with the earlier **fixed** method
 122.52 s cutting and 676.32 MB kernel peak RSS. That is a historical qualification,
 not a measurement of the latest `axis` kernel. Its 10 µm motion budget remained
 separate from ray spacing. [Evidence](docs/evidence/analytic-dexels/README.md).
+
+### Stage 2: continuous translation sweeps
+
+`--method sweep` now sweeps the **complete finite profiled wheel continuously**
+along each fixed-orientation subsegment. Only orientation is subdivided, with an
+explicit conservative motion bound. The frozen screw needs 11,264 sweeps instead
+of 39,936 midpoint poses; a fixed-axis straight move needs just one sweep.
+
+The first version was **not a screw-performance win**.
+In its matched eight-worker series at 25 µm, cutting took **3.744 s**
+(range 3.675–3.810), versus **3.537 s** (3.466–3.708) for `axis`.
+Sweep kernel total was 3.751 s and peak RSS 56.59 MB. Both methods ran faster
+than the earlier stage-1 session; that cross-session change is not a code speedup.
+The existing method remains available and the default stays `fixed`.
+
+A subsequent directional rejection enclosure preserves the entire material state
+while reducing fine sweep queries from **81.9 to 50.9 million**. Matched 25 µm
+cutting medians improve from **4.055 to 3.101 s (1.31×)**; final interval files are
+byte-identical at all four spacings. This is a separate measurement session,
+not a comparison with the 3.744 s figure above. A separate fresh matched run
+measured improved `sweep` at **3.128 s** versus `axis` at **3.973 s**, with their
+respective approximation policies unchanged. [Raw results, ranges and rejected trial](docs/evidence/sweep-directional-envelopes/README.md).
+
+An independent time-subdivision/distance oracle checked 128 cut endpoints at each
+of four spacings. At 25 µm the largest sampled upper distance was **8.29 µm**,
+within the sweep's **9.36 µm motion bound**. These are sampled distances to the
+continuous tool union, not a certified maximum surface error or a display-mesh
+accuracy guarantee. The approximation differs from `axis`; final states are not
+claimed byte-identical between methods.
+
+```sh
+zig-out/bin/menkh raydexel-bench --method sweep --spacing 0.025 --tolerance 0.01 --workers 8 --out out/screw-sweeps-25um
+python3 scripts/check-sweep-accuracy.py out/screw-sweeps-25um --out out/screw-sweeps-25um/accuracy.json
+```
+
+See [algorithm, error bound and restrictions](docs/CONTINUOUS-SWEEPS.md) and
+[raw measurements, rejected optimization and inspected screenshot](docs/evidence/continuous-sweeps/README.md).
 
 ### Inspect an interval result
 
@@ -287,7 +324,7 @@ There is no established matched performance ratio against Jens or ModuleWorks.
 ./zig build test --summary all
 ./zig build test -Doptimize=ReleaseFast --summary all
 python3 scripts/test-raydexels.py --out out/ray-tests-new
-python3 scripts/benchmark-raydexels.py --methods fixed axis --out out/ray-bench-new
+python3 scripts/benchmark-raydexels.py --methods axis sweep --out out/ray-bench-new
 ```
 
 The ray suite includes independent geometry checks, exhaustive small-grid

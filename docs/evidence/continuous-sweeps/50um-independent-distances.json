@@ -1,0 +1,1296 @@
+{
+  "method": "sweep",
+  "spacing_mm": 0.05,
+  "eligible_endpoints": 418952,
+  "samples": 128,
+  "epsilon_mm": 0.0005,
+  "max_sampled_upper_mm": 0.00828507756723312,
+  "min_sampled_lower_mm": 0.000901727969923845,
+  "declared_motion_bound_mm": 0.009364547908836788,
+  "elapsed_seconds": 0.9586446250032168,
+  "job_sha256": "dbe0e45c5d36fa35f4a5ac14492b2970ebedfad1d6e3eef3b25da5e383721a41",
+  "interval_sha256": "c372b949731adc615bff1458878fe8164fd56ed3410395a6d5a175a38bccb2b2",
+  "note": "Independent sampled output-endpoint to continuous-tool-union distances. Lipschitz time brackets in real arithmetic with practical f64 guard; no certified Hausdorff claim, reverse surface coverage or XY reconstruction bound.",
+  "rows": [
+    {
+      "point": [
+        4.775,
+        2.325000000000001,
+        11.521094143212434
+      ],
+      "distance_lower_mm": 0.007555235656373003,
+      "distance_upper_mm": 0.008054923983631128,
+      "point_pose_evaluations": 2666
+    },
+    {
+      "point": [
+        -4.325,
+        0.27500000000000036,
+        36.41776045365264
+      ],
+      "distance_lower_mm": 0.007052320245970255,
+      "distance_upper_mm": 0.0075506919255688065,
+      "point_pose_evaluations": 2212
+    },
+    {
+      "point": [
+        2.575000000000001,
+        4.125,
+        4.360020459942084
+      ],
+      "distance_lower_mm": 0.006696241803857195,
+      "distance_upper_mm": 0.007195356566754885,
+      "point_pose_evaluations": 2506
+    },
+    {
+      "point": [
+        4.225000000000001,
+        1.3250000000000002,
+        36.62315322814682
+      ],
+      "distance_lower_mm": 0.001386118780033483,
+      "distance_upper_mm": 0.0018800042594922183,
+      "point_pose_evaluations": 1106
+    },
+    {
+      "point": [
+        3.4250000000000007,
+        2.1750000000000007,
+        16.44675215627979
+      ],
+      "distance_lower_mm": 0.007253701548188419,
+      "distance_upper_mm": 0.007752180851094452,
+      "point_pose_evaluations": 2514
+    },
+    {
+      "point": [
+        -2.675,
+        -4.775,
+        14.419045866352752
+      ],
+      "distance_lower_mm": 0.007406943029110278,
+      "distance_upper_mm": 0.00790670879194532,
+      "point_pose_evaluations": 2298
+    },
+    {
+      "point": [
+        3.625,
+        4.375,
+        20.029207184007788
+      ],
+      "distance_lower_mm": 0.0075440310413547144,
+      "distance_upper_mm": 0.008042981335796723,
+      "point_pose_evaluations": 2020
+    },
+    {
+      "point": [
+        5.475000000000001,
+        -0.5749999999999993,
+        16.938883534492938
+      ],
+      "distance_lower_mm": 0.007389610500180882,
+      "distance_upper_mm": 0.007889604194488255,
+      "point_pose_evaluations": 2248
+    },
+    {
+      "point": [
+        4.625,
+        -0.9249999999999998,
+        24.55949835324236
+      ],
+      "distance_lower_mm": 0.006790856740609433,
+      "distance_upper_mm": 0.007289237429355889,
+      "point_pose_evaluations": 2414
+    },
+    {
+      "point": [
+        4.725000000000001,
+        2.9250000000000007,
+        23.628709248428006
+      ],
+      "distance_lower_mm": 0.007359581369222611,
+      "distance_upper_mm": 0.007857595898590107,
+      "point_pose_evaluations": 2172
+    },
+    {
+      "point": [
+        -4.975,
+        -2.375,
+        9.640171454258756
+      ],
+      "distance_lower_mm": 0.007663681635392963,
+      "distance_upper_mm": 0.00816197659840161,
+      "point_pose_evaluations": 2238
+    },
+    {
+      "point": [
+        4.375,
+        3.125,
+        29.850719632287948
+      ],
+      "distance_lower_mm": 0.007508653473556221,
+      "distance_upper_mm": 0.008006904916221578,
+      "point_pose_evaluations": 2512
+    },
+    {
+      "point": [
+        5.275,
+        -2.025,
+        30.446888242358025
+      ],
+      "distance_lower_mm": 0.007404330544398036,
+      "distance_upper_mm": 0.007900707754427288,
+      "point_pose_evaluations": 2058
+    },
+    {
+      "point": [
+        4.475000000000001,
+        1.2250000000000005,
+        33.08731434685749
+      ],
+      "distance_lower_mm": 0.00683438652703614,
+      "distance_upper_mm": 0.007334063294585174,
+      "point_pose_evaluations": 2756
+    },
+    {
+      "point": [
+        -5.025,
+        1.6750000000000007,
+        30.535381940143306
+      ],
+      "distance_lower_mm": 0.007706405879608257,
+      "distance_upper_mm": 0.008203684200256597,
+      "point_pose_evaluations": 2726
+    },
+    {
+      "point": [
+        -4.375,
+        3.625,
+        16.20878155942613
+      ],
+      "distance_lower_mm": 0.007549002405362989,
+      "distance_upper_mm": 0.008046439017873023,
+      "point_pose_evaluations": 2028
+    },
+    {
+      "point": [
+        -1.375,
+        -4.625,
+        8.732754023996959
+      ],
+      "distance_lower_mm": 0.006725355053219399,
+      "distance_upper_mm": 0.007224612797214231,
+      "point_pose_evaluations": 2394
+    },
+    {
+      "point": [
+        -2.025,
+        -5.075,
+        6.585288011958009
+      ],
+      "distance_lower_mm": 0.007663387905219439,
+      "distance_upper_mm": 0.00815929151667181,
+      "point_pose_evaluations": 2316
+    },
+    {
+      "point": [
+        5.525,
+        2.2750000000000004,
+        29.62008784253941
+      ],
+      "distance_lower_mm": 0.00741435646387768,
+      "distance_upper_mm": 0.007909739018865382,
+      "point_pose_evaluations": 1804
+    },
+    {
+      "point": [
+        4.525,
+        1.4750000000000005,
+        7.556149844733721
+      ],
+      "distance_lower_mm": 0.006769326400190597,
+      "distance_upper_mm": 0.0072690296057041715,
+      "point_pose_evaluations": 2526
+    },
+    {
+      "point": [
+        -2.175,
+        3.6750000000000007,
+        7.127145902875887
+      ],
+      "distance_lower_mm": 0.007091319753786982,
+      "distance_upper_mm": 0.007588353423421499,
+      "point_pose_evaluations": 2566
+    },
+    {
+      "point": [
+        -4.375,
+        -4.075,
+        11.831448123327824
+      ],
+      "distance_lower_mm": 0.007515297542019792,
+      "distance_upper_mm": 0.008015164070697925,
+      "point_pose_evaluations": 1796
+    },
+    {
+      "point": [
+        4.225000000000001,
+        1.0250000000000004,
+        24.812835273584227
+      ],
+      "distance_lower_mm": 0.007060899119927916,
+      "distance_upper_mm": 0.007560542956016492,
+      "point_pose_evaluations": 2472
+    },
+    {
+      "point": [
+        -1.625,
+        5.475000000000001,
+        15.46033089963815
+      ],
+      "distance_lower_mm": 0.007598011492939646,
+      "distance_upper_mm": 0.008097929992559826,
+      "point_pose_evaluations": 1994
+    },
+    {
+      "point": [
+        -3.625,
+        2.6750000000000007,
+        14.55229523709473
+      ],
+      "distance_lower_mm": 0.006951331930600919,
+      "distance_upper_mm": 0.007449366021868477,
+      "point_pose_evaluations": 2452
+    },
+    {
+      "point": [
+        -1.9249999999999998,
+        -4.025,
+        12.829545986460165
+      ],
+      "distance_lower_mm": 0.006976281461045649,
+      "distance_upper_mm": 0.007474515151173087,
+      "point_pose_evaluations": 2562
+    },
+    {
+      "point": [
+        -4.025,
+        3.575000000000001,
+        34.01368672114387
+      ],
+      "distance_lower_mm": 0.007554179523991061,
+      "distance_upper_mm": 0.008052785446793321,
+      "point_pose_evaluations": 2490
+    },
+    {
+      "point": [
+        -0.7749999999999995,
+        4.125,
+        29.849556122409798
+      ],
+      "distance_lower_mm": 0.007170334281048423,
+      "distance_upper_mm": 0.0076700607259807705,
+      "point_pose_evaluations": 2628
+    },
+    {
+      "point": [
+        -4.225,
+        0.27500000000000036,
+        11.500235279738684
+      ],
+      "distance_lower_mm": 0.007129364312760903,
+      "distance_upper_mm": 0.00762701920136851,
+      "point_pose_evaluations": 2592
+    },
+    {
+      "point": [
+        -0.9249999999999998,
+        5.675000000000001,
+        29.108881999474885
+      ],
+      "distance_lower_mm": 0.007248467596704564,
+      "distance_upper_mm": 0.007744295787904093,
+      "point_pose_evaluations": 1952
+    },
+    {
+      "point": [
+        -0.17499999999999982,
+        -4.525,
+        14.607406814753796
+      ],
+      "distance_lower_mm": 0.0069333780376253165,
+      "distance_upper_mm": 0.007431446949230055,
+      "point_pose_evaluations": 2654
+    },
+    {
+      "point": [
+        -1.0249999999999995,
+        5.175000000000001,
+        23.302322945027207
+      ],
+      "distance_lower_mm": 0.007607825577409663,
+      "distance_upper_mm": 0.00810513901683531,
+      "point_pose_evaluations": 2784
+    },
+    {
+      "point": [
+        -3.3249999999999997,
+        -3.975,
+        6.160397977106496
+      ],
+      "distance_lower_mm": 0.007643411203210406,
+      "distance_upper_mm": 0.008142233043341383,
+      "point_pose_evaluations": 3202
+    },
+    {
+      "point": [
+        5.025,
+        2.6750000000000007,
+        21.713817446894616
+      ],
+      "distance_lower_mm": 0.007599515205748875,
+      "distance_upper_mm": 0.008098310248095627,
+      "point_pose_evaluations": 2014
+    },
+    {
+      "point": [
+        -3.875,
+        -4.125,
+        23.95224278502086
+      ],
+      "distance_lower_mm": 0.007535589893989942,
+      "distance_upper_mm": 0.008034612168458615,
+      "point_pose_evaluations": 2044
+    },
+    {
+      "point": [
+        -0.9249999999999998,
+        -4.825,
+        14.72975747151966
+      ],
+      "distance_lower_mm": 0.006664847528047623,
+      "distance_upper_mm": 0.007162535465057789,
+      "point_pose_evaluations": 2372
+    },
+    {
+      "point": [
+        -2.625,
+        3.825000000000001,
+        18.01826068671478
+      ],
+      "distance_lower_mm": 0.006856820958074992,
+      "distance_upper_mm": 0.007354411246389166,
+      "point_pose_evaluations": 2422
+    },
+    {
+      "point": [
+        -4.725,
+        -2.375,
+        13.647364949918671
+      ],
+      "distance_lower_mm": 0.007711317431978443,
+      "distance_upper_mm": 0.00821062779242768,
+      "point_pose_evaluations": 2752
+    },
+    {
+      "point": [
+        4.425000000000001,
+        3.2750000000000004,
+        15.738909252194102
+      ],
+      "distance_lower_mm": 0.007635926886024821,
+      "distance_upper_mm": 0.008131714302057383,
+      "point_pose_evaluations": 2250
+    },
+    {
+      "point": [
+        -1.125,
+        4.225000000000001,
+        9.80137476060216
+      ],
+      "distance_lower_mm": 0.007024323385149299,
+      "distance_upper_mm": 0.0075238385507394884,
+      "point_pose_evaluations": 2478
+    },
+    {
+      "point": [
+        -2.4749999999999996,
+        -4.875,
+        10.470703155025735
+      ],
+      "distance_lower_mm": 0.007549764916214366,
+      "distance_upper_mm": 0.008048226865834101,
+      "point_pose_evaluations": 2304
+    },
+    {
+      "point": [
+        -0.7749999999999995,
+        4.475000000000001,
+        21.550713933557724
+      ],
+      "distance_lower_mm": 0.006925451679716697,
+      "distance_upper_mm": 0.007424569813697605,
+      "point_pose_evaluations": 2550
+    },
+    {
+      "point": [
+        3.5250000000000004,
+        -3.2249999999999996,
+        30.195936437305992
+      ],
+      "distance_lower_mm": 0.006759007312593419,
+      "distance_upper_mm": 0.007257163807084497,
+      "point_pose_evaluations": 2394
+    },
+    {
+      "point": [
+        4.675000000000001,
+        -3.5749999999999997,
+        20.280789514750953
+      ],
+      "distance_lower_mm": 0.007277647836218145,
+      "distance_upper_mm": 0.007777647318757874,
+      "point_pose_evaluations": 1858
+    },
+    {
+      "point": [
+        3.2249999999999996,
+        4.475000000000001,
+        8.131559037239526
+      ],
+      "distance_lower_mm": 0.007569203713556824,
+      "distance_upper_mm": 0.008068443744067778,
+      "point_pose_evaluations": 2228
+    },
+    {
+      "point": [
+        0.07500000000000018,
+        5.875,
+        32.872561311585955
+      ],
+      "distance_lower_mm": 0.007486501284338318,
+      "distance_upper_mm": 0.00798583215835897,
+      "point_pose_evaluations": 1860
+    },
+    {
+      "point": [
+        4.725000000000001,
+        1.4250000000000007,
+        33.362135435594276
+      ],
+      "distance_lower_mm": 0.006643098903286262,
+      "distance_upper_mm": 0.0071428805594790975,
+      "point_pose_evaluations": 2370
+    },
+    {
+      "point": [
+        -0.07499999999999929,
+        5.425000000000001,
+        12.952411003989276
+      ],
+      "distance_lower_mm": 0.00759751311474541,
+      "distance_upper_mm": 0.008097366531508454,
+      "point_pose_evaluations": 2378
+    },
+    {
+      "point": [
+        5.225000000000001,
+        -0.9249999999999998,
+        14.72138341488514
+      ],
+      "distance_lower_mm": 0.007569214838242662,
+      "distance_upper_mm": 0.008068243449741821,
+      "point_pose_evaluations": 2692
+    },
+    {
+      "point": [
+        4.725000000000001,
+        -3.5749999999999997,
+        8.292254150925064
+      ],
+      "distance_lower_mm": 0.007552147761350211,
+      "distance_upper_mm": 0.008051183144078385,
+      "point_pose_evaluations": 1826
+    },
+    {
+      "point": [
+        -0.07499999999999929,
+        -4.075,
+        9.687960979331924
+      ],
+      "distance_lower_mm": 0.007254327784923012,
+      "distance_upper_mm": 0.007752782583848576,
+      "point_pose_evaluations": 2518
+    },
+    {
+      "point": [
+        5.225000000000001,
+        0.375,
+        29.14202647366565
+      ],
+      "distance_lower_mm": 0.007606186754317299,
+      "distance_upper_mm": 0.008104581274219615,
+      "point_pose_evaluations": 2950
+    },
+    {
+      "point": [
+        -5.125,
+        2.9749999999999996,
+        10.213300874064336
+      ],
+      "distance_lower_mm": 0.007514760723592968,
+      "distance_upper_mm": 0.008009392841299508,
+      "point_pose_evaluations": 1826
+    },
+    {
+      "point": [
+        -5.525,
+        1.5250000000000004,
+        16.7522902321788
+      ],
+      "distance_lower_mm": 0.007573510989688144,
+      "distance_upper_mm": 0.00807055178477822,
+      "point_pose_evaluations": 1968
+    },
+    {
+      "point": [
+        -0.8249999999999993,
+        5.325000000000001,
+        5.133569340260011
+      ],
+      "distance_lower_mm": 0.007653788375207225,
+      "distance_upper_mm": 0.008150964437999599,
+      "point_pose_evaluations": 2482
+    },
+    {
+      "point": [
+        -4.825,
+        1.0750000000000002,
+        2.9328765215558503
+      ],
+      "distance_lower_mm": 0.0019424913817716288,
+      "distance_upper_mm": 0.0023864350053862515,
+      "point_pose_evaluations": 1120
+    },
+    {
+      "point": [
+        -4.925,
+        -3.125,
+        29.826033770620647
+      ],
+      "distance_lower_mm": 0.007401934298312661,
+      "distance_upper_mm": 0.007896295961088231,
+      "point_pose_evaluations": 1892
+    },
+    {
+      "point": [
+        4.625,
+        -3.4749999999999996,
+        32.28035022115992
+      ],
+      "distance_lower_mm": 0.007323474068019874,
+      "distance_upper_mm": 0.007823105546488605,
+      "point_pose_evaluations": 1924
+    },
+    {
+      "point": [
+        3.4250000000000007,
+        3.6750000000000007,
+        34.08555692937016
+      ],
+      "distance_lower_mm": 0.0077852255715971045,
+      "distance_upper_mm": 0.00828507756723312,
+      "point_pose_evaluations": 5416
+    },
+    {
+      "point": [
+        -0.5249999999999995,
+        -5.325,
+        28.81592751589512
+      ],
+      "distance_lower_mm": 0.007582692155765787,
+      "distance_upper_mm": 0.008080976881081657,
+      "point_pose_evaluations": 2574
+    },
+    {
+      "point": [
+        -1.8250000000000002,
+        3.7750000000000004,
+        22.95674392217138
+      ],
+      "distance_lower_mm": 0.00717624641412625,
+      "distance_upper_mm": 0.007674399643672641,
+      "point_pose_evaluations": 2752
+    },
+    {
+      "point": [
+        1.4750000000000005,
+        -3.8249999999999997,
+        10.776610964619127
+      ],
+      "distance_lower_mm": 0.007217548488248922,
+      "distance_upper_mm": 0.007715693753112149,
+      "point_pose_evaluations": 2518
+    },
+    {
+      "point": [
+        5.175000000000001,
+        -1.2249999999999996,
+        26.647684766876225
+      ],
+      "distance_lower_mm": 0.007544845860651956,
+      "distance_upper_mm": 0.008044064443475102,
+      "point_pose_evaluations": 2654
+    },
+    {
+      "point": [
+        -5.475,
+        0.5750000000000002,
+        24.93888353449294
+      ],
+      "distance_lower_mm": 0.007389610500185283,
+      "distance_upper_mm": 0.007889604194492273,
+      "point_pose_evaluations": 2248
+    },
+    {
+      "point": [
+        -3.0749999999999997,
+        -3.025,
+        12.508526320671642
+      ],
+      "distance_lower_mm": 0.007058604898663997,
+      "distance_upper_mm": 0.00755751268022755,
+      "point_pose_evaluations": 3108
+    },
+    {
+      "point": [
+        -3.125,
+        -2.5749999999999997,
+        17.144039129912517
+      ],
+      "distance_lower_mm": 0.007277367823256879,
+      "distance_upper_mm": 0.007777251574526658,
+      "point_pose_evaluations": 2764
+    },
+    {
+      "point": [
+        4.775,
+        -2.525,
+        34.31757837004504
+      ],
+      "distance_lower_mm": 0.0075272315733762125,
+      "distance_upper_mm": 0.008025393478150114,
+      "point_pose_evaluations": 2440
+    },
+    {
+      "point": [
+        -0.6749999999999998,
+        5.275,
+        17.105604713456966
+      ],
+      "distance_lower_mm": 0.007573105427908551,
+      "distance_upper_mm": 0.008070641355923171,
+      "point_pose_evaluations": 2654
+    },
+    {
+      "point": [
+        4.675000000000001,
+        -1.4249999999999998,
+        16.573447946105173
+      ],
+      "distance_lower_mm": 0.00667021395662681,
+      "distance_upper_mm": 0.007169300837534723,
+      "point_pose_evaluations": 2388
+    },
+    {
+      "point": [
+        3.4250000000000007,
+        2.375,
+        12.408411468608069
+      ],
+      "distance_lower_mm": 0.007189268465946572,
+      "distance_upper_mm": 0.007688120549690049,
+      "point_pose_evaluations": 2508
+    },
+    {
+      "point": [
+        -2.675,
+        -5.175,
+        8.287339178616394
+      ],
+      "distance_lower_mm": 0.007265235780491525,
+      "distance_upper_mm": 0.007764559656555404,
+      "point_pose_evaluations": 1886
+    },
+    {
+      "point": [
+        2.2750000000000004,
+        5.025,
+        20.385329101359414
+      ],
+      "distance_lower_mm": 0.007599450649775531,
+      "distance_upper_mm": 0.00809688993197938,
+      "point_pose_evaluations": 2226
+    },
+    {
+      "point": [
+        5.025,
+        -3.275,
+        20.390207580052536
+      ],
+      "distance_lower_mm": 0.007526602026183024,
+      "distance_upper_mm": 0.008019201282852802,
+      "point_pose_evaluations": 1786
+    },
+    {
+      "point": [
+        -1.5750000000000002,
+        -4.725,
+        8.565343235955423
+      ],
+      "distance_lower_mm": 0.006612036152073855,
+      "distance_upper_mm": 0.007111922661298131,
+      "point_pose_evaluations": 2970
+    },
+    {
+      "point": [
+        0.375,
+        5.075000000000001,
+        16.863324437826595
+      ],
+      "distance_lower_mm": 0.007769889828093987,
+      "distance_upper_mm": 0.008269126918738677,
+      "point_pose_evaluations": 4124
+    },
+    {
+      "point": [
+        0.7250000000000005,
+        -4.375,
+        18.789218218990424
+      ],
+      "distance_lower_mm": 0.0069994177880467225,
+      "distance_upper_mm": 0.007497085703442155,
+      "point_pose_evaluations": 2740
+    },
+    {
+      "point": [
+        -0.6749999999999998,
+        4.325000000000001,
+        14.73046091089475
+      ],
+      "distance_lower_mm": 0.007032138876042647,
+      "distance_upper_mm": 0.007531986418972096,
+      "point_pose_evaluations": 2790
+    },
+    {
+      "point": [
+        1.5250000000000004,
+        5.475000000000001,
+        6.744101760544384
+      ],
+      "distance_lower_mm": 0.0074981302050138605,
+      "distance_upper_mm": 0.00799755945081282,
+      "point_pose_evaluations": 2020
+    },
+    {
+      "point": [
+        -3.4749999999999996,
+        3.4749999999999996,
+        30.02778990596118
+      ],
+      "distance_lower_mm": 0.006645165594448378,
+      "distance_upper_mm": 0.0071440451677869735,
+      "point_pose_evaluations": 2378
+    },
+    {
+      "point": [
+        3.5250000000000004,
+        3.375,
+        29.915617966878518
+      ],
+      "distance_lower_mm": 0.006665267973640612,
+      "distance_upper_mm": 0.007163365412426639,
+      "point_pose_evaluations": 2718
+    },
+    {
+      "point": [
+        -3.175,
+        -4.325,
+        10.253803663785746
+      ],
+      "distance_lower_mm": 0.007562095592867396,
+      "distance_upper_mm": 0.008059130888876808,
+      "point_pose_evaluations": 2540
+    },
+    {
+      "point": [
+        4.625,
+        0.375,
+        12.851216251458457
+      ],
+      "distance_lower_mm": 0.006834387167336644,
+      "distance_upper_mm": 0.007331910115541879,
+      "point_pose_evaluations": 2484
+    },
+    {
+      "point": [
+        0.07500000000000018,
+        4.475000000000001,
+        14.592885124342493
+      ],
+      "distance_lower_mm": 0.006973231265114484,
+      "distance_upper_mm": 0.007471794180017233,
+      "point_pose_evaluations": 2454
+    },
+    {
+      "point": [
+        -5.175,
+        3.0250000000000004,
+        30.201254970150956
+      ],
+      "distance_lower_mm": 0.007524003038455083,
+      "distance_upper_mm": 0.008023307694674152,
+      "point_pose_evaluations": 1788
+    },
+    {
+      "point": [
+        2.4250000000000007,
+        4.925000000000001,
+        8.346457291810896
+      ],
+      "distance_lower_mm": 0.0076503799952276266,
+      "distance_upper_mm": 0.008147059938151392,
+      "point_pose_evaluations": 2266
+    },
+    {
+      "point": [
+        1.8250000000000002,
+        -4.575,
+        13.502228933706736
+      ],
+      "distance_lower_mm": 0.006631347366259668,
+      "distance_upper_mm": 0.007130693542130373,
+      "point_pose_evaluations": 2424
+    },
+    {
+      "point": [
+        -5.775,
+        -0.125,
+        37.127218517474795
+      ],
+      "distance_lower_mm": 0.007218317851791286,
+      "distance_upper_mm": 0.007716591519318123,
+      "point_pose_evaluations": 1840
+    },
+    {
+      "point": [
+        3.9750000000000014,
+        1.0250000000000004,
+        20.00941064922538
+      ],
+      "distance_lower_mm": 0.0072338765034676514,
+      "distance_upper_mm": 0.007732334885566217,
+      "point_pose_evaluations": 2708
+    },
+    {
+      "point": [
+        1.1750000000000007,
+        -5.225,
+        13.222317970142498
+      ],
+      "distance_lower_mm": 0.007533023859861407,
+      "distance_upper_mm": 0.00803146674913631,
+      "point_pose_evaluations": 2552
+    },
+    {
+      "point": [
+        3.075000000000001,
+        -4.475,
+        29.701033963358075
+      ],
+      "distance_lower_mm": 0.007575331613259845,
+      "distance_upper_mm": 0.008070988798309513,
+      "point_pose_evaluations": 2368
+    },
+    {
+      "point": [
+        3.375,
+        -2.775,
+        10.596588102625736
+      ],
+      "distance_lower_mm": 0.007039853365870317,
+      "distance_upper_mm": 0.007537612374031301,
+      "point_pose_evaluations": 2582
+    },
+    {
+      "point": [
+        3.375,
+        -2.675,
+        27.62270333953049
+      ],
+      "distance_lower_mm": 0.0070889268441119,
+      "distance_upper_mm": 0.007587485330233925,
+      "point_pose_evaluations": 2592
+    },
+    {
+      "point": [
+        -5.125,
+        -1.4249999999999998,
+        17.40188142948689
+      ],
+      "distance_lower_mm": 0.0076131458389951355,
+      "distance_upper_mm": 0.008111981362952584,
+      "point_pose_evaluations": 2650
+    },
+    {
+      "point": [
+        3.325000000000001,
+        -2.2249999999999996,
+        35.475429859614266
+      ],
+      "distance_lower_mm": 0.007299203053055063,
+      "distance_upper_mm": 0.007799134649364822,
+      "point_pose_evaluations": 2742
+    },
+    {
+      "point": [
+        4.175000000000001,
+        -3.3249999999999997,
+        30.085644502841387
+      ],
+      "distance_lower_mm": 0.0077041101428298835,
+      "distance_upper_mm": 0.008203797076014025,
+      "point_pose_evaluations": 2606
+    },
+    {
+      "point": [
+        3.825000000000001,
+        2.5250000000000004,
+        16.04114425837694
+      ],
+      "distance_lower_mm": 0.006874858674918073,
+      "distance_upper_mm": 0.007373671890737798,
+      "point_pose_evaluations": 2506
+    },
+    {
+      "point": [
+        4.525,
+        -1.9249999999999998,
+        3.104123350866889
+      ],
+      "distance_lower_mm": 0.000901727969923845,
+      "distance_upper_mm": 0.0014000400041031303,
+      "point_pose_evaluations": 1084
+    },
+    {
+      "point": [
+        3.9250000000000007,
+        -1.9749999999999996,
+        26.859040832202652
+      ],
+      "distance_lower_mm": 0.00700612101526058,
+      "distance_upper_mm": 0.007505010997913087,
+      "point_pose_evaluations": 2528
+    },
+    {
+      "point": [
+        -1.0749999999999993,
+        4.475000000000001,
+        11.017766361276745
+      ],
+      "distance_lower_mm": 0.006877417567402325,
+      "distance_upper_mm": 0.007376938395891474,
+      "point_pose_evaluations": 2436
+    },
+    {
+      "point": [
+        4.375,
+        -3.2249999999999996,
+        16.257253199718313
+      ],
+      "distance_lower_mm": 0.007582794061138351,
+      "distance_upper_mm": 0.008081054156335707,
+      "point_pose_evaluations": 2364
+    },
+    {
+      "point": [
+        3.575000000000001,
+        2.825000000000001,
+        21.531436469098402
+      ],
+      "distance_lower_mm": 0.006894098246318922,
+      "distance_upper_mm": 0.007392666294348551,
+      "point_pose_evaluations": 2476
+    },
+    {
+      "point": [
+        -5.775,
+        0.9750000000000005,
+        4.791750319159672
+      ],
+      "distance_lower_mm": 0.007375180315723748,
+      "distance_upper_mm": 0.007871967124350121,
+      "point_pose_evaluations": 1538
+    },
+    {
+      "point": [
+        3.825000000000001,
+        -1.6749999999999998,
+        23.1046103535169
+      ],
+      "distance_lower_mm": 0.007184792498278906,
+      "distance_upper_mm": 0.0076847552087558075,
+      "point_pose_evaluations": 2506
+    },
+    {
+      "point": [
+        -3.375,
+        -4.525,
+        22.270138634298526
+      ],
+      "distance_lower_mm": 0.007627717348798851,
+      "distance_upper_mm": 0.008119723768392909,
+      "point_pose_evaluations": 2068
+    },
+    {
+      "point": [
+        -2.875,
+        4.225000000000001,
+        23.804430789324044
+      ],
+      "distance_lower_mm": 0.007725408782813555,
+      "distance_upper_mm": 0.008224203550502976,
+      "point_pose_evaluations": 3786
+    },
+    {
+      "point": [
+        -1.4749999999999996,
+        -4.925,
+        24.584369626953972
+      ],
+      "distance_lower_mm": 0.007716103767632275,
+      "distance_upper_mm": 0.008214770514551847,
+      "point_pose_evaluations": 3578
+    },
+    {
+      "point": [
+        0.4250000000000007,
+        4.625,
+        10.63504711931874
+      ],
+      "distance_lower_mm": 0.0068268190437165335,
+      "distance_upper_mm": 0.007324115993750423,
+      "point_pose_evaluations": 2484
+    },
+    {
+      "point": [
+        -4.825,
+        1.2750000000000004,
+        36.704972937575
+      ],
+      "distance_lower_mm": 0.006610186516252223,
+      "distance_upper_mm": 0.007108716836962422,
+      "point_pose_evaluations": 2462
+    },
+    {
+      "point": [
+        3.625,
+        -2.675,
+        18.55229523709473
+      ],
+      "distance_lower_mm": 0.00695133193060202,
+      "distance_upper_mm": 0.007449366021869666,
+      "point_pose_evaluations": 2452
+    },
+    {
+      "point": [
+        -3.3249999999999997,
+        -3.775,
+        32.03970219900145
+      ],
+      "distance_lower_mm": 0.007774001148527841,
+      "distance_upper_mm": 0.008273946543092122,
+      "point_pose_evaluations": 5120
+    },
+    {
+      "point": [
+        3.7750000000000004,
+        1.625,
+        4.833805813808616
+      ],
+      "distance_lower_mm": 0.007221988244088926,
+      "distance_upper_mm": 0.007721415498132356,
+      "point_pose_evaluations": 2588
+    },
+    {
+      "point": [
+        3.1750000000000007,
+        3.625,
+        5.977778211648406
+      ],
+      "distance_lower_mm": 0.0067295554017875805,
+      "distance_upper_mm": 0.0072270846080085905,
+      "point_pose_evaluations": 2516
+    },
+    {
+      "point": [
+        -5.075,
+        2.2249999999999996,
+        12.549648031756433
+      ],
+      "distance_lower_mm": 0.007550689155111342,
+      "distance_upper_mm": 0.008048603623807682,
+      "point_pose_evaluations": 2192
+    },
+    {
+      "point": [
+        -1.375,
+        -4.175,
+        13.046175414666555
+      ],
+      "distance_lower_mm": 0.007006496184062326,
+      "distance_upper_mm": 0.0075037534412853504,
+      "point_pose_evaluations": 2542
+    },
+    {
+      "point": [
+        3.375,
+        -3.125,
+        19.764314283385602
+      ],
+      "distance_lower_mm": 0.006883794371114293,
+      "distance_upper_mm": 0.007382079488618607,
+      "point_pose_evaluations": 2434
+    },
+    {
+      "point": [
+        0.1750000000000007,
+        5.575000000000001,
+        31.039106995042246
+      ],
+      "distance_lower_mm": 0.007409651848700303,
+      "distance_upper_mm": 0.007908404116084894,
+      "point_pose_evaluations": 2152
+    },
+    {
+      "point": [
+        -2.3249999999999997,
+        4.325000000000001,
+        21.659142263676614
+      ],
+      "distance_lower_mm": 0.006661955397673081,
+      "distance_upper_mm": 0.007161433756056758,
+      "point_pose_evaluations": 2374
+    },
+    {
+      "point": [
+        -5.675,
+        1.0250000000000004,
+        10.673575433406697
+      ],
+      "distance_lower_mm": 0.00746043560533592,
+      "distance_upper_mm": 0.00795830164535574,
+      "point_pose_evaluations": 1936
+    },
+    {
+      "point": [
+        3.575000000000001,
+        -1.875,
+        31.641766572086176
+      ],
+      "distance_lower_mm": 0.0072592998958743915,
+      "distance_upper_mm": 0.007759043854912897,
+      "point_pose_evaluations": 2614
+    },
+    {
+      "point": [
+        4.175000000000001,
+        -2.925,
+        6.178771858501791
+      ],
+      "distance_lower_mm": 0.007764195100098791,
+      "distance_upper_mm": 0.00826330909702166,
+      "point_pose_evaluations": 3976
+    },
+    {
+      "point": [
+        -1.7249999999999996,
+        -4.175,
+        22.14922857686401
+      ],
+      "distance_lower_mm": 0.006931273248470891,
+      "distance_upper_mm": 0.007427784132156773,
+      "point_pose_evaluations": 2484
+    },
+    {
+      "point": [
+        4.275,
+        2.325000000000001,
+        13.567151831650266
+      ],
+      "distance_lower_mm": 0.006695310099237629,
+      "distance_upper_mm": 0.007193061819385665,
+      "point_pose_evaluations": 2374
+    },
+    {
+      "point": [
+        4.525,
+        -0.625,
+        4.477337016258094
+      ],
+      "distance_lower_mm": 0.006960832084855021,
+      "distance_upper_mm": 0.007449760014914493,
+      "point_pose_evaluations": 1258
+    },
+    {
+      "point": [
+        -3.4749999999999996,
+        3.4250000000000007,
+        14.065859513328235
+      ],
+      "distance_lower_mm": 0.00668123797066459,
+      "distance_upper_mm": 0.007180236416747494,
+      "point_pose_evaluations": 2362
+    },
+    {
+      "point": [
+        3.825000000000001,
+        -2.675,
+        34.453179101717744
+      ],
+      "distance_lower_mm": 0.006815489196730406,
+      "distance_upper_mm": 0.007314146465282476,
+      "point_pose_evaluations": 2794
+    },
+    {
+      "point": [
+        3.4749999999999996,
+        2.0250000000000004,
+        8.426889586197312
+      ],
+      "distance_lower_mm": 0.007298716883083553,
+      "distance_upper_mm": 0.007794341202246741,
+      "point_pose_evaluations": 2510
+    },
+    {
+      "point": [
+        4.375,
+        0.9750000000000005,
+        3.659758799443087
+      ],
+      "distance_lower_mm": 0.006951178920271777,
+      "distance_upper_mm": 0.007448081394609806,
+      "point_pose_evaluations": 2510
+    },
+    {
+      "point": [
+        4.775,
+        -3.425,
+        12.31886120028492
+      ],
+      "distance_lower_mm": 0.0073238826972907255,
+      "distance_upper_mm": 0.007818222823108848,
+      "point_pose_evaluations": 1858
+    }
+  ]
+}

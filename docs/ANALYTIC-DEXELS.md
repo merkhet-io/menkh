@@ -245,3 +245,16 @@ order. The 25 µm axis-method cutting median changes from 5.54 to 4.60 s on eigh
 workers, with byte-identical interval files at all four tested spacings and no
 larger node/pool allocation. This changes rejection efficiency only; it does not
 alter the motion budget or introduce another material approximation.
+
+## Stage 2: continuous finite-profile sweeps
+
+The opt-in `--method sweep` implementation holds an axis per bounded rotary
+subsegment and sweeps the complete convex wheel continuously along its center
+translation. It uses endpoint tools, translated profile rims and silhouette
+patches, not isolated poses or a swept-sphere substitute. See
+[geometry and bound](CONTINUOUS-SWEEPS.md), [frozen protocol](CONTINUOUS-SWEEP-PROTOCOL.md)
+and [measured results](evidence/continuous-sweeps/README.md). The first version was
+slower than `axis` on the frozen 25 µm screw despite fewer prepared primitives.
+A [directional rejection follow-up](evidence/sweep-directional-envelopes/README.md)
+reduces fine sweep queries with byte-identical final material.
+The existing default and production voxel workflows are unchanged.
