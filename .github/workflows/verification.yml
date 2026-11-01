@@ -107,6 +107,9 @@ jobs:
       - name: ReleaseFast tests
         shell: pwsh
         run: ./zig.ps1 build test -Doptimize=ReleaseFast --summary all
+      - name: Native PowerShell demo entry points
+        shell: pwsh
+        run: ./scripts/test-windows-demos.ps1
       - name: Native screw grinding and exhaustive oracle
         shell: pwsh
         run: |

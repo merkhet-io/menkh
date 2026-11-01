@@ -61,6 +61,18 @@ installed for the viewer:
 .\out\windows-viewer\menkh-viewer.exe examples/pocket-25um.json --job-output out/windows-pocket
 ```
 
+For the demos, use PowerShell instead of the macOS `.sh` launchers:
+
+```powershell
+.\scripts\demo.ps1 -Demo scene
+.\scripts\demo.ps1 -Demo grinding -Voxel 0.1
+.\scripts\demo.ps1 -Demo rays -Spacing 0.025
+```
+
+Scene/grinding calculate and open the native viewer; rays writes a final interval
+result without playback. Add `-NoViewer` for calculation only, or `-SkipBuild` to
+reuse existing binaries. Outputs get fresh directories automatically.
+
 Zig builds the engine; MSVC builds the viewer. Alternatively, open
 `viewer/windows/menkh-viewer.vcxproj` in Visual Studio 2026, toolset **v145**,
 Release/x64. The viewer uses the adjacent `menkh.dll` on a worker thread;
