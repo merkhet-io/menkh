@@ -7,6 +7,52 @@ which can load the engine DLL to calculate jobs in process. Building only the Zi
 CLI does not require Visual Studio; building the native viewer requires the C++
 desktop tools and Windows SDK.
 
+## Demo launcher (PowerShell)
+
+After `scripts/bootstrap-zig.ps1`, use the Windows launcher instead of `.sh` files:
+
+```powershell
+.\scripts\demo.ps1 -Demo scene
+.\scripts\demo.ps1 -Demo grinding -Voxel 0.1 -Workers 8
+.\scripts\demo.ps1 -Demo rays -Spacing 0.025 -Workers 8
+```
+
+The launcher builds the ReleaseFast CLI, calculates into a fresh directory and
+opens the Windows viewer for scene/grinding results. If needed it builds that
+viewer with the existing MSVC build script. `-NoViewer` skips viewer build/launch;
+`-SkipBuild` uses existing binaries. Nothing is installed automatically. The
+calculation and grinding generator are native Zig; Bash, WSL and Python are not
+required. The PowerShell file only selects arguments and launches programs.
+
+| macOS entry point | Windows entry point |
+|---|---|
+| `scripts/scene-demo.sh` | `scripts/demo.ps1 -Demo scene` |
+| Native two-start screw / `menkh grinding-demo` | `scripts/demo.ps1 -Demo grinding` |
+| Continuous interval screw / `menkh raydexel-bench --method sweep` | `scripts/demo.ps1 -Demo rays` |
+
+`-Demo grinding` runs the two-start screw, not the older Python-generated
+`grinding-demo.sh` example. `-Demo rays` writes final intervals, PPM sections and
+reports; it has no Windows viewer or playback. Use `-Demo grinding` for animation.
+Neither resolution nor runtime is interchangeable between the two backends.
+
+`-Out PATH` chooses a fresh output directory (relative to your current directory).
+Existing directories are rejected. `-Workpiece right` selects the scene's second
+workpiece. Grinding accepts `-Tolerance` and `-StepsPerTurn`; rays accepts
+`-Tolerance`. Unsupported combinations are rejected rather than ignored.
+
+Quick calculation-only smoke runs:
+
+```powershell
+.\scripts\demo.ps1 -Demo scene -NoViewer
+.\scripts\demo.ps1 -Demo grinding -Voxel 0.5 -Tolerance 0.08 -StepsPerTurn 16 -NoViewer
+.\scripts\demo.ps1 -Demo rays -Spacing 0.5 -NoViewer
+```
+
+The Windows CI launcher test covers these native calculations, paths with spaces,
+German number formatting, existing-output protection and invalid arguments. It
+uses `-NoViewer`; viewer rendering has separate CI checks. Scientific Python
+analysis scripts and macOS video-recording scripts are not converted by this launcher.
+
 ## Screw grinding without shell scripts
 
 After building the CLI, the workload generator and simulator are both native:
