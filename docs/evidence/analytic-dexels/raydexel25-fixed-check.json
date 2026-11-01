@@ -1,0 +1,50 @@
+{
+  "format": "menkh-analytic-ray-experiment-v1",
+  "zig": "0.15.2",
+  "mode": "ReleaseFast",
+  "workers": 8,
+  "method": "fixed",
+  "adaptive_work": null,
+  "operations": 1024,
+  "poses": 90112,
+  "spacing_mm": 0.025,
+  "requested_motion_tolerance_mm": 0.01,
+  "motion_over_removal_bound_mm": 0.008477409808227827,
+  "offset_miter_factor": 1.1095045038310967,
+  "floating_point_guard_mm": 0.00000011,
+  "columns": 180960,
+  "intervals": 1018924,
+  "remaining_volume_mm3": 3608.094920814885,
+  "analytic_initial_volume_mm3": 4523.893421169302,
+  "initial_volume_mm3": 4524,
+  "volume_is_transverse_ray_quadrature": true,
+  "result_capacity_bytes": 20645824,
+  "scratch_bytes": 11534464,
+  "hierarchy_bytes": 12451768,
+  "peak_rss_before_export_and_oracle_bytes": 56950784,
+  "work": {
+    "node_tests": 433645726,
+    "ray_pose_tests": 632299785,
+    "cutting_intervals": 624563434,
+    "skipped_removed_nodes": 70713094,
+    "envelope_tests": 393470222,
+    "seed_tests": 42510016
+  },
+  "timing": {
+    "planning_ns": 14647125,
+    "hierarchy_ns": 61153875,
+    "cut_including_stock_init_ns": 9238869333,
+    "statistics_ns": 1139625,
+    "kernel_total_ns": 9315813333,
+    "export_ns": 11230417,
+    "comparison_ns": 1095953833,
+    "total_before_report_ns": 10422994333
+  },
+  "comparison": {
+    "reference_occupied": 230838212,
+    "sampled_occupied": 230916520,
+    "extra_removed": 0,
+    "extra_retained": 78308
+  },
+  "note": "Experimental continuous Z intervals, convex profile only. Midpoint/conic offset semantics differ from production. No history, native viewer, engagement or resume. Kernel time is not end-to-end parity."
+}

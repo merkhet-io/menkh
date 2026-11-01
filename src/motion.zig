@@ -81,7 +81,7 @@ pub const XYZAC = struct {
         const u = p.axis();
         return .{ .position = e.sub(p.position, e.scale(u, width / 2)), .axis = u };
     }
-    fn validate(p: XYZAC) !void {
+    pub fn validate(p: XYZAC) !void {
         try e.validV(p.position);
         for ([_]f64{ p.a_deg, p.c_deg }) |v| if (!std.math.isFinite(v) or @abs(v) > 1e6) return error.InvalidRotaryAngle;
     }

@@ -1,0 +1,37 @@
+[
+  {
+    "spacing_mm": 0.025,
+    "method": "axis",
+    "workers": 8,
+    "metrics": {
+      "planning_seconds": {
+        "median": 0.003248875,
+        "min": 0.003019167,
+        "max": 0.003342458
+      },
+      "hierarchy_seconds": {
+        "median": 0.021034583,
+        "min": 0.020236541,
+        "max": 0.023702792
+      },
+      "cut_including_stock_init_seconds": {
+        "median": 5.9949925,
+        "min": 5.959642584,
+        "max": 6.025697834
+      },
+      "kernel_total_seconds": {
+        "median": 6.023302209,
+        "min": 5.984467583,
+        "max": 6.051325958
+      },
+      "export_seconds": {
+        "median": 0.009722208,
+        "min": 0.008991417,
+        "max": 0.011216292
+      }
+    },
+    "peak_rss_bytes": 50970624,
+    "intervals": 1019600,
+    "interval_sha256": "21c4914a887938f2aec8c557e72a5f46acca645e0262523c302a2cb76dfa4471"
+  }
+]

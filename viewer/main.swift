@@ -45,7 +45,24 @@ func readMesh(_ url: URL) throws -> (SCNGeometry, Int) {
     geometry.materials = [metal]
     return (geometry, indices.count / 3)
 }
-func makeScene(_ geometry: SCNGeometry) -> (SCNScene, SCNNode, SCNNode) {
+struct MeshFraming {
+    let target: SIMD3<Float>
+    let distance: Float
+    init(_ geometry: SCNGeometry) {
+        let box = geometry.boundingBox
+        let low = SIMD3<Float>(Float(box.min.x),Float(box.min.y),Float(box.min.z))
+        let high = SIMD3<Float>(Float(box.max.x),Float(box.max.y),Float(box.max.z))
+        target = (low+high)/2
+        distance = max(simd_length(high-low),1)*1.5
+    }
+    func reset(_ camera: SCNNode) {
+        camera.simdPosition = target + simd_normalize(SIMD3<Float>(0.8,-1,0.65))*distance
+        camera.camera?.zNear = Double(max(distance/1000,0.0001))
+        camera.camera?.zFar = Double(max(distance*10,2000))
+        camera.look(at:SCNVector3(target),up:SCNVector3(0,0,1),localFront:SCNVector3(0,0,-1))
+    }
+}
+func makeScene(_ geometry: SCNGeometry) -> (SCNScene, SCNNode, SCNNode, MeshFraming) {
     let scene = SCNScene()
     scene.background.contents = NSColor(calibratedRed: 0.035, green: 0.055, blue: 0.08, alpha: 1)
     scene.rootNode.addChildNode(SCNNode(geometry: geometry))
@@ -53,14 +70,15 @@ func makeScene(_ geometry: SCNGeometry) -> (SCNScene, SCNNode, SCNNode) {
     camera.camera?.zNear = 0.1; camera.camera?.zFar = 2000
     camera.camera?.fieldOfView = 43
     scene.rootNode.addChildNode(camera)
-    reset(camera)
+    let framing = MeshFraming(geometry)
+    framing.reset(camera)
     let ambient = SCNNode(); ambient.light = SCNLight(); ambient.light?.type = .ambient
     ambient.light?.intensity = 220; ambient.light?.color = NSColor(calibratedWhite: 0.8, alpha: 1)
     scene.rootNode.addChildNode(ambient)
     for (position, intensity) in [(SCNVector3(0,-20,65),CGFloat(1700)),(SCNVector3(65,50,35),CGFloat(950))] {
         let light = SCNNode(); light.light = SCNLight(); light.light?.type = .directional; light.light?.intensity = intensity
         light.position = position
-        light.look(at: SCNVector3(20,15,0), up: SCNVector3(0,0,1), localFront: SCNVector3(0,0,-1))
+        light.look(at: SCNVector3(framing.target), up: SCNVector3(0,0,1), localFront: SCNVector3(0,0,-1))
         scene.rootNode.addChildNode(light)
     }
     // Display annotation, deliberately lifted 0.08 mm above the floor to prevent z-fighting.
@@ -75,19 +93,16 @@ func makeScene(_ geometry: SCNGeometry) -> (SCNScene, SCNNode, SCNNode) {
         let dot = SCNNode(geometry: sphere); dot.position = SCNVector3(x,15,6.08); path.addChildNode(dot)
     }
     scene.rootNode.addChildNode(path)
-    return (scene,camera,path)
-}
-func reset(_ camera: SCNNode) {
-    camera.position = SCNVector3(58,-38,90)
-    camera.look(at: SCNVector3(20,15,4), up: SCNVector3(0,0,1), localFront: SCNVector3(0,0,-1))
+    return (scene,camera,path,framing)
 }
 class Viewer: NSViewController {
     let sceneView = SCNView()
     let camera: SCNNode
     let path: SCNNode
     let status: String
-    init(scene: SCNScene, camera: SCNNode, path: SCNNode, status: String) {
-        self.camera = camera; self.path = path; self.status = status
+    let framing: MeshFraming
+    init(scene: SCNScene, camera: SCNNode, path: SCNNode, framing: MeshFraming, status: String) {
+        self.camera = camera; self.path = path; self.status = status; self.framing = framing
         super.init(nibName: nil,bundle: nil)
         sceneView.scene = scene; sceneView.pointOfView = camera
     }
@@ -97,10 +112,10 @@ class Viewer: NSViewController {
         sceneView.frame = view.bounds; sceneView.autoresizingMask = [.width,.height]
         sceneView.antialiasingMode = .multisampling4X; sceneView.allowsCameraControl = true
         sceneView.defaultCameraController.worldUp = SCNVector3(0,0,1)
-        sceneView.defaultCameraController.target = SCNVector3(20,15,4)
+        sceneView.defaultCameraController.target = SCNVector3(framing.target)
         sceneView.defaultCameraController.interactionMode = .orbitTurntable
         view.addSubview(sceneView)
-        let title = NSTextField(labelWithString: "MENKH  /  Voxel machining")
+        let title = NSTextField(labelWithString: "MENKH  /  Surface inspection")
         title.font = .systemFont(ofSize: 21, weight: .semibold); title.textColor = .white
         let detail = NSTextField(labelWithString: status + "\nZiehen: drehen · Scrollen: zoomen · R: Kamera zurücksetzen")
         detail.font = .systemFont(ofSize: 12); detail.textColor = NSColor(calibratedWhite:0.75,alpha:1)
@@ -108,14 +123,14 @@ class Viewer: NSViewController {
         let resetButton = NSButton(title: "Kamera zurücksetzen", target: self, action: #selector(resetCamera))
         resetButton.bezelStyle = .rounded
         let pathButton = NSButton(checkboxWithTitle: "Beispielbahn (Z = 6 mm)", target: self, action: #selector(togglePath(_:)))
-        pathButton.state = .on
+        pathButton.state = path.isHidden ? .off : .on
         let stack = NSStackView(views: [title,detail,resetButton,pathButton]); stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 10
         stack.translatesAutoresizingMaskIntoConstraints = false; view.addSubview(stack)
         NSLayoutConstraint.activate([stack.leadingAnchor.constraint(equalTo:view.leadingAnchor,constant:24),stack.topAnchor.constraint(equalTo:view.topAnchor,constant:22)])
     }
     @objc func resetCamera() {
         sceneView.defaultCameraController.stopInertia()
-        reset(camera); sceneView.pointOfView = camera
+        framing.reset(camera); sceneView.pointOfView = camera
     }
     @objc func togglePath(_ button: NSButton) { path.isHidden = button.state != .on }
 }
@@ -128,7 +143,7 @@ class Delegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
             if CommandLine.arguments.dropFirst().first == "--help" {
-                print("menkh-viewer [SCENE_RESULT.json | JOB_OR_HISTORY.json | MESH.obj] [--workpiece ID] [--engine PATH] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--snapshot FILE.png]\nJobs run in the background and open at the final state. --live enables bounded completed-operation inspection on macOS. Relative resources default to the job directory.")
+                print("menkh-viewer [SCENE_RESULT.json | JOB_OR_HISTORY.json | MESH.obj] [--workpiece ID] [--engine PATH] [--job-output NEW_DIR] [--working-dir DIR] [--run-only] [--live] [--snapshot FILE.png] [--hide-path]\nJobs run in the background and open at the final state. --live enables bounded completed-operation inspection on macOS. Relative resources default to the job directory.")
                 NSApp.terminate(nil);return
             }
             var file: URL
@@ -158,18 +173,19 @@ class Delegate: NSObject, NSApplicationDelegate {
             }
             let start = Date()
             let (geometry, triangles) = try readMesh(file)
-            let (scene,camera,path) = makeScene(geometry)
+            let (scene,camera,path,framing) = makeScene(geometry)
+            path.isHidden = CommandLine.arguments.contains("--hide-path")
             let loadSeconds = Date().timeIntervalSince(start)
-            if CommandLine.arguments.count == 4 && CommandLine.arguments[2] == "--snapshot" {
+            if let snapshotIndex = CommandLine.arguments.firstIndex(of:"--snapshot"), snapshotIndex+1 < CommandLine.arguments.count {
                 guard let device = MTLCreateSystemDefaultDevice() else { throw MeshError.noMetal }
                 let renderer = SCNRenderer(device:device,options:nil); renderer.scene = scene; renderer.pointOfView = camera
                 let image = renderer.snapshot(atTime:0,with:CGSize(width:1400,height:1000),antialiasingMode:.multisampling4X)
                 guard let tiff = image.tiffRepresentation, let bitmap = NSBitmapImageRep(data:tiff), let png = bitmap.representation(using:.png,properties:[:]) else { throw MeshError.imageEncoding }
-                try png.write(to:URL(fileURLWithPath:CommandLine.arguments[3]))
+                try png.write(to:URL(fileURLWithPath:CommandLine.arguments[snapshotIndex+1]))
                 print("Loaded \(triangles) triangles in \(loadSeconds) s; snapshot written")
                 NSApp.terminate(nil); return
             }
-            controller = Viewer(scene:scene,camera:camera,path:path,status:"\(triangles.formatted()) Dreiecke · Rasteroberfläche, ohne Glättung · mm")
+            controller = Viewer(scene:scene,camera:camera,path:path,framing:framing,status:"\(triangles.formatted()) triangles · exported surface, no smoothing · mm")
             let window = NSWindow(contentRect:NSRect(x:0,y:0,width:1100,height:760),styleMask:[.titled,.closable,.miniaturizable,.resizable],backing:.buffered,defer:false)
             window.title = "menkh — \(file.lastPathComponent)"; window.contentViewController = controller
             window.center(); window.makeKeyAndOrderFront(nil); self.window = window

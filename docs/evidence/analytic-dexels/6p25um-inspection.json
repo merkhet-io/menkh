@@ -1,0 +1,12 @@
+{
+  "columns": 2895324,
+  "intervals": 16302460,
+  "interval_endpoints": 32604920,
+  "spacing_mm": 0.00625,
+  "remaining_volume_mm3": 3608.0501911959263,
+  "touching_interval_pairs": 0,
+  "retained_core_columns_checked": 985216,
+  "screw_invariants_checked": true,
+  "validation_seconds": 12.296378875005757,
+  "note": "Endpoint count is not a surface-voxel count. Volume is transverse ray quadrature."
+}

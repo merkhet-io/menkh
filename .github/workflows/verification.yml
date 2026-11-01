@@ -34,6 +34,7 @@ jobs:
         run: |
           python3 scripts/test-grinding.py
           python3 scripts/test-screw-demo.py
+          python3 scripts/test-raydexels.py
           xcrun clang++ -std=c++17 -O2 viewer/windows/history-test.cpp -o out/history-test
           python3 scripts/test-scene.py --reader out/history-test
           python3 scripts/test-provenance.py
@@ -111,6 +112,8 @@ jobs:
         run: |
           python scripts/test-screw-demo.py
           if ($LASTEXITCODE -ne 0) { throw 'Screw tests failed' }
+          python scripts/test-raydexels.py
+          if ($LASTEXITCODE -ne 0) { throw 'Analytic ray tests failed' }
           ./scripts/summarize-grinding.ps1 out/screw-cli-test/native/result/report.json | Out-File out/screw-summary.json
           $summary = Get-Content out/screw-summary.json -Raw | ConvertFrom-Json
           if ($summary.operations -ne 128 -or $summary.cutting_seconds -le 0) { throw 'Phase summary failed' }

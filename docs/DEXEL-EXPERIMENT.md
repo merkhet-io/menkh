@@ -89,3 +89,11 @@ structure trial. The next useful experiment is prepared analytic or bounded
 ray/tool interval intersection, or a hierarchy sharing uniform regions/columns,
 measured on the same screw. More tool types and display smoothing will not solve
 this bottleneck. These algorithms are outside the existing Lean model.
+
+## Follow-on analytic experiment
+
+The [continuous ray-interval implementation](ANALYTIC-DEXELS.md) now evaluates
+convex tool/ray intersections directly and batches the full path. It retains
+continuous endpoints and a different explicit motion bound, so its measured
+speed is not an exact-semantics optimization of this quantized oracle. The
+quantized backend remains available for comparison.

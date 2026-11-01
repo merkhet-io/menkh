@@ -149,3 +149,14 @@ partial-block mask calculation; exact flat XY and scalar reference paths remain
 serial. Operation reports include `work.workers_used`, while report `workers`
 is the requested limit (1 for reference). Final material/history ordering is
 independent of worker count. See [grinding performance](GRINDING-PERFORMANCE.md).
+
+### Experimental continuous Z-ray dump
+
+`menkh-experimental-z-rays-v1` is described in [ANALYTIC-DEXELS.md](ANALYTIC-DEXELS.md).
+The JSON manifest stores millimeter origin, transverse spacing, XY dimensions,
+column/interval counts and a sibling binary filename. Binary data is little-endian:
+all 24-byte column records (`u32 x, y; u64 interval_offset, count`) followed by
+16-byte intervals (`f64 lo, hi`, absolute workpiece Z in mm). Columns are strictly
+row-major; referenced intervals are contiguous, finite, ordered and nonoverlapping.
+This is a final-state experiment format, not native voxel history or a resumable
+job checkpoint. Use the supplied read-only inspector to validate it.

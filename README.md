@@ -2,37 +2,351 @@
 
 # Menkh — geometric cutting simulation
 
-Menkh calculates the material left after machining, using a **Zig CPU engine** and voxel occupancy as its geometric truth. It runs on **macOS / Apple Silicon** and **Windows x86-64**, with native **Swift/Metal** and **C++/D3D12** viewers. Lean proofs cover selected core mathematical models; a versioned C API supports embedding the engine.
+Menkh calculates the material remaining after machining. Its **Zig CPU engine**
+runs on **macOS / Apple Silicon** and **Windows x86-64**, with native
+**Swift/Metal** and **C++/D3D12** voxel viewers. General machining jobs use binary
+voxel material; a separate experimental grinding kernel stores **continuous
+material intervals on sampled XY rays**. Lean proofs cover selected mathematical
+models, and a versioned C API supports embedding the voxel engine.
 
-[Get started](#get-started) · [Windows guide](docs/WINDOWS.md) · [C API](docs/C-API.md) · [Capabilities](docs/CAPABILITIES.md) · [Changelog](CHANGELOG.md)
+[Get started](#get-started) · [Grinding](#helical-screw-grinding) · [Windows guide](docs/WINDOWS.md) · [C API](docs/C-API.md) · [Capabilities](docs/CAPABILITIES.md) · [Changelog](CHANGELOG.md)
+
+| Workflow | Material representation | Inspection and persistence |
+|---|---|---|
+| General jobs, `grinding-demo`, `drill` | 8³ voxel blocks with pooled occupancy bits | Native voxel playback, reversible history, job checkpoints, supported inspection tools |
+| Experimental `raydexel-bench` | Continuous Z intervals on XY rays; no Z voxel subdivision | Final-state binary dump, PPM sections and derived OBJ; no history, resume or native interval animation |
+
+Toolpath generation, controller emulation, full machine kinematics and physical
+force/thermal simulation are outside the product boundary. All cutting runs on
+the CPU. GPU APIs provide rendering.
 
 ## Helical screw grinding
 
-A native Zig command grinds a two-start screw from a 12 × 40 mm cylindrical
-blank with a profiled wheel: 1,024 continuous XYZAC segments, reversible
-history and operation-exposure colors. No Python or shell script is needed to
-generate the workload, including on Windows.
+Both grinding paths use a 12 × 40 mm cylindrical blank, a finite profiled wheel
+and 1,024 continuous XYZAC segments to form a two-start screw. Motion is covered
+conservatively between tool poses. The workload is an idealized grinding example,
+not a certified thread profile or evidence of industrial simulator parity.
+
+### Fast final-state experiment
+
+After [building the CLI](#get-started), run the current symmetry-aware method:
 
 ```sh
-zig-out/bin/menkh grinding-demo --voxel 0.1 --out out/screw
+zig-out/bin/menkh raydexel-bench --method axis --spacing 0.025 --tolerance 0.01 --workers 8 --out out/screw-rays-25um
 ```
 
-Use `zig-out\bin\menkh.exe` on Windows. Open
-`out/screw/result/voxel-animation.json` in the native viewer. For 25 µm, use
-`--voxel 0.025` and a fresh output directory. See the
-[frozen protocol, commands and measured limits](docs/SCREW-GRINDING.md).
-The measured kernel change cuts this workload 4.63× faster than the preceding
-implementation at 100 µm; the 25 µm run and video are recorded in the
-[evidence report](docs/evidence/screw-grinding/README.md). This is not a certified
-thread profile or a claim of 16k³ cutting capability. An experimental
-[quantized dexel backend](docs/DEXEL-EXPERIMENT.md) preserves exact occupancy for
-comparison; it is currently slower and is not the default.
+On Windows:
 
-## Why “Menkh”?
+```powershell
+.\zig-out\bin\menkh.exe raydexel-bench --method axis --spacing 0.025 --tolerance 0.01 --workers 8 --out out/screw-rays-25um
+```
 
-**𓍊 — a chisel.** The name draws on ancient Egyptian *mnḫ*, associated with carving. We chose it because the simulator does the same basic job as a chisel: remove material to give a workpiece its shape. The sign **𓍊** is Gardiner **U22** (Unicode U+1334A), used in writing *mnḫ*. “Menkh” is our readable Latin spelling, not a claim about the exact ancient pronunciation. The logo pairs a chisel with a voxel block.
+Use a new output directory for each run. `--spacing` sets the **XY ray spacing in
+millimeters**; endpoints along Z remain continuous. `--tolerance` separately
+controls the motion approximation. `--method axis` is opt-in: the default remains
+`fixed`, and the independently tested `adaptive` method remains available.
 
-Sources: [Gardiner sign list, U22](https://www.egyptianhieroglyphs.net/gardiners-sign-list/) and the Metropolitan Museum’s [*Ancient Egyptian Calligraphy*](https://resources.metmuseum.org/resources/metpublications/pdf/Ancient_Egyptian_Calligraphy.pdf), entry U22.
+The current implementation:
+
+- Intersects the complete convex wheel profile analytically with each ray.
+- Uses rotational symmetry and true-time midpoint poses to reduce preparation
+  from **90,112 to 39,936 poses** at the same requested 10 µm motion budget.
+- Selects tighter group enclosures to skip more overlapping cuts, preserving
+  cutter geometry, traversal order and final material.
+- Processes disjoint rays with deterministic CPU workers and stores long material
+  spans as intervals rather than individual volume voxels.
+
+**Latest matched measurements:** M5 Max, 128 GiB, Zig 0.15.2 ReleaseFast, eight
+workers; one warm-up and five measured runs per configuration, alternating the
+old and improved group-enclosure kernels.
+
+| XY spacing | Previous cutting median | Current cutting median |
+|---|---:|---:|
+| 250 µm | 0.03988 s | **0.03188 s** |
+| 100 µm | 0.33121 s | **0.28406 s** |
+| 50 µm | 1.35656 s | **1.11647 s** |
+| 25 µm | 5.53682 s | **4.60302 s** |
+
+At 25 µm, the current range is **4.499–4.920 s**, kernel total median is **4.625 s**,
+and peak process RSS is **50.18 MB**. Fine ray/pose queries fall from **359.6 to
+282.1 million**. Complete interval files are **byte-identical before and after
+this optimization at all four spacings**. These are no-history cutting/kernel
+measurements, excluding mesh generation and viewer loading; they are not voxel
+tests-per-second or interactive FPS. See [raw results, ranges and reproduction](docs/evidence/ray-envelope-anchors/README.md).
+
+The earlier change from `fixed` to `axis` is different: it changes the conservative
+motion approximation. Their reported motion bounds are 8.48 and 9.81 µm,
+respectively, within the requested 10 µm budget. At 25 µm, `axis` removed an
+additional 4.22 mm³ in the frozen example; that difference is documented rather
+than treated as identical geometry. A separate stricter-bound run also completed.
+See [motion derivation and limits](docs/ANALYTIC-DEXELS.md) and
+[planner comparisons, accuracy tests and noisy runs](docs/evidence/axisymmetric-rays/README.md).
+
+A complete **6.25 µm** run was also performed with the earlier **fixed** method:
+122.52 s cutting and 676.32 MB kernel peak RSS. That is a historical qualification,
+not a measurement of the latest `axis` kernel. Its 10 µm motion budget remained
+separate from ray spacing. [Evidence](docs/evidence/analytic-dexels/README.md).
+
+### Inspect an interval result
+
+The CLI writes `job.json`, `report.json`, `intervals.json` / `intervals.bin`, and
+PPM sections through the workpiece. Validate a saved result with:
+
+```sh
+python3 scripts/inspect-raydexels.py out/screw-rays-25um/intervals.json --check-screw-invariants
+```
+
+For a manageable macOS mesh preview, generate a coarser result and export its
+actual column surface:
+
+```sh
+zig-out/bin/menkh raydexel-bench --method axis --spacing 0.1 --workers 8 --out out/screw-preview
+python3 scripts/export-raydexel-obj.py out/screw-preview/intervals.json out/screw-preview/surface.obj --validate-edges
+./scripts/build-viewer.sh
+zig-out/bin/menkh-viewer out/screw-preview/surface.obj --hide-path
+```
+
+![Actual 100 µm interval result, inspected in the native macOS viewer](docs/evidence/axisymmetric-rays/100um-axis-column-solid.png)
+
+This is the **100 µm column-solid preview**, without geometric smoothing. The OBJ
+viewer fits the actual mesh bounds; `--hide-path` hides the unrelated legacy groove
+annotation. Mesh export and loading can cost more than cutting. The exporter
+limits input to 256 MiB. Python is needed for these optional inspection scripts,
+not for the cutting CLI.
+
+The interval experiment currently supports convex profiled tools and cylindrical
+stock. It is **not tri-dexel storage** and has no STL stock import, resume, history
+or native interval playback. The Windows CLI can calculate it, but the Windows
+viewer does not load its interval dumps or OBJ previews. Use the voxel workflow
+below for animated inspection on either platform.
+
+### Grinding with playback and exposure colors
+
+```sh
+zig-out/bin/menkh grinding-demo --voxel 0.1 --workers 8 --out out/screw-history
+```
+
+Open `out/screw-history/result/voxel-animation.json` in the native viewer:
+
+```sh
+# macOS
+zig-out/bin/menkh-viewer out/screw-history/result/voxel-animation.json --color-operation
+```
+
+```powershell
+# Windows, after building the viewer
+.\out\windows-viewer\menkh-viewer.exe out/screw-history/result/voxel-animation.json --color-operation
+```
+
+Use `--voxel 0.025` for 25 µm voxel spacing and another fresh output directory.
+This path retains reversible history and operation-exposure provenance, so its
+runtime and memory are not interchangeable with `raydexel-bench` results.
+The generator is native Zig on both platforms. See the
+[screw protocol](docs/SCREW-GRINDING.md), [worker measurements and viewer details](docs/GRINDING-PERFORMANCE.md).
+The older [quantized dexel experiment](docs/DEXEL-EXPERIMENT.md) remains an exact
+occupancy comparison and was slower; it is distinct from the continuous kernel.
+
+## Get started
+
+### macOS / Apple Silicon
+
+With Apple Command Line Tools installed:
+
+```sh
+./scripts/bootstrap-zig.sh
+./zig build -Doptimize=ReleaseFast
+./scripts/general-demo.sh
+```
+
+The repository pins **Zig 0.15.2** locally in `.tools/`; no global installation is
+required. `./zig build` uses Debug by default. CLI builds and tests do not require
+the viewer. `./scripts/build-viewer.sh` builds the separate native macOS app.
+See [build/SDK details](docs/BENCHMARKS.md) if the installed macOS SDK is incompatible;
+`MENKH_SDK=/path/to/MacOSX.sdk ./zig build` selects an existing SDK without changing
+system settings.
+
+### Windows x86-64
+
+For playback without compiling, download **windows-d3d12-viewer** from a successful
+[Verification run](https://github.com/merkhet-io/menkh/actions/workflows/verification.yml),
+extract `menkh-windows-viewer-demo.zip`, and run `open-demo.bat`.
+`calculate-demo.bat` runs the bundled job. Keep the extracted files together.
+
+Build from PowerShell, with Visual Studio C++ desktop tools and the Windows SDK
+installed for the viewer:
+
+```powershell
+.\scripts\bootstrap-zig.ps1
+.\zig.ps1 build -Doptimize=ReleaseFast
+.\zig.ps1 build sdk -Doptimize=ReleaseFast
+.\viewer\windows\build.bat
+.\out\windows-viewer\menkh-viewer.exe examples/pocket-25um.json --job-output out/windows-pocket
+```
+
+Zig builds the engine; MSVC builds the viewer. Alternatively, open
+`viewer/windows/menkh-viewer.vcxproj` in Visual Studio 2026, toolset **v145**,
+Release/x64. The viewer uses the adjacent `menkh.dll` on a worker thread;
+`--library PATH` selects another DLL and `--engine PATH` selects the CLI runner.
+Use a new `--job-output` directory for each calculation.
+
+Both native voxel viewers support orbit/zoom, playback and scrubbing. Windows
+also supports pan, XYZ sections, target/fixture overlays and picking, but has fewer
+inspection features than macOS. **C** cycles exposure colors when provenance is
+available. [Windows setup](docs/WINDOWS.md) · [Controls and limits](viewer/windows/README.md).
+
+Windows CI checks MSVC builds, DLL/static-library integration, CLI equivalence,
+cancellation, shader compilation and D3D12 WARP rendering/replay. WARP establishes
+functionality, not hardware-GPU performance. New interval algorithms are also
+cross-built locally and covered by the portable CLI test suite.
+
+## General machining and inspection
+
+General JSON jobs support primitive or closed binary-STL stock/targets,
+fixed-orientation flat/ball/bull/taper cutters, bounded circular/helical motion,
+checkpoints, reversible history, fixture/holder checks and target comparison.
+Fixed-axis line jobs reject orientation changes; wheel XYZAC motion has its own
+bounded-sweep contract. Limited turning envelopes are geometric operations, not
+a complete mill-turn machine simulation.
+
+```sh
+zig-out/bin/menkh job examples/general.json --voxel 0.1 --out out/general
+zig-out/bin/menkh inspect-state out/general/final.menkh
+zig-out/bin/menkh-viewer out/general/voxel-animation.json --color-operation
+```
+
+`--voxel MM` overrides job spacing for stock, target and fixtures without rewriting
+the input JSON. Resumed states must match that grid. Voxel surface counts are
+reported separately from occupied volume voxels; [definitions and comparison limits](docs/INSPECTION-COUNTS.md)
+explain why these are not interchangeable with ray or predicate counts.
+
+- **Live inspection:** add `--live` when opening a job in either native viewer.
+  Follow the latest completed operation, hold/scrub retained states, pause/resume
+  calculation and cancel. [Live inspection](docs/LIVE-INSPECTION.md),
+  [overlays and picking](docs/LIVE-OVERLAYS.md).
+- **Exposure colors:** identify the operation/tool that exposed a face, not
+  geometric accuracy or removal rate. General jobs export playback-wide
+  provenance by default. Use `--provenance final_surface` or `--no-provenance`
+  to reduce attribution storage. [Color semantics](docs/SURFACE-PROVENANCE.md).
+- **Defects and collisions:** the macOS inspector filters excess/missing regions,
+  focuses findings and seeks collision operations. Reports can be regenerated
+  from saved material. [Inspector](docs/DEFECT-INSPECTOR.md).
+- **Scenes:** `./scripts/scene-demo.sh` exercises named geometry/tool resources and
+  independent translated workpieces. Both viewers open the resulting scene
+  catalog with `--workpiece ID`. It is not yet a combined assembly viewport or
+  inter-workpiece collision simulation. [Scene contract](docs/SCENES.md).
+
+[Watch the inspected pocket-milling video](docs/general-demo.mp4) · [Capability matrix](docs/CAPABILITIES.md)
+
+### Imported ball-end finishing
+
+```sh
+python3 scripts/finishing-workflow.py --smoke
+python3 scripts/finishing-workflow.py
+```
+
+This frozen experiment imports distinct closed STL stock and target, runs **5,199
+ball-end segments at 25 µm**, compares the result, validates checkpoint/compacted
+resumption and saves native inspection images. The smoke configuration uses the
+same geometry/path at 250 µm. The recorded robustness milestone completed in
+**21.75 s total**, **15.57 s cutting**, with **121.27 MB peak RSS** on the M5 Max.
+These are that milestone's measurements, not a rerun after every commit.
+[Protocol](docs/FINISHING-PROTOCOL.md) · [Implementation](docs/FINISHING-ARCHITECTURE.md) · [Results](docs/MILLING-ROBUSTNESS.md).
+`python3 scripts/clamped-finishing.py` adds low-clamp and deliberately colliding
+fixture cases; contact reports do not stop or reroute the path.
+
+### Embed the voxel engine
+
+Build `sdk` for a shared library or `sdk-static` for a static library. The
+[versioned C API](docs/C-API.md) exposes material operations, queries, copied-history
+undo/redo, checkpoint/resume and JSON jobs with progress/cancellation. Rendering
+remains separate. The experimental ray-interval command is not exposed through
+this API.
+
+## Accuracy and representation
+
+| Backend | Material and volume semantics |
+|---|---|
+| Voxel jobs | Occupancy is sampled at voxel centers; volume is occupied cells × voxel volume. Pooled 8³ blocks retain disconnected pieces and enclosed cavities. |
+| Continuous ray experiment | Each XY cell samples a continuous Z interval set; volume is summed interval length × XY cell area. Features between rays can be missed. OBJ export assigns each ray its square transverse cell. |
+
+Input tessellation, toolpath approximation, continuous-motion bounds, occupancy
+sampling and surface reconstruction are separate error sources. **25 µm spacing
+is not a guaranteed 25 µm maximum surface error.** A small volume difference is
+not proof of local accuracy. Normal smoothing changes lighting only; adaptive
+simulation resolution and viewer LOD are not implemented by the new ray kernel.
+
+The current dense voxel world has resource limits; the
+[sparse mutation experiment](docs/SPARSE-MUTATION.md) is a separate backend.
+A virtual 65,536³ coordinate domain is not proof that a fully populated surface
+of that scale fits memory. [Large-world qualification](docs/LARGE-WORLD-QUALIFICATION.md).
+There is no established matched performance ratio against Jens or ModuleWorks.
+
+## Tests and reproducible measurements
+
+```sh
+./zig build test --summary all
+./zig build test -Doptimize=ReleaseFast --summary all
+python3 scripts/test-raydexels.py --out out/ray-tests-new
+python3 scripts/benchmark-raydexels.py --methods fixed axis --out out/ray-bench-new
+```
+
+The ray suite includes independent geometry checks, exhaustive small-grid
+comparisons, allocation failures, exact worker determinism, interval validation,
+retained core/endcaps and mesh volume/edge checks. Benchmark outputs retain
+warm-ups, repeated timings, configuration/source/binary identifiers and material
+hashes. The [latest comparison](docs/evidence/ray-envelope-anchors/README.md)
+provides the command for comparing two compiled binaries byte for byte.
+
+Other recorded workloads include the 325-segment pocket: **2.43 ms cutting at
+100 µm**, and **60.65 ms at 25 µm** with 117.08 ms full CLI time when mesh export
+was disabled. These are historical ReleaseFast measurements of that specific
+voxel workload, not numbers for screw grinding. [CPU evidence](docs/CPU-PERFORMANCE.md).
+
+## Formal verification with Lean
+
+**34 named, machine-checked Lean results** cover selected mathematical models:
+finite-cylinder straight sweeps in real arithmetic; subtraction monotonicity and
+idempotence; removed/remaining partitions and restoration; and abstract pool
+ownership/history rules under explicit preconditions. Additional results support
+block classification under stated hypotheses.
+
+CI audits the proofs and their axioms and compares **20,480 Lean-generated
+records** with Zig in Debug and ReleaseFast. Negative controls check that broken
+subtraction, undo and pool updates fail verification.
+
+These are **model proofs plus implementation tests**, not a proof of the compiled
+Zig engine. The continuous ray kernel, axisymmetric planner and new group-envelope
+optimization are outside the formal model, as are floating-point rounding and
+surface reconstruction. Lean is separate from engine/viewer builds.
+
+```sh
+./scripts/bootstrap-formal.sh  # Requires existing elan; toolchain stays in .tools/
+./scripts/verify-formal.sh
+```
+
+[Theorem inventory, assumptions and reproduction](docs/FORMAL-VERIFICATION.md).
+
+## Original demos
+
+These supported demos retain their own protocols, media and historical measurements.
+
+| Demo | Command / guide |
+|---|---|
+| 40 × 30 × 10 mm capsule groove | `./zig build demo -- --voxel 0.25 --out out/groove` · [Architecture](docs/ARCHITECTURE.md) · [Original benchmarks](docs/BENCHMARKS.md) |
+| Twist drill from cylindrical stock | `./scripts/drill-demo.sh` · [Animation](docs/drill-demo.mp4) · [Guide](docs/DRILL-DEMO.md) |
+| Exact 4096³ voxel domain | `./scripts/drill-4096.sh` · [Animation](docs/drill-4096.mp4) · [Protocol and measurements](docs/VOXEL-4096.md) |
+| Profile-wheel grinding | `./scripts/grinding-demo.sh --profile` · [Wheel and motion contract](docs/GRINDING.md) |
+
+The default `drill` command emits `voxel-animation.json` for both native viewers;
+its `animation.json` retains the macOS mesh animation and routes Windows to the
+matching voxel history. Regenerate older mesh-only outputs once.
+
+The original groove's `demo`, `export` and `bench` commands remain available.
+They emit PPM height images, exposed-face OBJ meshes and JSON reports;
+`--no-mesh` skips mesh generation and `--reference` selects scalar cutting.
+`export` reruns that fixed scenario rather than loading an arbitrary state.
+See [formats](docs/FORMATS.md), [engine contracts](docs/ENGINE.md) and the
+[product roadmap](docs/PRODUCT-ROADMAP.md) for broader workflows and remaining gates.
 
 ## Why Zig?
 
@@ -56,301 +370,11 @@ Zig gives us useful control; the algorithms and data layout determine whether we
 use it well. Performance claims come from measured workloads and comparison with
 reference implementations, not from the language choice alone.
 
-## Get started
+## Why “Menkh”?
 
-General jobs consume stock geometry, tools and motion. They support primitive or binary-STL stock, fixed-orientation flat/ball/bull/taper cutters, bounded helical motion, reversible cutting history, resumable checkpoints, fixture/holder checks, target comparison, cross-sections and limited turning envelopes.
+**𓍊 — a chisel.** The name draws on ancient Egyptian *mnḫ*, associated with carving. We chose it because the simulator does the same basic job as a chisel: remove material to give a workpiece its shape. The sign **𓍊** is Gardiner **U22** (Unicode U+1334A), used in writing *mnḫ*. “Menkh” is our readable Latin spelling, not a claim about the exact ancient pronunciation. The logo pairs a chisel with a voxel block.
 
-### macOS / Apple Silicon
-
-With Apple Command Line Tools installed, bootstrap the pinned Zig compiler locally and start the native demonstration:
-
-```sh
-./scripts/bootstrap-zig.sh
-./scripts/general-demo.sh
-```
-
-Run without the viewer:
-
-```sh
-./zig build job -Doptimize=ReleaseFast -- examples/general.json --voxel 0.1 --out out/general
-./zig build test --summary all
-./zig build test -Doptimize=ReleaseFast --summary all
-python3 scripts/validate-engine.py
-python3 scripts/benchmark-engine.py
-```
-
-### Windows x86-64
-
-For playback without a compiler, download the **windows-d3d12-viewer** artifact from a successful [Verification run](https://github.com/merkhet-io/menkh/actions/workflows/verification.yml), extract the included `menkh-windows-viewer-demo.zip`, and run `open-demo.bat`. `calculate-demo.bat` runs the bundled job. Keep the extracted files together.
-
-To build from source, use PowerShell with Visual Studio C++ desktop tools and the Windows SDK installed:
-
-```powershell
-.\scripts\bootstrap-zig.ps1
-.\zig.ps1 build -Doptimize=ReleaseFast
-.\zig.ps1 build sdk -Doptimize=ReleaseFast
-.\viewer\windows\build.bat
-.\out\windows-viewer\menkh-viewer.exe examples/pocket-25um.json --job-output out/windows-pocket
-```
-
-Zig 0.15.2 builds the engine; MSVC builds the viewer. The bootstrap installs Zig inside the repository, with no global installation. Alternatively, open `viewer/windows/menkh-viewer.vcxproj` in Visual Studio 2026 with toolset **v145**, Release/x64.
-
-The viewer loads the adjacent **menkh.dll** and calculates on a worker thread, showing progress and cancellation before opening the completed result. `--library PATH` selects another DLL; `--engine PATH` selects the CLI subprocess runner. Choose a fresh `--job-output` directory for each run. Cancellation in library mode waits for an operation boundary. Add `--live` to inspect completed-operation windows while cutting continues, with Follow latest, hold/scrub and calculation pause/resume controls. Live mode uses cooperative cancellation in both DLL and subprocess execution. See the [live inspection guide](docs/LIVE-INSPECTION.md).
-
-Open an existing result with:
-
-```powershell
-.\out\windows-viewer\menkh-viewer.exe out/windows-pocket/voxel-animation.json
-```
-
-Orbit, pan, zoom, play/pause and scrub the recorded history; **[ / ]** move the Z section and **C** cycles operation/tool exposure colors when provenance was exported. The Windows viewer has fewer inspection features than the macOS viewer. See [controls and limits](viewer/windows/README.md).
-
-Windows CI builds both MSVC entry points, tests the DLL and static library, compares job output with the CLI, exercises cancellation, and renders/replays results through D3D12 WARP. These checks establish functionality, not hardware-GPU performance.
-
-### Embed the engine
-
-Build `sdk` for a shared library or `sdk-static` for a static library. Both expose the same [versioned C API](docs/C-API.md): material operations, copied-history undo/redo, checkpoint/resume, and complete JSON jobs with progress and cancellation. Rendering remains separate.
-
-See the [capability matrix](docs/CAPABILITIES.md), [engine and accuracy contracts](docs/ENGINE.md), [job/state/STL formats](docs/FORMATS.md), and [measured validation report](docs/ENGINE-VALIDATION.md). The matrix distinguishes tested behavior from restrictions; this is not a claim of ModuleWorks compatibility or feature parity. All material removal stays on the CPU. Fixed-axis line jobs reject orientation changes; cylindrical/profile-wheel XYZAC operations have a separate bounded-sweep contract.
-
-[Watch the inspected pocket-milling video](docs/general-demo.mp4) (31 seconds).
-
-![Pocket milling with visible cutter](docs/pocket-demo.png)
-
-The default demo now uses 325 real cutting increments at 100 µm, rather than the eight-operation diagnostic fixture. Target coloring stays opt-in. The original multi-capability/collision example remains at `examples/general.json`.
-
-## Inspect defects and collisions
-
-The macOS viewer can filter excess/missing regions and collision events,
-focus their world-space location and seek to a collision operation. Findings can
-be regenerated from saved material states. See the [inspector guide](docs/DEFECT-INSPECTOR.md)
-for the small demo, the 25 µm workflow and measured limitations.
-
-## Imported ball-end finishing workflow
-
-```sh
-python3 scripts/finishing-workflow.py --smoke
-python3 scripts/finishing-workflow.py
-```
-
-This experiment imports separate closed STL stock and target, runs 5,199 ball-end
-segments at 25 µm, compares remaining material with the target, checks checkpoint
-and compacted-checkpoint resumption, and saves native Metal inspection images.
-The smoke run keeps the same geometry/path at 250 µm. See the [frozen protocol](docs/FINISHING-PROTOCOL.md),
-[implementation and reproduction](docs/FINISHING-ARCHITECTURE.md), and
-[measured results and accuracy limits](docs/FINISHING-RESULTS.md). The
-[current robustness milestone](docs/MILLING-ROBUSTNESS.md) completes the frozen
-25 µm job in **21.75 s**, with **15.57 s cutting** and **121.27 MB peak RSS** on the
-M5 Max. See the [product roadmap](docs/PRODUCT-ROADMAP.md) for the next release gates.
-
-To exercise imported fixture geometry and contact reporting:
-
-```sh
-python3 scripts/clamped-finishing.py
-```
-
-This generates both a low-clamp setup and a deliberately colliding tall-clamp setup;
-contacts are reported, not used to stop or reroute the path.
-
-## CPU performance
-
-On an M5 Max, the 325-segment, 100 µm pocket demo takes **2.43 ms for cutting** and **50.72 ms for the full CLI run**. At 25 µm, cutting takes **60.65 ms** for stock with 221 million occupied voxels; the full run takes **117.08 ms with mesh export disabled**. The second optimization pass improves 25 µm cutting by another **1.55×** and CLI wall time by **2.57×** over the first pass. These are repeated ReleaseFast medians with identical material/history and height-image output. Rendering is excluded.
-
-See [measured CPU performance, raw results and reproduction commands](docs/CPU-PERFORMANCE.md), including the separate scalar/SIMD predicate benchmark. Material updates default to one CPU worker; `grinding-demo --workers 8` enables deterministic parallel block masks. The [screw job measurements](docs/evidence/grinding-workers/README.md) cover whole-job throughput, separately from the predicate benchmark.
-
-## Formal verification with Lean
-
-**34 named, machine-checked Lean results** cover the mathematical models behind material removal and storage. They establish that:
-
-- A finite-cylinder sweep predicate matches continuous straight tool motion at fixed orientation, in local tool coordinates and real arithmetic.
-- Subtraction cannot add material and is idempotent; bitwise subtraction matches the occupancy rule.
-- Remaining and removed voxels form a disjoint partition; restoring the removed set recovers the original occupancy.
-- Abstract pool updates preserve exclusive ownership and retained history payloads under explicit slot-reuse preconditions.
-
-Additional results justify convex-corner and distance-based block reasoning under stated hypotheses. They do not prove every production classifier branch correct.
-
-CI checks the proofs and their axiom dependencies, runs the existing Zig tests, and compares **20,480 deterministic Lean-generated records** against Zig in Debug and ReleaseFast. Negative controls ensure deliberately broken subtraction, undo and pool updates fail verification.
-
-These are **model proofs plus implementation tests**, not formal verification of the compiled Zig engine. Floating-point rounding, tool-frame normalization, full binary history and surface reconstruction remain outside the proof boundary. Voxel spacing is not a guaranteed maximum surface error.
-
-```sh
-./scripts/bootstrap-formal.sh  # Existing elan required; missing toolchain stays in .tools/
-./scripts/verify-formal.sh     # Proofs, axiom audit, Zig bridge tests and negative controls
-```
-
-Lean is separate from the engine and viewer builds. See the [theorem inventory, assumptions and reproduction details](docs/FORMAL-VERIFICATION.md).
-
-## Original demos and measurements
-
-The sections below retain the original reproducible demos. Historical benchmark numbers describe their original checkpoint; current engine measurements are in the validation report.
-
-This first working version includes a simulation core and CLI in **Zig 0.15.2**, a scalar reference implementation, optimized block-based CPU cutting, PPM height maps, voxel-surface OBJ meshes, JSON reports, and a separate native macOS viewer. The core has no external packages. The 25 µm configuration has been run and checked against the reference voxel by voxel.
-
-![Rendered 25 µm material state](docs/preview-25um.png)
-
-## High-resolution demo: exactly 4096³
-
-[**Watch the new animation**](docs/drill-4096.mp4) · [Details, measurements, and controls](docs/VOXEL-4096.md)
-
-```sh
-./scripts/drill-4096.sh
-```
-
-A real **4096 × 4096 × 4096** voxel grid fills a 60 mm simulation cube, with **14.648 µm voxels** and initially 2.16 billion occupied voxels in the centered cylinder. CPU cutting produces a reversible history, displayed directly by the Metal voxel renderer. The blue-on-orange view follows the three most recent reference videos and supports pause, scrubbing, orbit, pan, and surface focus by double-clicking. Optional normal averaging affects lighting only.
-
-Measured results: **3.160 s median generation time** over three runs after warm-up, with approximately **648 MB peak process RSS**. **17/17 tests** pass in Debug and ReleaseFast. The full-size history has been checked forward, back to a byte-identical initial state, and forward again. This mode avoids generating a complete surface mesh at every step. The original mesh viewer and demos remain available.
-
-## Animated twist-drill demo
-
-[**Watch: From cylinder to twist drill**](docs/drill-demo.mp4) — 22.75 seconds, 960 × 960, H.264.
-
-```sh
-./scripts/drill-demo.sh
-```
-
-This generates the demo and opens the interactive player with **play/pause, restart, a timeline slider, orbit, and zoom**. To open existing data directly:
-
-```sh
-zig-out/bin/menkh-viewer out/drill/animation.json
-```
-
-A cylinder, 12 mm in diameter and 60 mm long, receives two helical flutes and a faceted tip on a 0.25 mm grid. Zig computes **225 actual voxel states** sequentially for playback. The translucent orange cutter remains visible as a position indicator even behind the workpiece. This is an idealized geometry demo; it does not establish cutting-edge clearance, real machine kinematics, or a production-ready drill. [Details and reproduction](docs/DRILL-DEMO.md).
-
-## macOS CLI examples
-
-```sh
-./zig version
-./zig build                         # Debug; CLI at zig-out/bin/menkh
-./zig build test                    # Debug tests
-./zig build demo -- --voxel 0.25 --out out/demo
-
-./zig build -Doptimize=ReleaseFast
-zig-out/bin/menkh demo --voxel 0.025 --out out/fine
-./zig build bench -Doptimize=ReleaseFast -- --voxel 0.025 --out out/bench-fine --repeats 7
-```
-
-`./zig` is a small project wrapper around the unmodified local Zig distribution. After a fresh checkout, first run `./scripts/bootstrap-zig.sh`. It downloads the official aarch64-macos distribution into `.tools/` and verifies its pinned SHA-256 checksum. It does not install global packages or permanently change the shell search path.
-
-Prerequisites: existing Apple Command Line Tools and a compatible macOS SDK. This machine uses the already installed `MacOSX15.4.sdk`. The newer SDK on this machine exposes its system libraries only as `arm64e-macos`, which Zig 0.15.2 cannot use to link its build runner. The wrapper redirects **only its own** `xcrun --sdk macosx --show-sdk-path` calls to the older SDK. To select another installed compatible SDK, use `MENKH_SDK=/path/MacOSX.sdk ./zig build`. No system settings are changed. The Zig version, SDK, and compiler CPU model are recorded in the [benchmark documentation](docs/BENCHMARKS.md).
-
-## CLI
-
-```sh
-# Demo and export run the same fixed example scenario.
-./zig build demo -- --voxel 0.1 --out out/demo-100um
-./zig build export -Doptimize=ReleaseFast -- --voxel 0.05 --out out/export-50um
-zig-out/bin/menkh export --voxel 0.025 --out out/export-25um
-
-# Skip the mesh, or explicitly use the scalar reference:
-zig-out/bin/menkh demo --voxel 0.025 --out out/image-only --no-mesh
-zig-out/bin/menkh demo --voxel 0.25 --out out/reference --reference
-
-# Both implementations: one warm-up + N repetitions each:
-./zig build bench -Doptimize=ReleaseFast -- --voxel 0.025 --out out/bench --repeats 7
-./scripts/benchmark-all.sh
-```
-
-Files written to the selected directory:
-
-- `height.ppm`: binary P6 image, one pixel per XY voxel column, with +X to the right and +Y upward. Grayscale represents the highest occupied cell's top face relative to the grid height; empty columns are 0. In the example, the stock top is 255 and the groove floor is 153. A height map cannot show hidden cavities.
-- `surface.obj`: all exposed voxel faces, merged into outward-facing quads in millimeters, without smoothing. Omitted with `--no-mesh`.
-- `report.json`: configuration, occupancy, rasterized volume, block/pool statistics, actual buffer capacities, process RSS, and separate phase timings.
-- `benchmark.json`: written instead by `bench`; includes reference validation and min/median/max timings for every phase and implementation. The images and mesh represent the final repetition.
-
-Existing outputs with the same names are overwritten. Use separate directories for different configurations. `export` reruns the simulation and exports the result. The 4096³ demo has separate reloadable voxel and history files; the classic CLI does not yet have a general import command. The classic CLI exposes the fixed example scenario. Other cuboids and sequences of XY cuts can be implemented through `Grid.init` and `Grid.cut` in the Zig core.
-
-## Mesh viewer
-
-```sh
-# Independent of the CLI build; requires the installed Apple Swift toolchain:
-./scripts/build-viewer.sh
-# Alternatively:
-./zig build viewer
-
-zig-out/bin/menkh-viewer out/fine/surface.obj
-# Without a path, a file picker opens:
-zig-out/bin/menkh-viewer
-# Reproducible rendered image:
-zig-out/bin/menkh-viewer out/fine/surface.obj --snapshot out/fine/view.png
-```
-
-Drag to orbit and scroll to zoom; press **R** or use the button to reset the camera. The orange example toolpath can be hidden. It is raised 0.08 mm above the groove floor to prevent z-fighting; the simulation still uses Z = 6 mm. The camera and path annotation are configured for the example scenario.
-
-The mesh viewer is a small **Swift/AppKit/SceneKit** companion, separate from the Zig core. It loads the OBJ into a shared geometry buffer with explicit flat normals, without a draw call per voxel. It needs neither a running CLI nor a CLI build. CLI builds and tests likewise have no Swift or viewer dependency. It uses installed Apple system frameworks only. Apple has placed [SceneKit in maintenance mode](https://developer.apple.com/videos/play/wwdc2025/288/), so this viewer is a prototype rather than a long-term rendering platform decision. The newer 4096³ voxel viewer uses Metal/MetalKit directly.
-
-The actual 25 µm mesh was loaded and rendered to PNG. Manual mouse/trackpad testing and a reliable interactive FPS measurement remain outstanding. The mesh viewer accepts the small OBJ subset produced by this exporter (`v` and quad `f` records), rather than general OBJ or CAD input. Recorded demo media retains its original on-screen labels.
-
-## Geometry and accuracy
-
-Stock: **40 × 30 × 10 mm**. Cutter radius: 3 mm. Cutting length: 10 mm. The center of the lower face moves from (10,15,6) to (30,15,6). Its swept volume is an XY capsule multiplied by a closed axial interval. The resulting groove is 4 mm deep, leaving a 6 mm floor.
-
-The block voxel grid is the sole material representation. Occupancy and removal are evaluated at **voxel centers**. Contact with the closed cutter volume removes the voxel; the radius and both Z limits are expanded by a fixed numerical tolerance of **1e-10 mm**. All predicates use `f64`, local workpiece coordinates, and deterministically ordered segment endpoints. Z changes are rejected with `UnsupportedMotion`. The sweep is continuous along the segment, with no discrete tool stamps.
-
-Volume is **occupied voxels × h³**, a raster approximation. The stock boundary is also sampled at cell centers: cells may extend past or stop short of the ideal boundary when dimensions are not integer multiples of the voxel size. All four voxel sizes in the example divide the stock dimensions exactly. A 25 µm grid spacing is **not a guaranteed maximum surface deviation**. No geometric smoothing is applied. For architecture, spatial queries, memory limits, and error handling, see [ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## Tests and measurements
-
-```sh
-./zig build test --summary all
-./zig build test -Doptimize=ReleaseFast --summary all
-python3 scripts/validate-exports.py out/fine
-```
-
-The independent export check uses only the Python standard library. It validates the fixed example's PPM pixel values, removed volume, and oriented OBJ volume. Python is not a runtime dependency of the CLI.
-
-Measured results for all four voxel sizes, including warm-up and seven repetitions, are in [BENCHMARKS.md](docs/BENCHMARKS.md). Unmodified JSON measurements are in [benchmarks/](benchmarks/). These original measurements use one cutting worker. Current SIMD predicate benchmarks and the separate sparse-storage experiment are documented below; GPU material removal and a PS3 port are not implemented.
-
-## Surface counts and portable histories
-
-The macOS and Windows viewers read the same voxel-history format.
-`menkh inspect-state FILE` reports boundary voxels separately from material volume.
-The 25 µm pocket video ends with **2,819,284 surface voxels**, versus 170,711,351
-occupied volume voxels. See [definitions, raw counts and comparison limits](docs/INSPECTION-COUNTS.md).
-
-Jobs accept `--voxel MM` to override the JSON spacing for that run. Stock, target
-and fixtures all use the override; saved states must already have that spacing
-(`GridMismatch` otherwise). The input JSON is never rewritten.
-
-The default `drill` command also emits `voxel-animation.json`. Its `animation.json`
-continues to open the mesh animation on macOS and now routes the Windows viewer
-to the matching voxel history. Regenerate older mesh-only outputs once.
-
-[Surface exposure coloring](docs/SURFACE-PROVENANCE.md) identifies the operation
-that exposed each voxel face. General JSON jobs now export playback-wide
-provenance by default, including surfaces removed later. Open the result with
-`--color-operation` or `--color-tool` in either native voxel viewer and scrub
-through the history. Original stock faces remain neutral.
-
-```sh
-zig-out/bin/menkh job examples/general.json --out out/colored
-zig-out/bin/menkh-viewer out/colored/voxel-animation.json --color-operation --frame 0
-# Override existing JSON settings without editing the file:
-zig-out/bin/menkh job examples/general.json --provenance all_frames --out out/playback
-zig-out/bin/menkh job examples/general.json --provenance final_surface --out out/final-only
-zig-out/bin/menkh job examples/general.json --no-provenance --out out/no-colors
-```
-
-Playback attribution uses additional memory and export time. Use `final_surface`
-for lower-memory final-result attribution or `off` / `--no-provenance` to disable
-it. Explicit JSON settings remain supported; CLI options take precedence.
-
-## Static multi-workpiece scenes
-
-A [typed scene layer](docs/SCENES.md) adds stable object/tool IDs, reusable geometry
-and independent workpiece states. `./scripts/scene-demo.sh` runs two translated
-workpieces with named targets and fixtures, then opens a workpiece selector on
-macOS. Both native viewers can open its `scene.json` catalog with `--workpiece ID`.
-The current scope is translation-only placement and inspection of one workpiece
-at a time, without inter-workpiece collision checks or synchronized playback.
-The voxel engine remains specialized; this is not a generic ECS rewrite.
-
-## Further capabilities
-
-- [Grinding wheels](docs/GRINDING.md): cylindrical or piecewise-linear radius profiles, explicit XYZAC motion and a declared continuous-coverage bound. Run `./scripts/grinding-demo.sh --profile` for a crowned wheel.
-- [Sparse mutation experiment](docs/SPARSE-MUTATION.md): cuts and retained roots in a 65,536³ virtual cube; separate from regular jobs, not the billion-face memory qualification.
-- Windows playback operation/tool colors via `--color-operation` / `--color-tool` and the **C** key.
-
-The [C API](docs/C-API.md) supports shared/static embedding and Windows viewer-owned calculation. On macOS, `./scripts/live-demo.sh` demonstrates [live inspection](docs/LIVE-INSPECTION.md): consistent material windows, retained-range scrubbing and pause/resume while a 25 µm ball-end job runs. Use `menkh-viewer job.json --live` for your own jobs. The Windows viewer also accepts `--live`. `./scripts/live-inspection-demo.sh` adds [live exposure colors, target comparison, fixtures and picking](docs/LIVE-OVERLAYS.md); live attribution requires `export_provenance: true`.
+Sources: [Gardiner sign list, U22](https://www.egyptianhieroglyphs.net/gardiners-sign-list/) and the Metropolitan Museum’s [*Ancient Egyptian Calligraphy*](https://resources.metmuseum.org/resources/metpublications/pdf/Ancient_Egyptian_Calligraphy.pdf), entry U22.
 
 ## License
 

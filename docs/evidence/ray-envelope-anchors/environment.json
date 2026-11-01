@@ -1,0 +1,20 @@
+{
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "workers": 8,
+  "method": "axis",
+  "warmups_per_configuration": 1,
+  "repetitions": 5,
+  "commit": "7cfa563bacb23be2bb26fc10168da106afe2ae82",
+  "source_diff_sha256": "d1fd6d05c1d06ef9b0c5eb3314373013f5d6f935bece71b0b43022a9f46e64c0",
+  "binaries": {
+    "before": {
+      "path": "/private/tmp/menkh-ray-pr46",
+      "sha256": "4bb452202beea86b8c49e3fa6de78510423a481826fdf465a811641420c7cbec"
+    },
+    "after": {
+      "path": "/Users/zin/sophia/menkh/zig-out/bin/menkh",
+      "sha256": "71bfdf0da34f5a883aeb442ce5aa358ec71bf30e5d73da55bf83a31708b7f86b"
+    }
+  }
+}

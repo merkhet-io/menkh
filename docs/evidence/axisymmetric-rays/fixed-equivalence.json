@@ -1,0 +1,22 @@
+[
+  {
+    "spacing_mm": 0.25,
+    "byte_identical": true,
+    "sha256": "224ec46d5b6030cbef2a6f2e4ca707128a2d5bd5cea980d2b4c0821a19b7321d"
+  },
+  {
+    "spacing_mm": 0.1,
+    "byte_identical": true,
+    "sha256": "530f53ab3b89c106607a80870331b8a3a3843e1ffb3b853ebeea2df18c23558f"
+  },
+  {
+    "spacing_mm": 0.05,
+    "byte_identical": true,
+    "sha256": "4eed3ef04c429905d25f2f0e1bc2f7ff2a61967591f46b7ee99a6687b0da6ea3"
+  },
+  {
+    "spacing_mm": 0.025,
+    "byte_identical": true,
+    "sha256": "153afa3640c5e9bfa6757228544e984333cef9b57aed4bc52e5947a011eb53e1"
+  }
+]
