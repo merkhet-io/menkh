@@ -42,6 +42,10 @@ pub const Sweep = struct {
     axial_speed: f64,
     radial_velocity: e.V,
     bounds: e.Bounds,
+    envelope_midpoint: e.V,
+    envelope_axial_half: f64,
+    envelope_radial_half: f64,
+    envelope_guard: f64,
     rims: []const Rim,
     planes: []const Plane,
 
@@ -118,13 +122,41 @@ pub const Sweep = struct {
         }
         if (nr < 2) return error.DegenerateSweepProfile;
         for (rim_storage[0..nr]) |rim| if (!std.math.isFinite(rim.z) or !std.math.isFinite(rim.radius) or rim.radius <= 0) return error.DegenerateSweepProfile;
-        return .{ .start = first, .movement = movement, .unit = unit, .length = length, .axial_speed = axial_speed, .radial_velocity = radial, .bounds = bounds, .rims = rim_storage[0..nr], .planes = plane_storage[0..np] };
+        return .{ .envelope_midpoint = e.add(first.base, e.scale(movement, 0.5)), .envelope_axial_half = @abs(axial_speed) * length / 2, .envelope_radial_half = e.norm(radial) * length / 2, .envelope_guard = (1 + profile.radius + profile.length + length) * 1e-8, .start = first, .movement = movement, .unit = unit, .length = length, .axial_speed = axial_speed, .radial_velocity = radial, .bounds = bounds, .rims = rim_storage[0..nr], .planes = plane_storage[0..np] };
     }
     /// A stationary conic enclosure used only for rejection, never subtraction.
     pub fn proxy(s: Sweep, profile: d.Profile) !d.Pose {
         var p = try d.Pose.init(profile, .{ .position = e.add(s.start.base, e.scale(s.movement, 0.5)), .axis = s.start.axis }, s.start.offset + s.length / 2);
         p.bounds = s.bounds;
         return p;
+    }
+    /// Directional support enclosure of the translation sweep. Rejection only:
+    /// radial supports expand by |d_radial|/2 + |m*d_axial|/2; axial caps by
+    /// |d_axial|/2. This avoids isotropic half-length inflation of a thin wheel.
+    pub fn rayEnvelope(s: Sweep, profile: d.Profile, origin: e.V, direction: e.V, limits: d.Interval, retained: []const d.Interval) !?d.Interval {
+        const q = e.sub(origin, s.envelope_midpoint);
+        const z = e.dot(q, s.start.axis);
+        const vz = e.dot(direction, s.start.axis);
+        const cap_offset = s.start.offset + s.envelope_axial_half + s.envelope_guard;
+        var interval = d.positive(limits, vz, z + cap_offset) orelse return null;
+        interval = d.positive(interval, -vz, profile.length + cap_offset - z) orelse return null;
+        var active = d.trimMaterial(retained, interval);
+        if (active.len == 0) return null;
+        const qr = e.sub(q, e.scale(s.start.axis, z));
+        const vr = e.sub(direction, e.scale(s.start.axis, vz));
+        const aa = e.dot(vr, vr);
+        const bb = 2 * e.dot(qr, vr);
+        const cc = e.dot(qr, qr);
+        for (profile.sides) |side| {
+            const margin = (s.start.offset + s.envelope_guard) * side.normal_length + s.envelope_radial_half + @abs(side.slope) * s.envelope_axial_half;
+            const r = side.intercept + side.slope * z + margin;
+            const v = side.slope * vz;
+            interval = d.positive(interval, v, r) orelse return null;
+            interval = (try d.quadratic(interval, aa - v * v, bb - 2 * r * v, cc - r * r)) orelse return null;
+            active = d.trimMaterial(active, interval);
+            if (active.len == 0) return null;
+        }
+        return interval;
     }
     fn fullRayBounds(s: Sweep, origin: e.V, direction: e.V) ?d.Interval {
         var span = d.Interval{ .lo = -std.math.inf(f64), .hi = std.math.inf(f64) };
