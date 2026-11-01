@@ -76,9 +76,12 @@ worker; queries do not allocate. An allocation/geometry failure discards the new
 result, publishing no partial material state. Workers own disjoint XY rows and
 merge deterministically. There is no retained-history slot reuse.
 
-Each sweep has an exact endpoint-union AABB enclosure and a midpoint conic
-rejection proxy inflated by half the translation length. The existing spatial
-hierarchy groups these proxies. Proxies and group envelopes can reject work;
+Each sweep has an endpoint-union AABB enclosure and a midpoint conic
+group proxy inflated by half the translation length. The existing spatial
+hierarchy groups these proxies. Fine sweep rejection uses a tighter directional
+enclosure: axial caps expand only by half the axial motion, and each conical
+support expands by half the radial motion plus its slope times half the absolute
+axial motion. See the [derivation and measured improvement](evidence/sweep-directional-envelopes/README.md). Proxies and group envelopes can reject work;
 **only the continuous sweep** removes material. Queries skip already removed
 intervals. The scalar exhaustive traversal remains an oracle for pruning.
 

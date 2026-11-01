@@ -93,7 +93,7 @@ pub fn ray(profile: Profile, pose: Pose, origin: e.V, direction: e.V, limits: In
 pub fn rayMaterial(profile: Profile, pose: Pose, origin: e.V, direction: e.V, limits: Interval, retained: []const Interval) !?Interval {
     return rayRetained(true, profile, pose, origin, direction, limits, retained);
 }
-fn trimMaterial(material: []const Interval, interval: Interval) []const Interval {
+pub fn trimMaterial(material: []const Interval, interval: Interval) []const Interval {
     var first: usize = 0;
     var end = material.len;
     while (first < end and material[first].hi <= interval.lo) first += 1;

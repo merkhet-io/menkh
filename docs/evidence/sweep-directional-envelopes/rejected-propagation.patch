@@ -1,0 +1,54 @@
+diff --git a/src/swept_raydexel.zig b/src/swept_raydexel.zig
+index 7f87f32..412e6b1 100644
+--- a/src/swept_raydexel.zig
++++ b/src/swept_raydexel.zig
+@@ -86,32 +86,34 @@ pub const Plan = struct {
+ };
+ pub const Work = struct { proxy_tests: u64 = 0, sweep_tests: u64 = 0 };
+ pub const Output = struct { material: d.Result, work: Work };
+-fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile, index: u32, x: f64, y: f64, material: *std.ArrayList(d.Interval), work: *d.Work) !void {
++fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile, index: u32, x: f64, y: f64, material: *std.ArrayList(d.Interval), work: *d.Work, inherited: d.Interval) !void {
+     work.node_tests += 1;
+     const node = tree.nodes.items[index];
+     if (x < node.bounds.lo[0] or x > node.bounds.hi[0] or y < node.bounds.lo[1] or y > node.bounds.hi[1]) return;
+-    if (!d.overlaps(material.items, .{ .lo = node.bounds.lo[2], .hi = node.bounds.hi[2] })) {
++    var clipped = d.intersect(inherited, .{ .lo = node.bounds.lo[2], .hi = node.bounds.hi[2] }) orelse return;
++    if (!d.overlaps(material.items, clipped)) {
+         work.skipped_removed_nodes += 1;
+         return;
+     }
+     if (node.envelope_offset >= 0) {
+         var envelope = tree.poses[node.anchorIndex()];
+         envelope.offset = node.envelope_offset;
+-        const limits = d.Interval{ .lo = node.bounds.lo[2], .hi = node.bounds.hi[2] };
++        const limits = clipped;
+         work.envelope_tests += 1;
+         const cut = (try d.rayMaterial(profile, envelope, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse return;
++        clipped = cut;
+         if (!d.overlaps(material.items, cut)) {
+             work.skipped_removed_nodes += 1;
+             return;
+         }
+     }
+     if (node.count == 0) {
+-        try visit(plan, sweep_work, tree, profile, node.left, x, y, material, work);
+-        try visit(plan, sweep_work, tree, profile, node.right_or_anchor, x, y, material, work);
++        try visit(plan, sweep_work, tree, profile, node.left, x, y, material, work, clipped);
++        try visit(plan, sweep_work, tree, profile, node.right_or_anchor, x, y, material, work, clipped);
+     } else for (tree.poses[node.start .. node.start + node.count]) |pose| {
+         if (material.items.len == 0) break;
+         if (x < pose.bounds.lo[0] or x > pose.bounds.hi[0] or y < pose.bounds.lo[1] or y > pose.bounds.hi[1]) continue;
+-        const limits = d.Interval{ .lo = @max(material.items[0].lo, pose.bounds.lo[2]), .hi = @min(material.items[material.items.len - 1].hi, pose.bounds.hi[2]) };
++        const limits = d.Interval{ .lo = @max(clipped.lo, @max(material.items[0].lo, pose.bounds.lo[2])), .hi = @min(clipped.hi, @min(material.items[material.items.len - 1].hi, pose.bounds.hi[2])) };
+         if (limits.lo > limits.hi or !d.overlaps(material.items, limits)) continue;
+         sweep_work.proxy_tests += 1;
+         const proxy_hit = (try d.rayMaterial(profile, pose, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse continue;
+@@ -166,7 +168,7 @@ pub fn finishRows(a: std.mem.Allocator, profile: d.Profile, plan: *const Plan, t
+                 sweep_work.sweep_tests += 1;
+                 if (try plan.sweeps[pose.motion_index].ray(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, .{ .lo = base[2], .hi = base[2] + length })) |cut| d.subtractIntervals(&material, cut);
+             }
+-            try visit(plan, sweep_work, tree, profile, 0, x, y, &material, &result.work);
++            try visit(plan, sweep_work, tree, profile, 0, x, y, &material, &result.work, .{ .lo = base[2], .hi = base[2] + length });
+         }
+         const offset = result.intervals.items.len;
+         try result.intervals.appendSlice(a, material.items);

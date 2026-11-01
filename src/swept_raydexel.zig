@@ -114,7 +114,7 @@ fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile,
         const limits = d.Interval{ .lo = @max(material.items[0].lo, pose.bounds.lo[2]), .hi = @min(material.items[material.items.len - 1].hi, pose.bounds.hi[2]) };
         if (limits.lo > limits.hi or !d.overlaps(material.items, limits)) continue;
         sweep_work.proxy_tests += 1;
-        const proxy_hit = (try d.rayMaterial(profile, pose, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse continue;
+        const proxy_hit = (try plan.sweeps[pose.motion_index].rayEnvelope(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse continue;
         if (!d.overlaps(material.items, proxy_hit)) continue;
         sweep_work.sweep_tests += 1;
         if (try plan.sweeps[pose.motion_index].ray(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, limits)) |cut| {
