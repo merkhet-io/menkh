@@ -1,0 +1,6 @@
+{
+  "command": "./zig build -Dtarget=x86_64-windows -Doptimize=ReleaseFast --prefix out/stage2-windows-build",
+  "result": "cross-compiled successfully; not executed on Windows in this session",
+  "bytes": 1631744,
+  "sha256": "2fe426eeabed791f6554a8efe272da28df520087c83d99391cf466e7561bb5e5"
+}
