@@ -6,6 +6,8 @@ const s = @import("profile_sweep.zig");
 const m = @import("motion.zig");
 const jobs = @import("job.zig");
 pub const Plan = struct {
+    // Borrowed immutable cache; owner must retain it until all workers finish.
+    prepared: ?*const @import("prepared_z_rays.zig").Scene = null,
     allocator: std.mem.Allocator,
     sweeps: []s.Sweep,
     rims: []s.Rim,
@@ -99,7 +101,7 @@ fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile,
         envelope.offset = node.envelope_offset;
         const limits = d.Interval{ .lo = node.bounds.lo[2], .hi = node.bounds.hi[2] };
         work.envelope_tests += 1;
-        const cut = (try d.rayMaterial(profile, envelope, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse return;
+        const cut = (if (plan.prepared) |cache| try cache.node(index).intersect(x, y, limits, material.items) else try d.rayMaterial(profile, envelope, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse return;
         if (!d.overlaps(material.items, cut)) {
             work.skipped_removed_nodes += 1;
             return;
@@ -114,7 +116,7 @@ fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile,
         const limits = d.Interval{ .lo = @max(material.items[0].lo, pose.bounds.lo[2]), .hi = @min(material.items[material.items.len - 1].hi, pose.bounds.hi[2]) };
         if (limits.lo > limits.hi or !d.overlaps(material.items, limits)) continue;
         sweep_work.proxy_tests += 1;
-        const proxy_hit = (try plan.sweeps[pose.motion_index].rayEnvelope(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse continue;
+        const proxy_hit = (if (plan.prepared) |cache| try cache.sweep(pose.motion_index).intersect(x, y, limits, material.items) else try plan.sweeps[pose.motion_index].rayEnvelope(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse continue;
         if (!d.overlaps(material.items, proxy_hit)) continue;
         sweep_work.sweep_tests += 1;
         if (try plan.sweeps[pose.motion_index].ray(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, limits)) |cut| {

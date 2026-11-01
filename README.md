@@ -109,6 +109,13 @@ not a comparison with the 3.744 s figure above. A separate fresh matched run
 measured improved `sweep` at **3.128 s** versus `axis` at **3.973 s**, with their
 respective approximation policies unchanged. [Raw results, ranges and rejected trial](docs/evidence/sweep-directional-envelopes/README.md).
 
+A follow-up prepares shared conic coefficients and evaluates them with SIMD.
+On a busy M5 Max, five paired 25 µm runs measured **4.730 → 3.806 s (1.24×)**
+with eight workers, preserving byte-identical intervals, at a **4.30 MB** cache
+cost. Timing ranges are broad; this is not an isolated-machine throughput claim.
+[Profiling, raw results and rejected alternatives](docs/evidence/prepared-z-rays/README.md).
+
+
 An independent time-subdivision/distance oracle checked 128 cut endpoints at each
 of four spacings. At 25 µm the largest sampled upper distance was **8.29 µm**,
 within the sweep's **9.36 µm motion bound**. These are sampled distances to the

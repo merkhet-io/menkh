@@ -127,6 +127,13 @@ fn pipeline(allocator: std.mem.Allocator) !void {
     for (fast.material.intervals.items, slow.material.intervals.items) |x, y| {
         try interval(x, y.lo, y.hi);
     }
+    var cache = try @import("prepared_z_rays.zig").Scene.init(allocator, p, plan.sweeps, tree);
+    defer cache.deinit();
+    plan.prepared = &cache;
+    var prepared = try swept.finishRows(allocator, p, &plan, tree, .{ 0, 0, 0 }, 2, 4, 0.4, false, null);
+    defer prepared.material.deinit();
+    try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(fast.material.intervals.items), std.mem.sliceAsBytes(prepared.material.intervals.items));
+    try std.testing.expectEqualDeep(fast.material.work, prepared.material.work);
 }
 test "continuous sweep hierarchy matches exhaustive rays and allocation failures clean up" {
     try pipeline(a);
@@ -230,5 +237,37 @@ test "directional sweep enclosures preserve exhaustive material in randomized ov
         defer slow.material.deinit();
         try std.testing.expectEqualDeep(fast.material.columns.items, slow.material.columns.items);
         try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(fast.material.intervals.items), std.mem.sliceAsBytes(slow.material.intervals.items));
+        var cache = try @import("prepared_z_rays.zig").Scene.init(a, p, plan.sweeps, tree);
+        defer cache.deinit();
+        plan.prepared = &cache;
+        var prepared = try swept.finishRows(a, p, &plan, tree, .{ 0, 0, 0 }, 2, 4, 0.4, false, null);
+        defer prepared.material.deinit();
+        try std.testing.expectEqualDeep(fast.material.columns.items, prepared.material.columns.items);
+        try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(fast.material.intervals.items), std.mem.sliceAsBytes(prepared.material.intervals.items));
+        try std.testing.expectEqualDeep(fast.material.work, prepared.material.work);
+        try std.testing.expectEqualDeep(fast.work, prepared.work);
+        for (0..16) |_| {
+            const x = rng.float(f64) * 8 - 4;
+            const y = rng.float(f64) * 8 - 4;
+            const limits = d.Interval{ .lo = -10, .hi = 10 };
+            const retained = [_]d.Interval{ .{ .lo = -10, .hi = -1 }, .{ .lo = 1, .hi = 10 } };
+            for (plan.sweeps, 0..) |sweep, i| {
+                try sameHit(try sweep.rayEnvelope(p, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, &retained), try cache.sweep(i).intersect(x, y, limits, &retained));
+            }
+            for (tree.nodes.items, 0..) |node, i| {
+                if (node.envelope_offset < 0) continue;
+                var pose = tree.poses[node.anchorIndex()];
+                pose.offset = node.envelope_offset;
+                try sameHit(try d.rayMaterial(p, pose, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, &retained), try cache.node(i).intersect(x, y, limits, &retained));
+            }
+        }
+    }
+}
+
+fn sameHit(expected: ?d.Interval, actual: ?d.Interval) !void {
+    try std.testing.expectEqual(expected != null, actual != null);
+    if (expected) |hit| {
+        try std.testing.expectEqual(@as(u64, @bitCast(hit.lo)), @as(u64, @bitCast(actual.?.lo)));
+        try std.testing.expectEqual(@as(u64, @bitCast(hit.hi)), @as(u64, @bitCast(actual.?.hi)));
     }
 }
