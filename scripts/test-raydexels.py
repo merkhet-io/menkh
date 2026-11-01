@@ -8,7 +8,7 @@ exe=Path('zig-out/bin/menkh'+('.exe' if os.name=='nt' else '')).resolve()
 def run(args,valid=True):
  result=subprocess.run([str(exe),*map(str,args)],capture_output=True)
  assert (result.returncode==0)==valid,result.stderr.decode(errors='replace')
-for method in ['fixed','adaptive','axis']:
+for method in ['fixed','adaptive','axis','sweep']:
  expected=None
  for workers in [1,4]:
   out=a.out/f'{method}-{workers}'

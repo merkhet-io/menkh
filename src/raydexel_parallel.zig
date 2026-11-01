@@ -3,7 +3,10 @@ const std = @import("std");
 const e = @import("engine.zig");
 const d = @import("raydexel.zig");
 const adaptive = @import("adaptive_raydexel.zig");
+const swept = @import("swept_raydexel.zig");
+pub const Output = struct { material: d.Result, work: adaptive.Work = .{}, sweep_work: swept.Work = .{} };
 const Task = struct {
+    continuous: ?*const swept.Plan,
     allocator: std.mem.Allocator,
     profile: d.Profile,
     plan: ?*const adaptive.Plan,
@@ -13,7 +16,7 @@ const Task = struct {
     length: f64,
     spacing: f64,
     rows: [2]u32,
-    result: ?adaptive.Output = null,
+    result: ?Output = null,
     failure: ?anyerror = null,
     fn run(task: *Task) void {
         task.result = task.calculate() catch |err| {
@@ -21,12 +24,25 @@ const Task = struct {
             return;
         };
     }
-    fn calculate(task: *Task) !adaptive.Output {
-        if (task.plan) |plan| return adaptive.finishRows(task.allocator, task.profile, plan, task.tree, task.base, task.radius, task.length, task.spacing, task.rows);
+    fn calculate(task: *Task) !Output {
+        if (task.continuous) |plan| {
+            const result = try swept.finishRows(task.allocator, task.profile, plan, task.tree, task.base, task.radius, task.length, task.spacing, false, task.rows);
+            return .{ .material = result.material, .sweep_work = result.work };
+        }
+        if (task.plan) |plan| {
+            const result = try adaptive.finishRows(task.allocator, task.profile, plan, task.tree, task.base, task.radius, task.length, task.spacing, task.rows);
+            return .{ .material = result.material, .work = result.work };
+        }
         return .{ .material = try d.finishCylinderRows(task.allocator, task.profile, task.tree, task.base, task.radius, task.length, task.spacing, false, task.rows), .work = .{} };
     }
 };
-pub fn finish(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.Plan, tree: d.Tree, base: e.V, radius: f64, length: f64, spacing: f64, workers: usize) !adaptive.Output {
+pub fn finish(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.Plan, tree: d.Tree, base: e.V, radius: f64, length: f64, spacing: f64, workers: usize) !Output {
+    return finishImpl(a, profile, plan, null, tree, base, radius, length, spacing, workers);
+}
+pub fn finishContinuous(a: std.mem.Allocator, profile: d.Profile, plan: *const swept.Plan, tree: d.Tree, base: e.V, radius: f64, length: f64, spacing: f64, workers: usize) !Output {
+    return finishImpl(a, profile, null, plan, tree, base, radius, length, spacing, workers);
+}
+fn finishImpl(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.Plan, continuous: ?*const swept.Plan, tree: d.Tree, base: e.V, radius: f64, length: f64, spacing: f64, workers: usize) !Output {
     if (workers < 1 or workers > 64) return error.InvalidWorkerCount;
     if (!std.math.isFinite(spacing) or spacing <= 0 or !std.math.isFinite(radius) or radius <= 0) return error.InvalidRayResolution;
     const nf = @ceil(2 * radius / spacing - 0.5);
@@ -36,7 +52,7 @@ pub fn finish(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.P
     // Wrap the supplied allocator rather than assuming it is thread safe.
     var safe = std.heap.ThreadSafeAllocator{ .child_allocator = a };
     var tasks: [64]Task = undefined;
-    for (tasks[0..count], 0..) |*task, i| task.* = .{ .allocator = safe.allocator(), .profile = profile, .plan = plan, .tree = tree, .base = base, .radius = radius, .length = length, .spacing = spacing, .rows = .{ @intCast(@as(usize, n) * i / count), @intCast(@as(usize, n) * (i + 1) / count) } };
+    for (tasks[0..count], 0..) |*task, i| task.* = .{ .continuous = continuous, .allocator = safe.allocator(), .profile = profile, .plan = plan, .tree = tree, .base = base, .radius = radius, .length = length, .spacing = spacing, .rows = .{ @intCast(@as(usize, n) * i / count), @intCast(@as(usize, n) * (i + 1) / count) } };
     defer for (tasks[0..count]) |*task| if (task.result) |*result| {
         result.material.deinit();
     };
@@ -57,7 +73,7 @@ pub fn finish(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.P
         columns = try std.math.add(usize, columns, task.result.?.material.columns.items.len);
         intervals = try std.math.add(usize, intervals, task.result.?.material.intervals.items.len);
     }
-    var output = adaptive.Output{ .material = .{ .allocator = a, .origin = .{ base[0] - radius, base[1] - radius, base[2] }, .spacing = spacing, .n = .{ n, n } }, .work = .{} };
+    var output = Output{ .material = .{ .allocator = a, .origin = .{ base[0] - radius, base[1] - radius, base[2] }, .spacing = spacing, .n = .{ n, n } }, .work = .{} };
     errdefer output.material.deinit();
     try output.material.columns.ensureTotalCapacityPrecise(a, columns);
     try output.material.intervals.ensureTotalCapacityPrecise(a, intervals);
@@ -68,6 +84,7 @@ pub fn finish(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.P
         for (part.material.columns.items) |col| output.material.columns.appendAssumeCapacity(.{ .x = col.x, .y = col.y, .offset = col.offset + offset, .count = col.count });
         inline for (std.meta.fields(d.Work)) |field| @field(output.material.work, field.name) += @field(part.material.work, field.name);
         inline for (std.meta.fields(adaptive.Work)) |field| @field(output.work, field.name) += @field(part.work, field.name);
+        inline for (std.meta.fields(swept.Work)) |field| @field(output.sweep_work, field.name) += @field(part.sweep_work, field.name);
         output.material.scratch_bytes += part.material.scratch_bytes;
     }
     return output;

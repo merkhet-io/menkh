@@ -57,16 +57,16 @@ pub const Pose = struct {
         return .{ .base = pose.position, .axis = axis, .offset = offset, .bounds = bounds };
     }
 };
-fn intersect(a: Interval, b: Interval) ?Interval {
+pub fn intersect(a: Interval, b: Interval) ?Interval {
     const out = Interval{ .lo = @max(a.lo, b.lo), .hi = @min(a.hi, b.hi) };
     return if (out.lo <= out.hi) out else null;
 }
 // Clip b + a*t >= 0 without a guessed near-zero slope cutoff.
-fn positive(interval: Interval, a: f64, b: f64) ?Interval {
+pub fn positive(interval: Interval, a: f64, b: f64) ?Interval {
     if (a == 0) return if (b >= 0) interval else null;
     return intersect(interval, if (a > 0) .{ .lo = -b / a, .hi = std.math.inf(f64) } else .{ .lo = -std.math.inf(f64), .hi = -b / a });
 }
-fn quadratic(interval: Interval, a: f64, b: f64, c: f64) !?Interval {
+pub fn quadratic(interval: Interval, a: f64, b: f64, c: f64) !?Interval {
     if (a == 0) return positive(interval, -b, -c);
     const disc = b * b - 4 * a * c;
     if (disc < 0) return if (a < 0) interval else null;
@@ -89,6 +89,9 @@ fn quadratic(interval: Interval, a: f64, b: f64, c: f64) !?Interval {
 /// intervals include tangency; zero-length cuts do not affect volume.
 pub fn ray(profile: Profile, pose: Pose, origin: e.V, direction: e.V, limits: Interval) !?Interval {
     return rayRetained(false, profile, pose, origin, direction, limits, &.{});
+}
+pub fn rayMaterial(profile: Profile, pose: Pose, origin: e.V, direction: e.V, limits: Interval, retained: []const Interval) !?Interval {
+    return rayRetained(true, profile, pose, origin, direction, limits, retained);
 }
 fn trimMaterial(material: []const Interval, interval: Interval) []const Interval {
     var first: usize = 0;
