@@ -1,0 +1,36 @@
+[
+  {
+    "spacing_mm": 0.1,
+    "before": {
+      "cut_median_s": 0.210074375,
+      "cut_min_s": 0.209928042,
+      "cut_max_s": 0.222776166,
+      "kernel_median_s": 0.216077458,
+      "peak_kernel_rss_bytes": 17940480,
+      "work": {
+        "node_tests": 6354670,
+        "ray_pose_tests": 0,
+        "cutting_intervals": 4728379,
+        "skipped_removed_nodes": 0,
+        "envelope_tests": 5337984,
+        "seed_tests": 341868
+      }
+    },
+    "after": {
+      "cut_median_s": 0.214945625,
+      "cut_min_s": 0.213948833,
+      "cut_max_s": 0.22618825,
+      "kernel_median_s": 0.220975666,
+      "peak_kernel_rss_bytes": 17940480,
+      "work": {
+        "node_tests": 6330586,
+        "ray_pose_tests": 0,
+        "cutting_intervals": 4087190,
+        "skipped_removed_nodes": 0,
+        "envelope_tests": 5314451,
+        "seed_tests": 1341248
+      }
+    },
+    "cut_speedup": 0.9773372916987727
+  }
+]

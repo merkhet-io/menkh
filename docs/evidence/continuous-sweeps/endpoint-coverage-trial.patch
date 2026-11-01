@@ -1,0 +1,53 @@
+diff --git a/src/profile_sweep.zig b/src/profile_sweep.zig
+index f757f03..75c1c44 100644
+--- a/src/profile_sweep.zig
++++ b/src/profile_sweep.zig
+@@ -136,6 +136,14 @@ pub const Sweep = struct {
+     }
+     /// Exact-in-real-arithmetic continuous translation; unit ray direction.
+     pub fn ray(s: Sweep, profile: d.Profile, origin: e.V, direction: e.V, limits: d.Interval) !?d.Interval {
++        return s.rayImpl(false, profile, origin, direction, limits, &.{}, limits);
++    }
++    /// The proxy is an outer interval. Stop once endpoint tools already cover
++    /// every retained piece in it; this changes traversal work, not material.
++    pub fn rayMaterial(s: Sweep, profile: d.Profile, origin: e.V, direction: e.V, limits: d.Interval, material: []const d.Interval, proxy_span: d.Interval) !?d.Interval {
++        return s.rayImpl(true, profile, origin, direction, limits, material, proxy_span);
++    }
++    fn rayImpl(s: Sweep, comptime filter: bool, profile: d.Profile, origin: e.V, direction: e.V, limits: d.Interval, material: []const d.Interval, proxy_span: d.Interval) !?d.Interval {
+         if (s.length == 0) return d.ray(profile, s.start, origin, direction, limits);
+         const box = s.fullRayBounds(origin, direction) orelse return null;
+         if (d.intersect(box, limits) == null) return null;
+@@ -149,6 +157,20 @@ pub const Sweep = struct {
+         var end = s.start;
+         end.base = e.add(end.base, s.movement);
+         if (try d.ray(profile, end, origin, direction, box)) |hit| includeInterval(&result, hit, box);
++        if (filter) {
++            if (result) |covered| {
++                var all_covered = true;
++                for (material) |span| {
++                    if (d.intersect(span, proxy_span)) |part| {
++                        if (part.lo < covered.lo or part.hi > covered.hi) {
++                            all_covered = false;
++                            break;
++                        }
++                    }
++                }
++                if (all_covered) return d.intersect(covered, limits);
++            }
++        }
+         for (s.rims) |rim| {
+             // A rim plane can meet this finite ray/motion rectangle only in
+             // this axial range. Reject before dividing near-parallel speeds.
+diff --git a/src/swept_raydexel.zig b/src/swept_raydexel.zig
+index 7f87f32..3c16212 100644
+--- a/src/swept_raydexel.zig
++++ b/src/swept_raydexel.zig
+@@ -117,7 +117,7 @@ fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile,
+         const proxy_hit = (try d.rayMaterial(profile, pose, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items)) orelse continue;
+         if (!d.overlaps(material.items, proxy_hit)) continue;
+         sweep_work.sweep_tests += 1;
+-        if (try plan.sweeps[pose.motion_index].ray(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, limits)) |cut| {
++        if (try plan.sweeps[pose.motion_index].rayMaterial(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, limits, material.items, proxy_hit)) |cut| {
+             work.cutting_intervals += 1;
+             d.subtractIntervals(material, cut);
+         }

@@ -28,6 +28,8 @@ for method in ['fixed','adaptive','axis','sweep']:
    assert spans[0][0]==0 and spans[0][1]>=1 and spans[-1][0]<=39 and spans[-1][1]==40
    px=-6+(x+.5)*.5;py=-6+(y+.5)*.5
    if px*px+py*py<3.5**2: assert spans==[(0.,40.)], 'Retained core was damaged'
+ if method=='sweep':
+  subprocess.run([sys.executable,'scripts/check-sweep-accuracy.py',str(out),'--samples','32','--out',str(a.out/'sweep-independent-distances.json')],check=True)
  subprocess.run([sys.executable,'scripts/export-raydexel-obj.py',str(out/'intervals.json'),str(a.out/f'{method}.obj'),'--validate-edges'],check=True)
  # Fresh-output protection must leave the saved material untouched.
  run(['raydexel-bench','--spacing','.5','--out',out],valid=False)
