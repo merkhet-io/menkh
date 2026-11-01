@@ -4,7 +4,7 @@ const e = @import("engine.zig");
 const d = @import("raydexel.zig");
 const adaptive = @import("adaptive_raydexel.zig");
 const swept = @import("swept_raydexel.zig");
-pub const Output = struct { material: d.Result, work: adaptive.Work = .{}, sweep_work: swept.Work = .{} };
+pub const Output = struct { prepared_ray_bytes: usize = 0, prepared_ray_ns: u64 = 0, material: d.Result, work: adaptive.Work = .{}, sweep_work: swept.Work = .{} };
 const Task = struct {
     continuous: ?*const swept.Plan,
     allocator: std.mem.Allocator,
@@ -49,10 +49,16 @@ fn finishImpl(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.P
     if (!std.math.isFinite(nf) or nf < 1 or nf > 65536) return error.InvalidRayResolution;
     const n: u32 = @intFromFloat(nf);
     const count = @min(workers, n);
+    var preparation_timer = try std.time.Timer.start();
+    var prepared: ?@import("prepared_z_rays.zig").Scene = if (continuous) |p| try @import("prepared_z_rays.zig").Scene.init(a, profile, p.sweeps, tree) else null;
+    defer if (prepared) |*cache| cache.deinit();
+    var working_plan: ?swept.Plan = if (continuous) |p| p.* else null;
+    if (working_plan) |*p| p.prepared = &prepared.?;
+    const preparation_ns = if (prepared != null) preparation_timer.read() else 0;
     // Wrap the supplied allocator rather than assuming it is thread safe.
     var safe = std.heap.ThreadSafeAllocator{ .child_allocator = a };
     var tasks: [64]Task = undefined;
-    for (tasks[0..count], 0..) |*task, i| task.* = .{ .continuous = continuous, .allocator = safe.allocator(), .profile = profile, .plan = plan, .tree = tree, .base = base, .radius = radius, .length = length, .spacing = spacing, .rows = .{ @intCast(@as(usize, n) * i / count), @intCast(@as(usize, n) * (i + 1) / count) } };
+    for (tasks[0..count], 0..) |*task, i| task.* = .{ .continuous = if (working_plan) |*p| p else null, .allocator = safe.allocator(), .profile = profile, .plan = plan, .tree = tree, .base = base, .radius = radius, .length = length, .spacing = spacing, .rows = .{ @intCast(@as(usize, n) * i / count), @intCast(@as(usize, n) * (i + 1) / count) } };
     defer for (tasks[0..count]) |*task| if (task.result) |*result| {
         result.material.deinit();
     };
@@ -73,7 +79,7 @@ fn finishImpl(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.P
         columns = try std.math.add(usize, columns, task.result.?.material.columns.items.len);
         intervals = try std.math.add(usize, intervals, task.result.?.material.intervals.items.len);
     }
-    var output = Output{ .material = .{ .allocator = a, .origin = .{ base[0] - radius, base[1] - radius, base[2] }, .spacing = spacing, .n = .{ n, n } }, .work = .{} };
+    var output = Output{ .prepared_ray_bytes = if (prepared) |cache| cache.bytes() else 0, .prepared_ray_ns = preparation_ns, .material = .{ .allocator = a, .origin = .{ base[0] - radius, base[1] - radius, base[2] }, .spacing = spacing, .n = .{ n, n } }, .work = .{} };
     errdefer output.material.deinit();
     try output.material.columns.ensureTotalCapacityPrecise(a, columns);
     try output.material.intervals.ensureTotalCapacityPrecise(a, intervals);

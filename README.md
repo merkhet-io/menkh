@@ -2,186 +2,27 @@
 
 # Menkh — geometric cutting simulation
 
-Menkh calculates the material remaining after machining. Its **Zig CPU engine**
-runs on **macOS / Apple Silicon** and **Windows x86-64**, with native
-**Swift/Metal** and **C++/D3D12** voxel viewers. General machining jobs use binary
-voxel material; a separate experimental grinding kernel stores **continuous
-material intervals on sampled XY rays**. Lean proofs cover selected mathematical
-models, and a versioned C API supports embedding the voxel engine.
+Menkh is a **CPU material-removal engine written in Zig**. It takes tool geometry
+and motion and calculates the remaining workpiece. It runs on **macOS / Apple
+Silicon** and **Windows x86-64**, with native **Swift/Metal** and **C++/D3D12**
+viewers for voxel inspection and playback.
 
-[Get started](#get-started) · [Grinding](#helical-screw-grinding) · [Windows guide](docs/WINDOWS.md) · [C API](docs/C-API.md) · [Capabilities](docs/CAPABILITIES.md) · [Changelog](CHANGELOG.md)
+General machining uses compact voxel blocks. An experimental grinding backend
+stores **continuous material intervals along sampled rays**, avoiding subdivision
+along the ray axis. Selected mathematical models have Lean proofs; the executable
+is validated with geometry oracles, differential tests and reproducible workloads.
 
-| Workflow | Material representation | Inspection and persistence |
+[Get started](#get-started) · [Performance](#measured-performance) · [Grinding](#helical-screw-grinding) · [Windows](docs/WINDOWS.md) · [C API](docs/C-API.md) · [Capabilities](docs/CAPABILITIES.md) · [Changelog](CHANGELOG.md)
+
+| Workflow | Material representation | What you can do |
 |---|---|---|
-| General jobs, `grinding-demo`, `drill` | 8³ voxel blocks with pooled occupancy bits | Native voxel playback, reversible history, job checkpoints, supported inspection tools |
-| Experimental `raydexel-bench` | Continuous Z intervals on XY rays; no Z voxel subdivision | Final-state binary dump, PPM sections and derived OBJ; no history, resume or native interval animation |
+| General jobs, `grinding-demo`, `drill` | 8³ voxel blocks with pooled occupancy bits | Import stock/targets, cut, inspect, replay history, checkpoint/resume; native viewers and C API |
+| Experimental `raydexel-bench` | Continuous Z intervals on sampled XY rays | Calculate final cylindrical stock after convex-profile cuts; export interval data, PPM sections and a derived OBJ |
 
-Toolpath generation, controller emulation, full machine kinematics and physical
-force/thermal simulation are outside the product boundary. All cutting runs on
-the CPU. GPU APIs provide rendering.
-
-## Helical screw grinding
-
-Both grinding paths use a 12 × 40 mm cylindrical blank, a finite profiled wheel
-and 1,024 continuous XYZAC segments to form a two-start screw. Motion is covered
-conservatively between tool poses. The workload is an idealized grinding example,
-not a certified thread profile or evidence of industrial simulator parity.
-
-### Fast final-state experiment
-
-After [building the CLI](#get-started), run the current symmetry-aware method:
-
-```sh
-zig-out/bin/menkh raydexel-bench --method axis --spacing 0.025 --tolerance 0.01 --workers 8 --out out/screw-rays-25um
-```
-
-On Windows:
-
-```powershell
-.\zig-out\bin\menkh.exe raydexel-bench --method axis --spacing 0.025 --tolerance 0.01 --workers 8 --out out/screw-rays-25um
-```
-
-Use a new output directory for each run. `--spacing` sets the **XY ray spacing in
-millimeters**; endpoints along Z remain continuous. `--tolerance` separately
-controls the motion approximation. `--method axis` is opt-in: the default remains
-`fixed`, and the independently tested `adaptive` method remains available.
-
-The current implementation:
-
-- Intersects the complete convex wheel profile analytically with each ray.
-- Uses rotational symmetry and true-time midpoint poses to reduce preparation
-  from **90,112 to 39,936 poses** at the same requested 10 µm motion budget.
-- Selects tighter group enclosures to skip more overlapping cuts, preserving
-  cutter geometry, traversal order and final material.
-- Processes disjoint rays with deterministic CPU workers and stores long material
-  spans as intervals rather than individual volume voxels.
-
-**Stage 1 matched measurements:** M5 Max, 128 GiB, Zig 0.15.2 ReleaseFast, eight
-workers; one warm-up and five measured runs per configuration, alternating the
-old and improved group-enclosure kernels.
-
-| XY spacing | Previous cutting median | Current cutting median |
-|---|---:|---:|
-| 250 µm | 0.03988 s | **0.03188 s** |
-| 100 µm | 0.33121 s | **0.28406 s** |
-| 50 µm | 1.35656 s | **1.11647 s** |
-| 25 µm | 5.53682 s | **4.60302 s** |
-
-At 25 µm, the current range is **4.499–4.920 s**, kernel total median is **4.625 s**,
-and peak process RSS is **50.18 MB**. Fine ray/pose queries fall from **359.6 to
-282.1 million**. Complete interval files are **byte-identical before and after
-this optimization at all four spacings**. These are no-history cutting/kernel
-measurements, excluding mesh generation and viewer loading; they are not voxel
-tests-per-second or interactive FPS. See [raw results, ranges and reproduction](docs/evidence/ray-envelope-anchors/README.md).
-
-The earlier change from `fixed` to `axis` is different: it changes the conservative
-motion approximation. Their reported motion bounds are 8.48 and 9.81 µm,
-respectively, within the requested 10 µm budget. At 25 µm, `axis` removed an
-additional 4.22 mm³ in the frozen example; that difference is documented rather
-than treated as identical geometry. A separate stricter-bound run also completed.
-See [motion derivation and limits](docs/ANALYTIC-DEXELS.md) and
-[planner comparisons, accuracy tests and noisy runs](docs/evidence/axisymmetric-rays/README.md).
-
-A complete **6.25 µm** run was also performed with the earlier **fixed** method:
-122.52 s cutting and 676.32 MB kernel peak RSS. That is a historical qualification,
-not a measurement of the latest `axis` kernel. Its 10 µm motion budget remained
-separate from ray spacing. [Evidence](docs/evidence/analytic-dexels/README.md).
-
-### Stage 2: continuous translation sweeps
-
-`--method sweep` now sweeps the **complete finite profiled wheel continuously**
-along each fixed-orientation subsegment. Only orientation is subdivided, with an
-explicit conservative motion bound. The frozen screw needs 11,264 sweeps instead
-of 39,936 midpoint poses; a fixed-axis straight move needs just one sweep.
-
-The first version was **not a screw-performance win**.
-In its matched eight-worker series at 25 µm, cutting took **3.744 s**
-(range 3.675–3.810), versus **3.537 s** (3.466–3.708) for `axis`.
-Sweep kernel total was 3.751 s and peak RSS 56.59 MB. Both methods ran faster
-than the earlier stage-1 session; that cross-session change is not a code speedup.
-The existing method remains available and the default stays `fixed`.
-
-A subsequent directional rejection enclosure preserves the entire material state
-while reducing fine sweep queries from **81.9 to 50.9 million**. Matched 25 µm
-cutting medians improve from **4.055 to 3.101 s (1.31×)**; final interval files are
-byte-identical at all four spacings. This is a separate measurement session,
-not a comparison with the 3.744 s figure above. A separate fresh matched run
-measured improved `sweep` at **3.128 s** versus `axis` at **3.973 s**, with their
-respective approximation policies unchanged. [Raw results, ranges and rejected trial](docs/evidence/sweep-directional-envelopes/README.md).
-
-An independent time-subdivision/distance oracle checked 128 cut endpoints at each
-of four spacings. At 25 µm the largest sampled upper distance was **8.29 µm**,
-within the sweep's **9.36 µm motion bound**. These are sampled distances to the
-continuous tool union, not a certified maximum surface error or a display-mesh
-accuracy guarantee. The approximation differs from `axis`; final states are not
-claimed byte-identical between methods.
-
-```sh
-zig-out/bin/menkh raydexel-bench --method sweep --spacing 0.025 --tolerance 0.01 --workers 8 --out out/screw-sweeps-25um
-python3 scripts/check-sweep-accuracy.py out/screw-sweeps-25um --out out/screw-sweeps-25um/accuracy.json
-```
-
-See [algorithm, error bound and restrictions](docs/CONTINUOUS-SWEEPS.md) and
-[raw measurements, rejected optimization and inspected screenshot](docs/evidence/continuous-sweeps/README.md).
-
-### Inspect an interval result
-
-The CLI writes `job.json`, `report.json`, `intervals.json` / `intervals.bin`, and
-PPM sections through the workpiece. Validate a saved result with:
-
-```sh
-python3 scripts/inspect-raydexels.py out/screw-rays-25um/intervals.json --check-screw-invariants
-```
-
-For a manageable macOS mesh preview, generate a coarser result and export its
-actual column surface:
-
-```sh
-zig-out/bin/menkh raydexel-bench --method axis --spacing 0.1 --workers 8 --out out/screw-preview
-python3 scripts/export-raydexel-obj.py out/screw-preview/intervals.json out/screw-preview/surface.obj --validate-edges
-./scripts/build-viewer.sh
-zig-out/bin/menkh-viewer out/screw-preview/surface.obj --hide-path
-```
-
-![Actual 100 µm interval result, inspected in the native macOS viewer](docs/evidence/axisymmetric-rays/100um-axis-column-solid.png)
-
-This is the **100 µm column-solid preview**, without geometric smoothing. The OBJ
-viewer fits the actual mesh bounds; `--hide-path` hides the unrelated legacy groove
-annotation. Mesh export and loading can cost more than cutting. The exporter
-limits input to 256 MiB. Python is needed for these optional inspection scripts,
-not for the cutting CLI.
-
-The interval experiment currently supports convex profiled tools and cylindrical
-stock. It is **not tri-dexel storage** and has no STL stock import, resume, history
-or native interval playback. The Windows CLI can calculate it, but the Windows
-viewer does not load its interval dumps or OBJ previews. Use the voxel workflow
-below for animated inspection on either platform.
-
-### Grinding with playback and exposure colors
-
-```sh
-zig-out/bin/menkh grinding-demo --voxel 0.1 --workers 8 --out out/screw-history
-```
-
-Open `out/screw-history/result/voxel-animation.json` in the native viewer:
-
-```sh
-# macOS
-zig-out/bin/menkh-viewer out/screw-history/result/voxel-animation.json --color-operation
-```
-
-```powershell
-# Windows, after building the viewer
-.\out\windows-viewer\menkh-viewer.exe out/screw-history/result/voxel-animation.json --color-operation
-```
-
-Use `--voxel 0.025` for 25 µm voxel spacing and another fresh output directory.
-This path retains reversible history and operation-exposure provenance, so its
-runtime and memory are not interchangeable with `raydexel-bench` results.
-The generator is native Zig on both platforms. See the
-[screw protocol](docs/SCREW-GRINDING.md), [worker measurements and viewer details](docs/GRINDING-PERFORMANCE.md).
-The older [quantized dexel experiment](docs/DEXEL-EXPERIMENT.md) remains an exact
-occupancy comparison and was slower; it is distinct from the continuous kernel.
+The interval backend has **no history, resume or native interval playback**. It
+is not tri-dexel storage. Toolpath generation, controller emulation, full machine
+kinematics and force/thermal simulation are outside the project scope. GPU APIs
+provide rendering; material removal runs on the CPU.
 
 ## Get started
 
@@ -235,6 +76,143 @@ Windows CI checks MSVC builds, DLL/static-library integration, CLI equivalence,
 cancellation, shader compilation and D3D12 WARP rendering/replay. WARP establishes
 functionality, not hardware-GPU performance. New interval algorithms are also
 cross-built locally and covered by the portable CLI test suite.
+
+## Measured performance
+
+The latest optimization prepares shared world-Z conic coefficients and evaluates
+four constraints with SIMD. It accelerates rejection tests in the **continuous
+sweep interval backend**; tool geometry, motion bounds and final material stay
+unchanged.
+
+The frozen grinding workload is a **12 mm diameter × 40 mm** cylindrical blank,
+a finite profiled wheel and **1,024 XYZAC segments** forming a two-start screw.
+The planner produces **11,264 continuous translation sweeps**, subdividing only
+orientation. At a requested 10 µm motion tolerance, the reported conservative
+motion bound is **9.36 µm**, independently of XY ray spacing.
+
+**Apple M5 Max, 128 GiB, Zig 0.15.2, ReleaseFast.** Each configuration uses one
+warm-up and five measured repetitions, alternating the baseline and SIMD binaries.
+The machine had unrelated VM/database activity; the ranges below show that
+variation. These are measured comparisons, not isolated-machine guarantees.
+
+| XY spacing | CPU workers | Baseline cutting median | SIMD cutting median (min–max) | Median speedup |
+|---|---:|---:|---:|---:|
+| 100 µm | 1 | 1.484 s | **1.210 s** (1.092–1.554) | **1.23×** |
+| 100 µm | 8 | 0.251 s | **0.241 s** (0.145–0.252) | **1.04×** |
+| 25 µm | 8 | 4.730 s | **3.806 s** (3.447–5.075) | **1.24×** |
+
+For the **25 µm, eight-worker** configuration:
+
+- **3.815 s kernel-total median**, including planning, hierarchy, cutting and statistics.
+- **61.46 MB maximum observed pre-export process RSS**, versus 57.18 MB for the baseline.
+- **4.30 MB shared coefficient cache**; preparation is included in cutting time.
+- **50.9 million fine sweep queries**, unchanged by SIMD. These are not voxel tests.
+- **Byte-identical final interval and job files** in every paired run.
+
+These measurements exclude history, mesh generation and viewer loading. They do
+not measure animation FPS or machining time. The baseline's 25 µm cutting range
+was 4.450–7.498 s. Do not compare absolute times from different measurement
+sessions as if they were code speedups.
+
+[Raw reports, profiling, source/binary hashes and rejected alternatives](docs/evidence/prepared-z-rays/README.md).
+Earlier [directional-enclosure measurements](docs/evidence/sweep-directional-envelopes/README.md)
+and [continuous-sweep validation](docs/evidence/continuous-sweeps/README.md) remain
+available. The older [6.25 µm qualification](docs/evidence/analytic-dexels/README.md)
+used the `fixed` method, not this SIMD sweep kernel. General voxel workloads have
+separate measurements below; there is no established matched performance ratio
+against Jens or ModuleWorks.
+
+## Helical screw grinding
+
+### Fast final-state calculation
+
+After building the CLI, run the continuous-sweep method explicitly:
+
+```sh
+zig-out/bin/menkh raydexel-bench --method sweep --spacing 0.025 --tolerance 0.01 --workers 8 --out out/screw-sweeps-25um
+```
+
+On Windows:
+
+```powershell
+.\zig-out\bin\menkh.exe raydexel-bench --method sweep --spacing 0.025 --tolerance 0.01 --workers 8 --out out/screw-sweeps-25um
+```
+
+Use a **new output directory** for every run. `--spacing` is XY ray spacing in
+millimeters; interval endpoints along Z remain continuous. `--tolerance` controls
+the separate motion approximation. The default method remains `fixed`; `axis`
+and `adaptive` are also available, with different approximation policies.
+
+The sweep solver intersects the **complete finite convex profiled wheel** moving
+along each fixed-orientation subsegment. Conservative bounds cover orientation
+changes between subsegments. A spatial hierarchy skips irrelevant cuts, already
+removed intervals are skipped, and workers process disjoint rays deterministically.
+The screw is an idealized grinding example, not a certified thread profile.
+
+An independent distance oracle checked 128 cut endpoints at each of four spacings.
+At 25 µm, the largest sampled upper distance to the continuous tool union was
+**8.29 µm**, within the **9.36 µm motion bound**. This is sampled evidence, not a
+certified maximum surface error. Input path chords, XY sampling and mesh
+reconstruction have separate errors. See [geometry and approximation contracts](docs/CONTINUOUS-SWEEPS.md).
+
+### Inspect the result
+
+The CLI writes `job.json`, `report.json`, `intervals.json` / `intervals.bin` and
+PPM sections. Optional Python tools validate the saved material and sample its
+geometric error:
+
+```sh
+python3 scripts/inspect-raydexels.py out/screw-sweeps-25um/intervals.json --check-screw-invariants
+python3 scripts/check-sweep-accuracy.py out/screw-sweeps-25um --out out/screw-sweeps-25um/accuracy.json
+```
+
+For a manageable macOS preview, export the actual column surface at 100 µm:
+
+```sh
+zig-out/bin/menkh raydexel-bench --method sweep --spacing 0.1 --workers 8 --out out/screw-preview
+python3 scripts/export-raydexel-obj.py out/screw-preview/intervals.json out/screw-preview/surface.obj --validate-edges
+./scripts/build-viewer.sh
+zig-out/bin/menkh-viewer out/screw-preview/surface.obj --hide-path
+```
+
+![Earlier 100 µm axis-method result in the native macOS viewer](docs/evidence/axisymmetric-rays/100um-axis-column-solid.png)
+
+The image shows the earlier **100 µm `axis` result**, not the timed SIMD run.
+Column surfaces have no geometric smoothing. `--hide-path` hides an unrelated
+legacy groove annotation. Mesh export/loading can cost more than cutting; the
+exporter limits input to 256 MiB.
+
+This backend currently supports **cylindrical stock and convex profiled tools**.
+It has no STL stock import, history or resume. The Windows CLI calculates it, but
+the Windows viewer does not load interval dumps or OBJ previews. Python is needed
+only for the optional inspection/export scripts, not for cutting.
+
+### Animated grinding with voxel history
+
+Use the voxel workflow for playback and exposure colors on either platform:
+
+```sh
+zig-out/bin/menkh grinding-demo --voxel 0.1 --workers 8 --out out/screw-history
+```
+
+Open the resulting history:
+
+```sh
+# macOS
+zig-out/bin/menkh-viewer out/screw-history/result/voxel-animation.json --color-operation
+```
+
+```powershell
+# Windows, after building the viewer
+.\out\windows-viewer\menkh-viewer.exe out/screw-history/result/voxel-animation.json --color-operation
+```
+
+Use `--voxel 0.025` and a fresh output directory for 25 µm voxel spacing. This
+workflow retains reversible history and face-exposure provenance; **its runtime
+and memory are not the interval benchmark numbers above**. Both grinding workflows
+use the same nominal blank, wheel and 1,024-segment screw path.
+
+[Screw protocol](docs/SCREW-GRINDING.md) · [Voxel performance and viewer details](docs/GRINDING-PERFORMANCE.md) · [Older quantized dexel experiment](docs/DEXEL-EXPERIMENT.md).
 
 ## General machining and inspection
 
@@ -327,11 +305,14 @@ python3 scripts/test-raydexels.py --out out/ray-tests-new
 python3 scripts/benchmark-raydexels.py --methods axis sweep --out out/ray-bench-new
 ```
 
-The ray suite includes independent geometry checks, exhaustive small-grid
+The latest SIMD follow-up passes **104 tests in Debug and ReleaseFast**, with one
+existing skip. Windows x86-64 cross-builds successfully; its SIMD runtime and
+performance have not been measured locally. The ray suite includes independent
+geometry checks, exhaustive small-grid
 comparisons, allocation failures, exact worker determinism, interval validation,
 retained core/endcaps and mesh volume/edge checks. Benchmark outputs retain
 warm-ups, repeated timings, configuration/source/binary identifiers and material
-hashes. The [latest comparison](docs/evidence/ray-envelope-anchors/README.md)
+hashes. The [latest comparison](docs/evidence/prepared-z-rays/README.md)
 provides the command for comparing two compiled binaries byte for byte.
 
 Other recorded workloads include the 325-segment pocket: **2.43 ms cutting at
@@ -352,7 +333,7 @@ records** with Zig in Debug and ReleaseFast. Negative controls check that broken
 subtraction, undo and pool updates fail verification.
 
 These are **model proofs plus implementation tests**, not a proof of the compiled
-Zig engine. The continuous ray kernel, axisymmetric planner and new group-envelope
+Zig engine. The continuous ray kernel, axisymmetric planner, group enclosures and SIMD
 optimization are outside the formal model, as are floating-point rounding and
 surface reconstruction. Lean is separate from engine/viewer builds.
 

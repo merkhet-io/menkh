@@ -1,0 +1,8 @@
+{
+  "binary_sha256": "b94959dce4649db2b3625fb1f0520662e40fc8cc068496dccf9ec37b32d666aa",
+  "process_exit": 0,
+  "sample_exit": 0,
+  "sample_stdout": "",
+  "sample_stderr": "Sampling process 76628 for 1 second with 1 millisecond of run time between samples\nCouldn't find _sigtramp symbol in expected dylibs\nFound _sigtramp symbol after 5 tries\nSampling completed, processing symbols...\nSample analysis of process 76628 written to file out/sweep-cpu-profile/sample.txt\n",
+  "note": "Instrumented run; timing is not a performance benchmark."
+}

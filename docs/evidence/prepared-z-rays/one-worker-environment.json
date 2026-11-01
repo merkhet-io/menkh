@@ -1,0 +1,60 @@
+{
+  "source_sha256": {
+    "build.zig": "a5115e0fab36cfb658a3bf8eaab073f97e1d9dbc8b48ed82ca0e045acdcaaff2",
+    "src/adaptive_raydexel.zig": "5622c0c6e379ef0441e22b1ef7c5c5db3fbf9b86192dd84338718fb7fe3c1ab7",
+    "src/c_api.zig": "aa5b655261df843aa5eec5b3d84b3ec7502f13b3dd953674d80ad37ea113e433",
+    "src/core.zig": "b2194ad98966a6ce9d2fbdf9813e921dc982c1c19571d322508c7c1924116dcf",
+    "src/defects.zig": "eeef85847cc294be2bd8eeadf0c9b6115eb90d9e0bf3ae5c48897467c253eb6a",
+    "src/dexel.zig": "490ef859b8ce6e0598577e6bfbb2d643cf793c3feec01128beefb1ed66539e35",
+    "src/dexel_bench.zig": "57c9c0c819229ea215166c7468ea2af3b5c83733a2d310cde81d07eb6184b7b2",
+    "src/drill.zig": "a30567af3722ca39d83b3268a1d45302e6ea7a7b4b4496b610f167e25a73e7ea",
+    "src/engine.zig": "3cd357644e2756ee254cdfbfe15fb578980238a3a2e04ab65e096e756b67cc3e",
+    "src/engine_tests.zig": "3e74e9aebb25050401ef199a777e8ea18a016d9ef26ea647b3dbef2bf10613e8",
+    "src/fine.zig": "d1c2953a9244e05e7745edaf493f63a674275c0996b92293d803940eeac379fe",
+    "src/formal_bridge.zig": "f2b10d26eaf661871b01081074a3fd4c2fd1833afaa8fd6d8edcd1fcd8d98ed8",
+    "src/grinding_demo.zig": "236b72494e7c8f1547dc7ada726fc813b6b5dc0952d877632c4db923ceeb0ce3",
+    "src/inspect.zig": "5e8c7409947d55051d826be92083a3c79bbb8bc10ba836e4e9fde5c7686017d4",
+    "src/job.zig": "ef16d82da7126bdb70e8a92d17be34a79ca4bb9a7449635b380eb5f617d42417",
+    "src/kernel_bench.zig": "c7bb96a12903a96369b7f0476598cf05a73cb9888f867e0bc38ca27bc4873b7b",
+    "src/live.zig": "625aa78da458556432bfe2703ee061aabe6d8eefb2196a7f98bb6e81cdb11181",
+    "src/main.zig": "f48c94a9080e0fd1aca462a9d667b83792452327f14ac6bff69689f2d54f035a",
+    "src/mesh_input.zig": "9e9aabf7856bd2e8f4e190cb09050744870118508a48f311e85877edb318138a",
+    "src/motion.zig": "3a0b1bc27ca4323016854260b45b6d4a7b19369dcaf5065cf1efe7092264554f",
+    "src/platform.zig": "d465d9d917c5d48c192e5f4981feefdae9c77816f13d6add1eb6ef802bc0a9d7",
+    "src/prepared_z_rays.zig": "64d55b3ad92947eae0e276d425f0cc3436471ba25f18c0d7848437cff996a343",
+    "src/profile_simd.zig": "e79b13c77e544d32622b0fa9b7058ff8cca14cc89681f0def3a08482ca9ee328",
+    "src/profile_sweep.zig": "971944c0bac86a0338e15b233a5bf185d07e15c4f4a988408b1411b793b6fda1",
+    "src/profile_sweep_tests.zig": "1f7d21a3e33d6ae55028237755fce4e0b9ce3af719a0477b4689ce3c24ba1566",
+    "src/provenance.zig": "1acf3524e1cb40a225b3b87222b8482c580d4cd345e7ff9be5e7b39a4ce68cab",
+    "src/raydexel.zig": "615a75f2f442619c4e8a81b926627c5f8aa256a6ffd689b23bc507dd3477dd76",
+    "src/raydexel_bench.zig": "58c0ff21148af23ed2ce2de88bc87913775379039bfe8c15dd0606bda95b1ba5",
+    "src/raydexel_motion.zig": "86f00f3a8c516602d866e92c2ce73bb9910597b0fc43adccb7de911d5dd2835c",
+    "src/raydexel_parallel.zig": "8b81e3cc06c5c955a47810b1d88e1d1e6a9dbed4380b4f7c3d7bd623934df8ce",
+    "src/raydexel_tests.zig": "b6209624eb75486743a738e7c254e9894ef5ffff127e77e72bb95035fe342b04",
+    "src/scene.zig": "28dbfcfb31e3fdd169c31fe8daa523e097da768b36bdc7575bc23e80e086e179",
+    "src/sparse.zig": "2a8fbd6523e8a981a5a24d09738a6cf81ba72e07c248ffab95235033995ea5a6",
+    "src/state.zig": "b2e8f10d755ee1097f940d21224cb9c30cacf03e135bb344e601a61dc0bef11a",
+    "src/surface.zig": "65344ed7a03fc28323fca3c7442caa87d78a514690b57b53fca83f85143a1cff",
+    "src/swept_raydexel.zig": "c4b03df1ec7b4e32b77576457e3336ae144bb663ad6712b203a230978b65f793",
+    "src/tests.zig": "720881c41d11acf0f94ab2e777eef8c2c39af3d0c7191658289a4acc0867d2d5",
+    "src/tiles.zig": "0386c3fc9248f26d3a59a3b9d1516aac0edb602148d3da4e769d2f2009df5050"
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "workers": 1,
+  "method": "sweep",
+  "warmups_per_configuration": 1,
+  "repetitions": 5,
+  "commit": "1b6ee111d19ab60a1105271de24cea9881b6fd05",
+  "source_diff_sha256": "e50b85eef62360a4ebf168c46360b995c4891f3914b3f97f6a6facb99c2a0b80",
+  "binaries": {
+    "before": {
+      "path": "/private/tmp/menkh-boundary-reference",
+      "sha256": "b94959dce4649db2b3625fb1f0520662e40fc8cc068496dccf9ec37b32d666aa"
+    },
+    "after": {
+      "path": "/Users/zin/sophia/menkh/zig-out/bin/menkh",
+      "sha256": "fb60c6bb4f138fd77ff53be0cd27322250764bd3bc57d5c20b3abc18d3df18fd"
+    }
+  }
+}

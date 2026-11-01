@@ -24,7 +24,10 @@ a.out.mkdir(parents=True, exist_ok=False)
 binaries = {name: path.resolve() for name, path in [('before', a.before), ('after', a.after)]}
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
-environment = dict(platform=platform.platform(), machine=platform.machine(), workers=a.workers, method=a.method,
+source_paths = sorted(set(subprocess.check_output(
+    ['git', 'ls-files', '-co', '--exclude-standard', '--', 'src', 'build.zig', 'build.zig.zon'], text=True).splitlines()))
+source_hashes = {name: sha(Path(name)) for name in source_paths if Path(name).is_file()}
+environment = dict(source_sha256=source_hashes, platform=platform.platform(), machine=platform.machine(), workers=a.workers, method=a.method,
                    warmups_per_configuration=1, repetitions=a.repeat,
                    commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
                    source_diff_sha256=hashlib.sha256(subprocess.check_output(['git', 'diff'])).hexdigest(),
