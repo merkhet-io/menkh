@@ -83,7 +83,7 @@ fn finishImpl(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.P
     errdefer output.material.deinit();
     try output.material.columns.ensureTotalCapacityPrecise(a, columns);
     try output.material.intervals.ensureTotalCapacityPrecise(a, intervals);
-    for (tasks[0..count]) |task| {
+    for (tasks[0..count]) |*task| {
         const part = task.result.?;
         const offset = output.material.intervals.items.len;
         output.material.intervals.appendSliceAssumeCapacity(part.material.intervals.items);
@@ -92,6 +92,10 @@ fn finishImpl(a: std.mem.Allocator, profile: d.Profile, plan: ?*const adaptive.P
         inline for (std.meta.fields(adaptive.Work)) |field| @field(output.work, field.name) += @field(part.work, field.name);
         inline for (std.meta.fields(swept.Work)) |field| @field(output.sweep_work, field.name) += @field(part.sweep_work, field.name);
         output.material.scratch_bytes += part.material.scratch_bytes;
+        // All workers have joined. Retire each copied part before touching the
+        // next output range, rather than retaining a second full result.
+        task.result.?.material.deinit();
+        task.result = null;
     }
     return output;
 }

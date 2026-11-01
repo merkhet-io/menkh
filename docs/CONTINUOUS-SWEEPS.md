@@ -85,6 +85,16 @@ axial motion. See the [derivation and measured improvement](evidence/sweep-direc
 **only the continuous sweep** removes material. Queries skip already removed
 intervals. The scalar exhaustive traversal remains an oracle for pruning.
 
+The prepared SIMD path caches world-Z conic coefficients before starting workers.
+Each ray also retains the sweep IDs that produced its final interval endpoints,
+then recomputes those sweeps to seed the next ray in the same row. The ordinary
+coarse seeding and full hierarchy pass remain in place; no intersection or
+material value is copied between rays. Row resets preserve deterministic query
+counts across worker partitions. `sweep_work.coherent_seed_tests` reports this
+additional work and is included in `sweep_work.sweep_tests`.
+[Scaling measurements and rejected alternative](evidence/coherent-ray-seeds/README.md).
+
+
 `report.json` distinguishes `sweep_work.proxy_tests` and `sweep_work.sweep_tests`
 from group-envelope tests. `poses` is a legacy count field; `prepared_kind` states
 whether it counts continuous sweeps or poses/nodes. These are not voxel tests.
