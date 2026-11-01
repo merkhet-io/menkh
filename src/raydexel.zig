@@ -284,6 +284,12 @@ pub const Result = struct {
 /// Endpoint surfaces remain closed; removed/retained boundary ambiguity has
 /// zero ray length and is reported separately from center-sampled comparisons.
 pub fn subtractIntervals(material: *std.ArrayList(Interval), cut: Interval) void {
+    subtractIntervalsTracked(material, cut, null, 0);
+}
+/// Optional endpoint-owner metadata, with capacity reserved alongside material.
+/// Tracking changes traversal hints only; interval subtraction is identical.
+pub fn subtractIntervalsTracked(material: *std.ArrayList(Interval), cut: Interval, owners: ?*std.ArrayList([2]u32), owner: u32) void {
+    if (owners) |o| std.debug.assert(o.items.len == material.items.len);
     if (cut.lo >= cut.hi) return; // Regularized difference: a tangent point has no volume.
     var i: usize = 0;
     while (i < material.items.len) {
@@ -295,13 +301,21 @@ pub fn subtractIntervals(material: *std.ArrayList(Interval), cut: Interval) void
         }
         if (cut.lo <= span.lo and cut.hi >= span.hi) {
             _ = material.orderedRemove(i);
+            if (owners) |o| _ = o.orderedRemove(i);
         } else if (cut.lo <= span.lo) {
             material.items[i].lo = cut.hi;
+            if (owners) |o| o.items[i][0] = owner;
             break;
         } else if (cut.hi >= span.hi) {
             material.items[i].hi = cut.lo;
+            if (owners) |o| o.items[i][1] = owner;
             i += 1;
         } else {
+            if (owners) |o| {
+                const old_hi = o.items[i][1];
+                o.items[i][1] = owner;
+                o.insertAssumeCapacity(i + 1, .{ owner, old_hi });
+            }
             material.insertAssumeCapacity(i + 1, .{ .lo = cut.hi, .hi = span.hi });
             material.items[i].hi = cut.lo;
             break;

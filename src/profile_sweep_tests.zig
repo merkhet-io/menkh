@@ -127,6 +127,11 @@ fn pipeline(allocator: std.mem.Allocator) !void {
     for (fast.material.intervals.items, slow.material.intervals.items) |x, y| {
         try interval(x, y.lo, y.hi);
     }
+    plan.coherent_seeds = false;
+    var original_order = try swept.finishRows(allocator, p, &plan, tree, .{ 0, 0, 0 }, 2, 4, 0.4, false, null);
+    defer original_order.material.deinit();
+    try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(fast.material.intervals.items), std.mem.sliceAsBytes(original_order.material.intervals.items));
+    plan.coherent_seeds = true;
     var cache = try @import("prepared_z_rays.zig").Scene.init(allocator, p, plan.sweeps, tree);
     defer cache.deinit();
     plan.prepared = &cache;
@@ -134,6 +139,9 @@ fn pipeline(allocator: std.mem.Allocator) !void {
     defer prepared.material.deinit();
     try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(fast.material.intervals.items), std.mem.sliceAsBytes(prepared.material.intervals.items));
     try std.testing.expectEqualDeep(fast.material.work, prepared.material.work);
+    var merged = try @import("raydexel_parallel.zig").finishContinuous(allocator, p, &plan, tree, .{ 0, 0, 0 }, 2, 4, 0.4, 1);
+    defer merged.material.deinit();
+    try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(fast.material.intervals.items), std.mem.sliceAsBytes(merged.material.intervals.items));
 }
 test "continuous sweep hierarchy matches exhaustive rays and allocation failures clean up" {
     try pipeline(a);
@@ -237,6 +245,11 @@ test "directional sweep enclosures preserve exhaustive material in randomized ov
         defer slow.material.deinit();
         try std.testing.expectEqualDeep(fast.material.columns.items, slow.material.columns.items);
         try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(fast.material.intervals.items), std.mem.sliceAsBytes(slow.material.intervals.items));
+        plan.coherent_seeds = false;
+        var original_order = try swept.finishRows(a, p, &plan, tree, .{ 0, 0, 0 }, 2, 4, 0.4, false, null);
+        defer original_order.material.deinit();
+        try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(fast.material.intervals.items), std.mem.sliceAsBytes(original_order.material.intervals.items));
+        plan.coherent_seeds = true;
         var cache = try @import("prepared_z_rays.zig").Scene.init(a, p, plan.sweeps, tree);
         defer cache.deinit();
         plan.prepared = &cache;
@@ -270,4 +283,45 @@ fn sameHit(expected: ?d.Interval, actual: ?d.Interval) !void {
         try std.testing.expectEqual(@as(u64, @bitCast(hit.lo)), @as(u64, @bitCast(actual.?.lo)));
         try std.testing.expectEqual(@as(u64, @bitCast(hit.hi)), @as(u64, @bitCast(actual.?.hi)));
     }
+}
+
+test "tracked interval subtraction retains the actual endpoint contributors" {
+    var material: std.ArrayList(d.Interval) = .empty;
+    defer material.deinit(a);
+    var owners: std.ArrayList([2]u32) = .empty;
+    defer owners.deinit(a);
+    try material.ensureTotalCapacityPrecise(a, 64);
+    try owners.ensureTotalCapacityPrecise(a, 64);
+    material.appendAssumeCapacity(.{ .lo = 0, .hi = 100 });
+    owners.appendAssumeCapacity(.{ 99, 99 });
+    const cuts = [_]d.Interval{
+        .{ .lo = 10, .hi = 20 }, .{ .lo = 30, .hi = 40 },
+        .{ .lo = 5, .hi = 15 },  .{ .lo = 35, .hi = 60 },
+        .{ .lo = 5, .hi = 60 },  .{ .lo = 60, .hi = 60 },
+        .{ .lo = -10, .hi = 1 }, .{ .lo = 80, .hi = 200 },
+    };
+    for (cuts, 0..) |cut, id| {
+        d.subtractIntervalsTracked(&material, cut, &owners, @intCast(id));
+        try std.testing.expectEqual(material.items.len, owners.items.len);
+        for (material.items, owners.items) |span, pair| {
+            try std.testing.expectEqual(if (pair[0] == 99) @as(f64, 0) else cuts[pair[0]].hi, span.lo);
+            try std.testing.expectEqual(if (pair[1] == 99) @as(f64, 100) else cuts[pair[1]].lo, span.hi);
+        }
+        // Independent integer midpoint occupancy, including overlaps/tangencies.
+        for (0..100) |cell| {
+            const z = @as(f64, @floatFromInt(cell)) + 0.5;
+            var expected = true;
+            for (cuts[0 .. id + 1]) |c| if (z > c.lo and z < c.hi) {
+                expected = false;
+            };
+            var actual = false;
+            for (material.items) |span| if (z > span.lo and z < span.hi) {
+                actual = true;
+            };
+            try std.testing.expectEqual(expected, actual);
+        }
+    }
+    d.subtractIntervalsTracked(&material, .{ .lo = -100, .hi = 200 }, &owners, 0);
+    try std.testing.expectEqual(@as(usize, 0), material.items.len);
+    try std.testing.expectEqual(@as(usize, 0), owners.items.len);
 }

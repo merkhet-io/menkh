@@ -1,0 +1,107 @@
+[
+  {
+    "spacing_mm": 0.025,
+    "method": "sweep",
+    "workers": 8,
+    "metrics": {
+      "planning_seconds": {
+        "median": 0.0025159165,
+        "min": 0.002412041,
+        "max": 0.002619792
+      },
+      "hierarchy_seconds": {
+        "median": 0.00432,
+        "min": 0.003950709,
+        "max": 0.004689291
+      },
+      "cut_including_stock_init_seconds": {
+        "median": 3.482827979,
+        "min": 3.368478208,
+        "max": 3.59717775
+      },
+      "kernel_total_seconds": {
+        "median": 3.4904393125,
+        "min": 3.375669875,
+        "max": 3.60520875
+      },
+      "export_seconds": {
+        "median": 0.008551979500000001,
+        "min": 0.008114709,
+        "max": 0.00898925
+      }
+    },
+    "peak_rss_bytes": 61456384,
+    "intervals": 1018792,
+    "interval_sha256": "b7e68781fa343d0b92a0d5bba8a06fc0b7f1fb06a78536f70355832d76f992f1"
+  },
+  {
+    "spacing_mm": 0.0125,
+    "method": "sweep",
+    "workers": 8,
+    "metrics": {
+      "planning_seconds": {
+        "median": 0.0026364165,
+        "min": 0.002179458,
+        "max": 0.003093375
+      },
+      "hierarchy_seconds": {
+        "median": 0.004455146,
+        "min": 0.003767292,
+        "max": 0.005143
+      },
+      "cut_including_stock_init_seconds": {
+        "median": 16.8139776875,
+        "min": 16.635049833,
+        "max": 16.992905542
+      },
+      "kernel_total_seconds": {
+        "median": 16.8250050205,
+        "min": 16.645537083,
+        "max": 17.004472958
+      },
+      "export_seconds": {
+        "median": 0.0404699585,
+        "min": 0.031185,
+        "max": 0.049754917
+      }
+    },
+    "peak_rss_bytes": 185237504,
+    "intervals": 4074328,
+    "interval_sha256": "aa4ffd5e4f7dc626b7d10e653e9bdc6a959c8dc072a6f1bdd131f8a6e75061f2"
+  },
+  {
+    "spacing_mm": 0.00625,
+    "method": "sweep",
+    "workers": 8,
+    "metrics": {
+      "planning_seconds": {
+        "median": 0.0022505835,
+        "min": 0.002132625,
+        "max": 0.002368542
+      },
+      "hierarchy_seconds": {
+        "median": 0.003965125,
+        "min": 0.00376675,
+        "max": 0.0041635
+      },
+      "cut_including_stock_init_seconds": {
+        "median": 64.5304937085,
+        "min": 63.15817875,
+        "max": 65.902808667
+      },
+      "kernel_total_seconds": {
+        "median": 64.5499676255,
+        "min": 63.177966917,
+        "max": 65.921968334
+      },
+      "export_seconds": {
+        "median": 0.131388167,
+        "min": 0.131205917,
+        "max": 0.131570417
+      }
+    },
+    "peak_rss_bytes": 680656896,
+    "intervals": 16297320,
+    "interval_sha256": "b98327a0fe02287b8152f29bb4287901dd4cdc4fba7fa4a7c452c8da1a83ca16"
+  }
+]

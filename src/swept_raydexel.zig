@@ -6,6 +6,7 @@ const s = @import("profile_sweep.zig");
 const m = @import("motion.zig");
 const jobs = @import("job.zig");
 pub const Plan = struct {
+    coherent_seeds: bool = true,
     // Borrowed immutable cache; owner must retain it until all workers finish.
     prepared: ?*const @import("prepared_z_rays.zig").Scene = null,
     allocator: std.mem.Allocator,
@@ -86,9 +87,9 @@ pub const Plan = struct {
         return p.sweeps.len * @sizeOf(s.Sweep) + p.rims.len * @sizeOf(s.Rim) + p.planes.len * @sizeOf(s.Plane) + p.proxies.len * @sizeOf(d.Pose);
     }
 };
-pub const Work = struct { proxy_tests: u64 = 0, sweep_tests: u64 = 0 };
+pub const Work = struct { coherent_seed_tests: u64 = 0, proxy_tests: u64 = 0, sweep_tests: u64 = 0 };
 pub const Output = struct { material: d.Result, work: Work };
-fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile, index: u32, x: f64, y: f64, material: *std.ArrayList(d.Interval), work: *d.Work) !void {
+fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile, index: u32, x: f64, y: f64, material: *std.ArrayList(d.Interval), owners: ?*std.ArrayList([2]u32), work: *d.Work) !void {
     work.node_tests += 1;
     const node = tree.nodes.items[index];
     if (x < node.bounds.lo[0] or x > node.bounds.hi[0] or y < node.bounds.lo[1] or y > node.bounds.hi[1]) return;
@@ -108,8 +109,8 @@ fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile,
         }
     }
     if (node.count == 0) {
-        try visit(plan, sweep_work, tree, profile, node.left, x, y, material, work);
-        try visit(plan, sweep_work, tree, profile, node.right_or_anchor, x, y, material, work);
+        try visit(plan, sweep_work, tree, profile, node.left, x, y, material, owners, work);
+        try visit(plan, sweep_work, tree, profile, node.right_or_anchor, x, y, material, owners, work);
     } else for (tree.poses[node.start .. node.start + node.count]) |pose| {
         if (material.items.len == 0) break;
         if (x < pose.bounds.lo[0] or x > pose.bounds.hi[0] or y < pose.bounds.lo[1] or y > pose.bounds.hi[1]) continue;
@@ -121,7 +122,7 @@ fn visit(plan: *const Plan, sweep_work: *Work, tree: d.Tree, profile: d.Profile,
         sweep_work.sweep_tests += 1;
         if (try plan.sweeps[pose.motion_index].ray(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, limits)) |cut| {
             work.cutting_intervals += 1;
-            d.subtractIntervals(material, cut);
+            d.subtractIntervalsTracked(material, cut, owners, pose.motion_index);
         }
     }
 }
@@ -141,13 +142,31 @@ pub fn finishRows(a: std.mem.Allocator, profile: d.Profile, plan: *const Plan, t
     var material: std.ArrayList(d.Interval) = .empty;
     defer material.deinit(a);
     try material.ensureTotalCapacityPrecise(a, try std.math.add(usize, tree.poses.len, 1));
-    result.scratch_bytes = material.capacity * @sizeOf(d.Interval);
+    var boundary_owners: std.ArrayList([2]u32) = .empty;
+    defer boundary_owners.deinit(a);
+    const coherent = plan.coherent_seeds and !exhaustive;
+    if (coherent) try boundary_owners.ensureTotalCapacityPrecise(a, try std.math.add(usize, tree.poses.len, 1));
+    const owners: ?*std.ArrayList([2]u32) = if (coherent) &boundary_owners else null;
+    // Prior-ray endpoint contributors are hints, never reused intersections.
+    var seed_ids: std.ArrayList(u32) = .empty;
+    defer seed_ids.deinit(a);
+    if (coherent) try seed_ids.ensureTotalCapacityPrecise(a, try std.math.mul(usize, boundary_owners.capacity, 2));
+    result.scratch_bytes = material.capacity * @sizeOf(d.Interval) + boundary_owners.capacity * @sizeOf([2]u32) + seed_ids.capacity * @sizeOf(u32);
     const range = rows orelse [2]u32{ 0, n };
     if (range[0] > range[1] or range[1] > n) return error.InvalidRayRows;
     for (range[0]..range[1]) |iy| for (0..n) |ix| {
         const x = result.origin[0] + (@as(f64, @floatFromInt(ix)) + 0.5) * spacing;
         const y = result.origin[1] + (@as(f64, @floatFromInt(iy)) + 0.5) * spacing;
+        // Reset per row: hints and work counts are independent of worker partitions.
+        if (ix == 0) boundary_owners.clearRetainingCapacity();
         if ((x - base[0]) * (x - base[0]) + (y - base[1]) * (y - base[1]) > radius * radius) continue;
+        seed_ids.clearRetainingCapacity();
+        for (boundary_owners.items) |pair| for (pair) |id| {
+            if (id == std.math.maxInt(u32)) continue;
+            if (seed_ids.items.len == 0 or seed_ids.items[seed_ids.items.len - 1] != id) seed_ids.appendAssumeCapacity(id);
+        };
+        boundary_owners.clearRetainingCapacity();
+        if (coherent) boundary_owners.appendAssumeCapacity(.{ std.math.maxInt(u32), std.math.maxInt(u32) });
         material.clearRetainingCapacity();
         material.appendAssumeCapacity(.{ .lo = base[2], .hi = base[2] + length });
         if (exhaustive) {
@@ -156,6 +175,13 @@ pub fn finishRows(a: std.mem.Allocator, profile: d.Profile, plan: *const Plan, t
                 if (try plan.sweeps[pose.motion_index].ray(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, .{ .lo = base[2], .hi = base[2] + length })) |cut| d.subtractIntervals(&material, cut);
             }
         } else {
+            for (seed_ids.items) |id| {
+                const cut_sweep = plan.sweeps[id];
+                if (x < cut_sweep.bounds.lo[0] or x > cut_sweep.bounds.hi[0] or y < cut_sweep.bounds.lo[1] or y > cut_sweep.bounds.hi[1]) continue;
+                sweep_work.coherent_seed_tests += 1;
+                sweep_work.sweep_tests += 1;
+                if (try cut_sweep.ray(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, .{ .lo = base[2], .hi = base[2] + length })) |cut| d.subtractIntervalsTracked(&material, cut, owners, id);
+            }
             // Seed the removed union with widely spaced poses before refining
             // its boundary. This is traversal order only: the exact tree pass
             // still covers every pose. It avoids growing each cut monotonically
@@ -166,9 +192,9 @@ pub fn finishRows(a: std.mem.Allocator, profile: d.Profile, plan: *const Plan, t
                 if (x < pose.bounds.lo[0] or x > pose.bounds.hi[0] or y < pose.bounds.lo[1] or y > pose.bounds.hi[1]) continue;
                 result.work.seed_tests += 1;
                 sweep_work.sweep_tests += 1;
-                if (try plan.sweeps[pose.motion_index].ray(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, .{ .lo = base[2], .hi = base[2] + length })) |cut| d.subtractIntervals(&material, cut);
+                if (try plan.sweeps[pose.motion_index].ray(profile, .{ x, y, 0 }, .{ 0, 0, 1 }, .{ .lo = base[2], .hi = base[2] + length })) |cut| d.subtractIntervalsTracked(&material, cut, owners, pose.motion_index);
             }
-            try visit(plan, sweep_work, tree, profile, 0, x, y, &material, &result.work);
+            try visit(plan, sweep_work, tree, profile, 0, x, y, &material, owners, &result.work);
         }
         const offset = result.intervals.items.len;
         try result.intervals.appendSlice(a, material.items);

@@ -1,0 +1,72 @@
+[
+  {
+    "spacing_mm": 0.025,
+    "method": "sweep",
+    "workers": 8,
+    "metrics": {
+      "planning_seconds": {
+        "median": 0.0032207085,
+        "min": 0.003195833,
+        "max": 0.003245584
+      },
+      "hierarchy_seconds": {
+        "median": 0.005447520500000001,
+        "min": 0.005406541,
+        "max": 0.0054885
+      },
+      "cut_including_stock_init_seconds": {
+        "median": 3.823509438,
+        "min": 3.704940792,
+        "max": 3.942078084
+      },
+      "kernel_total_seconds": {
+        "median": 3.833223521,
+        "min": 3.714677542,
+        "max": 3.9517695
+      },
+      "export_seconds": {
+        "median": 0.0143614585,
+        "min": 0.011466042,
+        "max": 0.017256875
+      }
+    },
+    "peak_rss_bytes": 43859968,
+    "intervals": 1018792,
+    "interval_sha256": "b7e68781fa343d0b92a0d5bba8a06fc0b7f1fb06a78536f70355832d76f992f1"
+  },
+  {
+    "spacing_mm": 0.00625,
+    "method": "sweep",
+    "workers": 8,
+    "metrics": {
+      "planning_seconds": {
+        "median": 0.0024663124999999998,
+        "min": 0.002432,
+        "max": 0.002500625
+      },
+      "hierarchy_seconds": {
+        "median": 0.0043088125,
+        "min": 0.004270416,
+        "max": 0.004347209
+      },
+      "cut_including_stock_init_seconds": {
+        "median": 60.124520125000004,
+        "min": 59.206111791,
+        "max": 61.042928459
+      },
+      "kernel_total_seconds": {
+        "median": 60.1483651665,
+        "min": 59.2294945,
+        "max": 61.067235833
+      },
+      "export_seconds": {
+        "median": 0.179029104,
+        "min": 0.153124375,
+        "max": 0.204933833
+      }
+    },
+    "peak_rss_bytes": 398852096,
+    "intervals": 16297320,
+    "interval_sha256": "b98327a0fe02287b8152f29bb4287901dd4cdc4fba7fa4a7c452c8da1a83ca16"
+  }
+]

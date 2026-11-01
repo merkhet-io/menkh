@@ -91,48 +91,48 @@ cross-built locally and covered by the portable CLI test suite.
 
 ## Measured performance
 
-The latest optimization prepares shared world-Z conic coefficients and evaluates
-four constraints with SIMD. It accelerates rejection tests in the **continuous
-sweep interval backend**; tool geometry, motion bounds and final material stay
-unchanged.
+The latest iteration uses the sweeps that formed one ray's final boundaries to
+seed the next ray. Each intersection is recomputed; the full pruning pass still
+runs afterward. This builds on SIMD conic rejection without changing tool
+geometry, motion bounds or the final material. Worker buffers are now released
+as their results are merged, reducing peak resident memory.
 
-The frozen grinding workload is a **12 mm diameter × 40 mm** cylindrical blank,
-a finite profiled wheel and **1,024 XYZAC segments** forming a two-start screw.
-The planner produces **11,264 continuous translation sweeps**, subdividing only
-orientation. At a requested 10 µm motion tolerance, the reported conservative
-motion bound is **9.36 µm**, independently of XY ray spacing.
+The frozen workload is a **12 mm diameter × 40 mm** cylindrical blank, a finite
+profiled wheel and **1,024 XYZAC segments** forming a two-start screw. Planning
+produces **11,264 continuous translation sweeps**. The reported motion bound is
+**9.36 µm** at a requested 10 µm tolerance, independently of XY ray spacing.
 
-**Apple M5 Max, 128 GiB, Zig 0.15.2, ReleaseFast.** Each configuration uses one
-warm-up and five measured repetitions, alternating the baseline and SIMD binaries.
-The machine had unrelated VM/database activity; the ranges below show that
-variation. These are measured comparisons, not isolated-machine guarantees.
+**Apple M5 Max, 128 GiB, Zig 0.15.2, ReleaseFast, eight workers.** The final paired
+comparison uses one warm-up and five measured repetitions per configuration.
+The machine had unrelated CPU activity; these are observations under shared load.
 
-| XY spacing | CPU workers | Baseline cutting median | SIMD cutting median (min–max) | Median speedup |
-|---|---:|---:|---:|---:|
-| 100 µm | 1 | 1.484 s | **1.210 s** (1.092–1.554) | **1.23×** |
-| 100 µm | 8 | 0.251 s | **0.241 s** (0.145–0.252) | **1.04×** |
-| 25 µm | 8 | 4.730 s | **3.806 s** (3.447–5.075) | **1.24×** |
+| XY spacing | Baseline cutting median | Current cutting median (min–max) | Median speedup |
+|---|---:|---:|---:|
+| 100 µm | 0.301 s | **0.275 s** (0.235–0.327) | **1.09×** |
+| 25 µm | 5.087 s | **4.219 s** (3.396–4.446) | **1.21×** |
 
-For the **25 µm, eight-worker** configuration:
+At **25 µm**, kernel total median is **4.229 s**, with **43.86 MB peak pre-export
+RSS**. Fine sweep queries fall from **50.9 to 33.3 million**. Every paired final
+interval and job file is **byte-identical**. These queries are not voxel tests.
 
-- **3.815 s kernel-total median**, including planning, hierarchy, cutting and statistics.
-- **61.46 MB maximum observed pre-export process RSS**, versus 57.18 MB for the baseline.
-- **4.30 MB shared coefficient cache**; preparation is included in cutting time.
-- **50.9 million fine sweep queries**, unchanged by SIMD. These are not voxel tests.
-- **Byte-identical final interval and job files** in every paired run.
+A completed **6.25 µm** qualification contains **16.3 million intervals**.
+Early worker-buffer release reduced observed peak RSS from **680.67 to 398.85 MB**
+(about **41%**). Two measured runs after warm-up took **60.125 s median cutting**
+(59.206–61.043 s). The final arrays still occupy **330.24 MB**; this saves resident
+memory during merging, not output size. Its 1,920 × 1,920 XY domain has continuous
+Z intervals—it is not a 16k³ voxel qualification.
 
-These measurements exclude history, mesh generation and viewer loading. They do
-not measure animation FPS or machining time. The baseline's 25 µm cutting range
-was 4.450–7.498 s. Do not compare absolute times from different measurement
-sessions as if they were code speedups.
+Times exclude history, mesh generation and viewer loading. The 25 µm baseline
+range was 4.389–5.335 s. Do not compare absolute times across measurement sessions
+as code speedups. An older-method regression check preserved material but measured
+about 7% slower with overlapping ranges; that unfavorable result is retained.
 
-[Raw reports, profiling, source/binary hashes and rejected alternatives](docs/evidence/prepared-z-rays/README.md).
-Earlier [directional-enclosure measurements](docs/evidence/sweep-directional-envelopes/README.md)
-and [continuous-sweep validation](docs/evidence/continuous-sweeps/README.md) remain
-available. The older [6.25 µm qualification](docs/evidence/analytic-dexels/README.md)
-used the `fixed` method, not this SIMD sweep kernel. General voxel workloads have
-separate measurements below; there is no established matched performance ratio
-against Jens or ModuleWorks.
+[Latest raw measurements, memory accounting, validation and rejected alternative](docs/evidence/coherent-ray-seeds/README.md).
+Earlier [SIMD](docs/evidence/prepared-z-rays/README.md),
+[directional-enclosure](docs/evidence/sweep-directional-envelopes/README.md) and
+[continuous-sweep](docs/evidence/continuous-sweeps/README.md) results remain available.
+General voxel workflows have separate measurements below. There is no established
+matched performance ratio against Jens or ModuleWorks.
 
 ## Helical screw grinding
 
@@ -317,14 +317,14 @@ python3 scripts/test-raydexels.py --out out/ray-tests-new
 python3 scripts/benchmark-raydexels.py --methods axis sweep --out out/ray-bench-new
 ```
 
-The latest SIMD follow-up passes **104 tests in Debug and ReleaseFast**, with one
+The latest interval-kernel follow-up passes **105 tests in Debug and ReleaseFast**, with one
 existing skip. Windows x86-64 cross-builds successfully; its SIMD runtime and
 performance have not been measured locally. The ray suite includes independent
 geometry checks, exhaustive small-grid
 comparisons, allocation failures, exact worker determinism, interval validation,
 retained core/endcaps and mesh volume/edge checks. Benchmark outputs retain
 warm-ups, repeated timings, configuration/source/binary identifiers and material
-hashes. The [latest comparison](docs/evidence/prepared-z-rays/README.md)
+hashes. The [latest comparison](docs/evidence/coherent-ray-seeds/README.md)
 provides the command for comparing two compiled binaries byte for byte.
 
 Other recorded workloads include the 325-segment pocket: **2.43 ms cutting at
