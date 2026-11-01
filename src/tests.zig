@@ -367,6 +367,7 @@ test "fine grid errors and allocation failures" {
 test {
     _ = @import("engine_tests.zig");
     _ = @import("raydexel_tests.zig");
+    _ = @import("profile_sweep_tests.zig");
 }
 
 test "block height export matches scalar scan for random partial blocks and cavities" {
