@@ -45,6 +45,12 @@ test "continuous crown boundary construction agrees with reverse motion oracle" 
             const origin = e.V{ rng.float(f64) * 8 - 4, rng.float(f64) * 8 - 4, rng.float(f64) * 8 - 4 };
             const direction = normalize(.{ rng.float(f64) - 0.5, rng.float(f64) - 0.5, rng.float(f64) - 0.5 });
             const hit = try sweep.ray(p, origin, direction, .{ .lo = -10, .hi = 10 });
+            if (hit) |h| if (h.hi - h.lo > 1e-8) {
+                const outer = try sweep.rayEnvelope(p, origin, direction, .{ .lo = -10, .hi = 10 }, &.{.{ .lo = -10, .hi = 10 }});
+                try std.testing.expect(outer != null);
+                try std.testing.expect(outer.?.lo <= h.lo + 1e-9);
+                try std.testing.expect(outer.?.hi >= h.hi - 1e-9);
+            };
             for (0..81) |i| {
                 const t = -10 + @as(f64, @floatFromInt(i)) / 4;
                 const actual = if (hit) |h| t >= h.lo and t <= h.hi else false;
@@ -197,4 +203,32 @@ test "continuous preparation rejects invalid input and insufficient storage" {
     var plan = try swept.Plan.init(a, p, &straight, 0.01);
     defer plan.deinit();
     try std.testing.expectEqual(@as(usize, 1), plan.sweeps.len);
+}
+
+test "directional sweep enclosures preserve exhaustive material in randomized overlapping jobs" {
+    const p = try d.Profile.init(a, crown);
+    defer p.deinit();
+    var random = std.Random.DefaultPrng.init(493521);
+    const rng = random.random();
+    for (0..12) |_| {
+        var ops: [32]@import("job.zig").Operation = undefined;
+        for (&ops) |*op| {
+            const from = @import("motion.zig").XYZAC{ .position = .{ rng.float(f64) * 6 - 3, rng.float(f64) * 6 - 3, rng.float(f64) * 6 - 1 }, .a_deg = rng.float(f64) * 180, .c_deg = rng.float(f64) * 360 };
+            var to = from;
+            to.position = e.add(from.position, .{ rng.float(f64) - 0.5, rng.float(f64) - 0.5, rng.float(f64) - 0.5 });
+            to.a_deg += rng.float(f64) * 10 - 5;
+            to.c_deg += rng.float(f64) * 10 - 5;
+            op.* = .{ .id = "random", .tool = 0, .rotary = .{ .a = from, .b = to } };
+        }
+        var plan = try swept.Plan.init(a, p, &ops, 0.025);
+        defer plan.deinit();
+        var tree = try d.Tree.init(a, p, plan.proxies);
+        defer tree.deinit();
+        var fast = try swept.finishRows(a, p, &plan, tree, .{ 0, 0, 0 }, 2, 4, 0.4, false, null);
+        defer fast.material.deinit();
+        var slow = try swept.finishRows(a, p, &plan, tree, .{ 0, 0, 0 }, 2, 4, 0.4, true, null);
+        defer slow.material.deinit();
+        try std.testing.expectEqualDeep(fast.material.columns.items, slow.material.columns.items);
+        try std.testing.expectEqualSlices(u8, std.mem.sliceAsBytes(fast.material.intervals.items), std.mem.sliceAsBytes(slow.material.intervals.items));
+    }
 }

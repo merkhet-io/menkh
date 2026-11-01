@@ -253,6 +253,8 @@ subsegment and sweeps the complete convex wheel continuously along its center
 translation. It uses endpoint tools, translated profile rims and silhouette
 patches, not isolated poses or a swept-sphere substitute. See
 [geometry and bound](CONTINUOUS-SWEEPS.md), [frozen protocol](CONTINUOUS-SWEEP-PROTOCOL.md)
-and [measured results](evidence/continuous-sweeps/README.md). It is currently
+and [measured results](evidence/continuous-sweeps/README.md). The first version was
 slower than `axis` on the frozen 25 µm screw despite fewer prepared primitives.
+A [directional rejection follow-up](evidence/sweep-directional-envelopes/README.md)
+reduces fine sweep queries with byte-identical final material.
 The existing default and production voxel workflows are unchanged.

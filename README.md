@@ -94,12 +94,20 @@ along each fixed-orientation subsegment. Only orientation is subdivided, with an
 explicit conservative motion bound. The frozen screw needs 11,264 sweeps instead
 of 39,936 midpoint poses; a fixed-axis straight move needs just one sweep.
 
-This is a working geometric capability, **not yet a screw-performance win**.
-In a fresh matched eight-worker series at 25 µm, cutting took **3.744 s**
+The first version was **not a screw-performance win**.
+In its matched eight-worker series at 25 µm, cutting took **3.744 s**
 (range 3.675–3.810), versus **3.537 s** (3.466–3.708) for `axis`.
 Sweep kernel total was 3.751 s and peak RSS 56.59 MB. Both methods ran faster
 than the earlier stage-1 session; that cross-session change is not a code speedup.
 The existing method remains available and the default stays `fixed`.
+
+A subsequent directional rejection enclosure preserves the entire material state
+while reducing fine sweep queries from **81.9 to 50.9 million**. Matched 25 µm
+cutting medians improve from **4.055 to 3.101 s (1.31×)**; final interval files are
+byte-identical at all four spacings. This is a separate measurement session,
+not a comparison with the 3.744 s figure above. A separate fresh matched run
+measured improved `sweep` at **3.128 s** versus `axis` at **3.973 s**, with their
+respective approximation policies unchanged. [Raw results, ranges and rejected trial](docs/evidence/sweep-directional-envelopes/README.md).
 
 An independent time-subdivision/distance oracle checked 128 cut endpoints at each
 of four spacings. At 25 µm the largest sampled upper distance was **8.29 µm**,
